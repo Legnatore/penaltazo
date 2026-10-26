@@ -263,20 +263,22 @@ class NetworkManager {
       let winner = null;
       let nextIsSuddenDeath = this.localState.isSuddenDeath;
       let nextSuddenDeathRound = this.localState.suddenDeathRound;
-      const totalRegularTurns = (this.localState.penaltiesPerPlayer || 0) * 2;
+      const basePenalties = this.localState.penaltiesPerPlayer || 0;
+      const totalRegularTurns = basePenalties * 2;
 
       if (!this.localState.isSuddenDeath) {
-        if (nextTurnIndex >= totalRegularTurns) {
-          if (this.localState.scores.P1 > this.localState.scores.P2) {
-            gameOver = true;
-            winner = 'P1';
-          } else if (this.localState.scores.P2 > this.localState.scores.P1) {
-            gameOver = true;
-            winner = 'P2';
-          } else {
-            nextIsSuddenDeath = true;
-            nextSuddenDeathRound = 1;
-          }
+        const p1Remaining = Math.max(0, basePenalties - this.localState.history.P1.length);
+        const p2Remaining = Math.max(0, basePenalties - this.localState.history.P2.length);
+
+        if (this.localState.scores.P1 > this.localState.scores.P2 + p2Remaining) {
+          gameOver = true;
+          winner = 'P1';
+        } else if (this.localState.scores.P2 > this.localState.scores.P1 + p1Remaining) {
+          gameOver = true;
+          winner = 'P2';
+        } else if (nextTurnIndex >= totalRegularTurns) {
+          nextIsSuddenDeath = true;
+          nextSuddenDeathRound = 1;
         }
       } else {
         if (nextTurnIndex % 2 === 0) {

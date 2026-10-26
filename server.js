@@ -458,20 +458,26 @@ function resolveTurn(room) {
   let winner = null;
   let nextIsSuddenDeath = room.isSuddenDeath;
   let nextSuddenDeathRound = room.suddenDeathRound;
-  const totalRegularTurns = (room.penaltiesPerPlayer || 0) * 2;
+  const basePenalties = room.penaltiesPerPlayer || 0;
+  const totalRegularTurns = basePenalties * 2;
 
   if (!room.isSuddenDeath) {
-    if (nextTurnIndex >= totalRegularTurns) {
-      if (room.scores.P1 > room.scores.P2) {
-        gameOver = true;
-        winner = 'P1';
-      } else if (room.scores.P2 > room.scores.P1) {
-        gameOver = true;
-        winner = 'P2';
-      } else {
-        nextIsSuddenDeath = true;
-        nextSuddenDeathRound = 1;
-      }
+    // Calcular cuántos tiros regulares le quedan a cada jugador
+    const p1Remaining = Math.max(0, basePenalties - room.history.P1.length);
+    const p2Remaining = Math.max(0, basePenalties - room.history.P2.length);
+
+    if (room.scores.P1 > room.scores.P2 + p2Remaining) {
+      // P2 ya no puede alcanzar matemáticamente a P1
+      gameOver = true;
+      winner = 'P1';
+    } else if (room.scores.P2 > room.scores.P1 + p1Remaining) {
+      // P1 ya no puede alcanzar matemáticamente a P2
+      gameOver = true;
+      winner = 'P2';
+    } else if (nextTurnIndex >= totalRegularTurns) {
+      // Se completaron todos los tiros regulares en empate -> Muerte Súbita
+      nextIsSuddenDeath = true;
+      nextSuddenDeathRound = 1;
     }
   } else {
     if (nextTurnIndex % 2 === 0) {

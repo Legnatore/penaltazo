@@ -277,10 +277,19 @@ class TournamentManager {
     let s1 = 0;
     let s2 = 0;
 
-    // Simular los tiros reglamentarios (0 si es muerte súbita directa, 3 o 5)
+    // Simular los tiros reglamentarios comprobando victoria matemática anticipada
     for (let i = 0; i < penaltiesPerPlayer; i++) {
+      // Tira P1
       if (Math.random() < 0.72) s1++;
+      const p1RemAfterP1 = penaltiesPerPlayer - (i + 1);
+      const p2RemAfterP1 = penaltiesPerPlayer - i;
+      if (s1 > s2 + p2RemAfterP1 || s2 > s1 + p1RemAfterP1) break;
+
+      // Tira P2
       if (Math.random() < 0.72) s2++;
+      const p1RemAfterP2 = penaltiesPerPlayer - (i + 1);
+      const p2RemAfterP2 = penaltiesPerPlayer - (i + 1);
+      if (s1 > s2 + p2RemAfterP2 || s2 > s1 + p1RemAfterP2) break;
     }
 
     // Si empatan (o si empezó en muerte súbita directa), decidir en rondas de muerte súbita

@@ -300,15 +300,34 @@ io.on('connection', (socket) => {
       rooms.set(matchRoomId, room);
     }
 
-    // Configurar jugadores
-    const isP1 = (match.p1.id === socket.id || (!match.p1.isBot && match.p2.isBot));
-    const myRoleAssigned = isP1 ? 'P1' : 'P2';
+    // Configurar jugadores según quién es humano y quién es bot (o P1 vs P2 humanos)
+    let myRoleAssigned = 'spectator';
+    if (match.p1 && (match.p1.id === socket.id || match.p1.socketId === socket.id)) {
+      myRoleAssigned = 'P1';
+    } else if (match.p2 && (match.p2.id === socket.id || match.p2.socketId === socket.id)) {
+      myRoleAssigned = 'P2';
+    } else if (match.p1 && !match.p1.isBot && match.p2 && match.p2.isBot) {
+      myRoleAssigned = 'P1';
+    } else if (match.p2 && !match.p2.isBot && match.p1 && match.p1.isBot) {
+      myRoleAssigned = 'P2';
+    }
     playerRole = myRoleAssigned;
 
     socket.join(matchRoomId);
 
-    // Si P2 es BOT, agregar al bot en la sala
-    if (match.p2.isBot && !room.players.some(p => p.role === 'P2')) {
+    // Si P1 es BOT, agregar al bot en la sala como P1
+    if (match.p1 && match.p1.isBot && !room.players.some(p => p.role === 'P1')) {
+      room.players.push({
+        id: match.p1.id,
+        role: 'P1',
+        name: match.p1.name,
+        connected: true,
+        isBot: true
+      });
+    }
+
+    // Si P2 es BOT, agregar al bot en la sala como P2
+    if (match.p2 && match.p2.isBot && !room.players.some(p => p.role === 'P2')) {
       room.players.push({
         id: match.p2.id,
         role: 'P2',
@@ -318,19 +337,22 @@ io.on('connection', (socket) => {
       });
     }
 
-    // Registrar al jugador humano en la sala
-    const existingHuman = room.players.find(p => p.role === myRoleAssigned);
-    if (!existingHuman) {
-      room.players.push({
-        id: socket.id,
-        role: myRoleAssigned,
-        name: isP1 ? match.p1.name : match.p2.name,
-        connected: true,
-        isBot: false
-      });
-    } else {
-      existingHuman.id = socket.id;
-      existingHuman.connected = true;
+    // Registrar al jugador humano en la sala con su rol real
+    if (myRoleAssigned === 'P1' || myRoleAssigned === 'P2') {
+      const humanData = myRoleAssigned === 'P1' ? match.p1 : match.p2;
+      const existingHuman = room.players.find(p => p.role === myRoleAssigned);
+      if (!existingHuman) {
+        room.players.push({
+          id: socket.id,
+          role: myRoleAssigned,
+          name: humanData ? humanData.name : 'Jugador',
+          connected: true,
+          isBot: false
+        });
+      } else {
+        existingHuman.id = socket.id;
+        existingHuman.connected = true;
+      }
     }
 
     match.status = 'playing';

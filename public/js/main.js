@@ -265,51 +265,205 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- PERSONALIZACIÓN DE EQUIPOS Y TEMAS VISUALES ---
+  const DEFAULT_LOCAL_KIT = {
+    key: 'default',
+    name: 'Celeste Titular',
+    primary: '#0284c7',
+    secondary: '#ffffff',
+    accent: '#facc15',
+    shorts: '#1e3a8a',
+    numColor: '#ffffff'
+  };
+
   const TEAM_KITS = {
     default: null,
     carbayon: {
+      key: 'carbayon',
       name: 'Azul Carbayón',
       primary: '#003399',
       secondary: '#ffffff',
       accent: '#facc15',
-      shorts: '#ffffff'
+      shorts: '#ffffff',
+      numColor: '#facc15'
     },
     rojiblanco: {
+      key: 'rojiblanco',
       name: 'Rojiblanco',
       primary: '#dc2626',
       secondary: '#ffffff',
       accent: '#1e3a8a',
-      shorts: '#1e3a8a'
+      shorts: '#1e3a8a',
+      numColor: '#ffffff'
     },
     blaugrana: {
+      key: 'blaugrana',
       name: 'Blaugrana',
       primary: '#991b1b',
       secondary: '#1e3a8a',
       accent: '#facc15',
-      shorts: '#1e3a8a'
+      shorts: '#1e3a8a',
+      numColor: '#facc15'
     },
     merengue: {
+      key: 'merengue',
       name: 'Blanco Real',
       primary: '#f8fafc',
       secondary: '#cbd5e1',
       accent: '#d97706',
-      shorts: '#ffffff'
+      shorts: '#1e293b',
+      numColor: '#facc15'
     },
     verdiblanco: {
+      key: 'verdiblanco',
       name: 'Verdiblanco',
       primary: '#16a34a',
       secondary: '#ffffff',
       accent: '#facc15',
-      shorts: '#ffffff'
+      shorts: '#14532d',
+      numColor: '#ffffff'
     },
     aurinegro: {
+      key: 'aurinegro',
       name: 'Aurinegro',
       primary: '#facc15',
       secondary: '#0f172a',
       accent: '#f97316',
-      shorts: '#0f172a'
+      shorts: '#0f172a',
+      numColor: '#ffffff'
+    },
+    naranja: {
+      key: 'naranja',
+      name: 'Naranja Mecánica',
+      primary: '#f97316',
+      secondary: '#ea580c',
+      accent: '#facc15',
+      shorts: '#0f172a',
+      numColor: '#ffffff'
+    },
+    violeta: {
+      key: 'violeta',
+      name: 'Violeta Imperial',
+      primary: '#7c3aed',
+      secondary: '#ffffff',
+      accent: '#facc15',
+      shorts: '#1e1b4b',
+      numColor: '#facc15'
     }
   };
+
+  const RIVAL_KIT_KEYS = ['carbayon', 'rojiblanco', 'blaugrana', 'merengue', 'verdiblanco', 'aurinegro', 'naranja', 'violeta'];
+
+  // Estado persistente de dorsales y equipaciones por partida y por torneo
+  let currentTournamentVisualId = null;
+  let myTournamentJerseyNumber = null;
+  const tournamentParticipantVisuals = new Map(); // nombre -> { kitKey, jerseyNumber }
+
+  let myCurrentMatchNumber = 1;
+  let rivalCurrentMatchNumber = 13;
+  let rivalCurrentMatchKitKey = 'naranja';
+
+  function generateRandomJerseyNumber(excludeNumber = null) {
+    let num = Math.floor(Math.random() * 99) + 1;
+    while (excludeNumber !== null && num === excludeNumber) {
+      num = Math.floor(Math.random() * 99) + 1;
+    }
+    return num;
+  }
+
+  function getMySelectedKitKey() {
+    const teamKitSelectEl = document.getElementById('team-kit-select');
+    return (teamKitSelectEl && teamKitSelectEl.value) || localStorage.getItem('penaltazo_team_kit') || 'default';
+  }
+
+  function getMyActiveKitObject() {
+    const key = getMySelectedKitKey();
+    return TEAM_KITS[key] || DEFAULT_LOCAL_KIT;
+  }
+
+  function pickRandomDistinctKitKey(myKitKey) {
+    const candidates = RIVAL_KIT_KEYS.filter(k => k !== myKitKey);
+    return candidates[Math.floor(Math.random() * candidates.length)] || 'naranja';
+  }
+
+  function getRivalActiveKitObject() {
+    const myKey = getMySelectedKitKey();
+    if (!rivalCurrentMatchKitKey || rivalCurrentMatchKitKey === myKey) {
+      rivalCurrentMatchKitKey = pickRandomDistinctKitKey(myKey);
+    }
+    return TEAM_KITS[rivalCurrentMatchKitKey] || TEAM_KITS.naranja;
+  }
+
+  function initMatchVisualIdentities(roomState) {
+    const myKey = getMySelectedKitKey();
+    const rivalRole = (myRole === 'P2') ? 'P1' : 'P2';
+    const rivalPlayerObj = (roomState && roomState.players) ? roomState.players.find(p => p.role === rivalRole) : null;
+    const rivalNameKey = (rivalPlayerObj && rivalPlayerObj.name) ? rivalPlayerObj.name : (playerNames[rivalRole] || 'Rival');
+
+    if (isInTournament && activeTournament) {
+      // En un torneo: el jugador local y cada participante mantienen el mismo dorsal y equipación todo el torneo
+      if (currentTournamentVisualId !== activeTournament.id || !myTournamentJerseyNumber) {
+        currentTournamentVisualId = activeTournament.id;
+        myTournamentJerseyNumber = generateRandomJerseyNumber();
+        tournamentParticipantVisuals.clear();
+      }
+      myCurrentMatchNumber = myTournamentJerseyNumber;
+
+      if (!tournamentParticipantVisuals.has(rivalNameKey)) {
+        tournamentParticipantVisuals.set(rivalNameKey, {
+          kitKey: pickRandomDistinctKitKey(myKey),
+          jerseyNumber: generateRandomJerseyNumber(myCurrentMatchNumber)
+        });
+      }
+      const rivalVisual = tournamentParticipantVisuals.get(rivalNameKey);
+      rivalCurrentMatchNumber = rivalVisual.jerseyNumber;
+      rivalCurrentMatchKitKey = rivalVisual.kitKey === myKey ? pickRandomDistinctKitKey(myKey) : rivalVisual.kitKey;
+    } else {
+      // En partida 1v1 o contra la IA: dorsal y equipación aleatorios elegidos antes de empezar la partida y mantenidos toda la tanda
+      myCurrentMatchNumber = generateRandomJerseyNumber();
+      rivalCurrentMatchNumber = generateRandomJerseyNumber(myCurrentMatchNumber);
+      rivalCurrentMatchKitKey = pickRandomDistinctKitKey(myKey);
+    }
+  }
+
+  function updateActiveKeeperAppearance(keeperRole = currentKeeperRole) {
+    const keeperEl = document.getElementById('animated-keeper');
+    const keeperNumberEl = document.getElementById('keeper-jersey-number');
+    if (!keeperEl) return;
+
+    const isLocalPlayerInGoal = (myRole === 'spectator')
+      ? (keeperRole === 'P1')
+      : (keeperRole === myRole);
+
+    const activeKit = isLocalPlayerInGoal ? getMyActiveKitObject() : getRivalActiveKitObject();
+    const activeNumber = isLocalPlayerInGoal ? myCurrentMatchNumber : rivalCurrentMatchNumber;
+
+    keeperEl.style.setProperty('--keeper-primary', activeKit.primary);
+    keeperEl.style.setProperty('--keeper-secondary', activeKit.secondary);
+    keeperEl.style.setProperty('--keeper-accent', activeKit.accent);
+    keeperEl.style.setProperty('--keeper-shorts', activeKit.shorts);
+    keeperEl.style.setProperty('--keeper-num-color', activeKit.numColor || '#ffffff');
+
+    if (keeperNumberEl) {
+      keeperNumberEl.textContent = String(activeNumber);
+    }
+
+    // Colorear también las cajas de marcador P1 y P2 con los colores de cada uno para coherencia visual
+    const p1ScoreBox = document.querySelector('.team-p1 .team-score');
+    const p2ScoreBox = document.querySelector('.team-p2 .team-score');
+    const myKit = getMyActiveKitObject();
+    const rivKit = getRivalActiveKitObject();
+    const p1Kit = (myRole === 'P2') ? rivKit : myKit;
+    const p2Kit = (myRole === 'P2') ? myKit : rivKit;
+
+    if (p1ScoreBox) {
+      p1ScoreBox.style.background = `linear-gradient(180deg, ${p1Kit.primary} 0%, ${p1Kit.shorts} 140%)`;
+      p1ScoreBox.style.color = p1Kit.accent;
+    }
+    if (p2ScoreBox) {
+      p2ScoreBox.style.background = `linear-gradient(180deg, ${p2Kit.primary} 0%, ${p2Kit.shorts} 140%)`;
+      p2ScoreBox.style.color = p2Kit.accent;
+    }
+  }
 
   function applyTeamKit(kitKey) {
     const root = document.documentElement;
@@ -320,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
       root.style.removeProperty('--team-secondary');
       root.style.removeProperty('--team-accent');
       root.style.removeProperty('--team-shorts');
+      updateActiveKeeperAppearance(currentKeeperRole);
       return;
     }
     document.body.setAttribute('data-kit', kitKey);
@@ -327,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     root.style.setProperty('--team-secondary', kit.secondary);
     root.style.setProperty('--team-accent', kit.accent);
     root.style.setProperty('--team-shorts', kit.shorts);
+    updateActiveKeeperAppearance(currentKeeperRole);
   }
 
   const teamKitSelect = document.getElementById('team-kit-select');
@@ -545,6 +701,11 @@ document.addEventListener('DOMContentLoaded', () => {
     isInTournament = true;
     activeTournament = tournament;
     myUserId = myId;
+    if (currentTournamentVisualId !== tournament.id) {
+      currentTournamentVisualId = tournament.id;
+      myTournamentJerseyNumber = generateRandomJerseyNumber();
+      tournamentParticipantVisuals.clear();
+    }
     sessionStorage.setItem('penaltazo_active_tournament', tournament.id);
 
     headerRoomBadge.textContent = `Torneo: ${tournament.id}`;
@@ -935,11 +1096,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const p2 = roomState.players.find(p => p.role === 'P2');
       if (p1 && p1.name) playerNames.P1 = p1.name;
       if (p2 && p2.name) playerNames.P2 = p2.name;
+      const p1Num = (myRole === 'P2') ? rivalCurrentMatchNumber : myCurrentMatchNumber;
+      const p2Num = (myRole === 'P2') ? myCurrentMatchNumber : rivalCurrentMatchNumber;
       scoreboard.updatePlayerNames(
-        p1 ? (p1.role === myRole ? `${p1.name} (Tú)` : p1.name) : 'Jugador 1',
-        p2 ? (p2.role === myRole ? `${p2.name} (Tú)` : p2.name) : 'Jugador 2'
+        p1 ? `#${p1Num} ${p1.role === myRole ? `${p1.name} (Tú)` : p1.name}` : `#${p1Num} Jugador 1`,
+        p2 ? `#${p2Num} ${p2.role === myRole ? `${p2.name} (Tú)` : p2.name}` : `#${p2Num} Jugador 2`
       );
     }
+
+    // Actualizar la equipación y el dorsal del portero según a quién le toque parar en este turno
+    updateActiveKeeperAppearance(keeperRole);
 
     // Actualizar pancartas de ánimo en las gradas del estadio para el jugador actual
     const cheerLeft = document.getElementById('cheer-banner-left');
@@ -1115,6 +1281,15 @@ document.addEventListener('DOMContentLoaded', () => {
     matchZoneStats = createEmptyZoneStats();
     pendingRematchVotes = [];
     gameOverModal.classList.add('hidden');
+    if (data && data.roomState && data.roomState.players) {
+      const p1 = data.roomState.players.find(p => p.role === 'P1');
+      const p2 = data.roomState.players.find(p => p.role === 'P2');
+      if (p1 && p1.name) playerNames.P1 = p1.name;
+      if (p2 && p2.name) playerNames.P2 = p2.name;
+    }
+    if (!data || !data.turnIndex || data.turnIndex === 0) {
+      initMatchVisualIdentities(data ? data.roomState : null);
+    }
     showScreen(gameScreen);
     if (window.soundEngine) {
       window.soundEngine.playPenaltazoTheme();

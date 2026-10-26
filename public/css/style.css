@@ -4279,30 +4279,60 @@ body[data-kit] .team-p1 .team-score {
   color: var(--team-accent) !important;
 }
 
-body[data-kit] .keeper-torso {
+.animated-keeper {
+  --keeper-primary: #0284c7;
+  --keeper-secondary: #ffffff;
+  --keeper-accent: #facc15;
+  --keeper-shorts: #1e3a8a;
+  --keeper-num-color: #ffffff;
+}
+
+.animated-keeper .keeper-torso,
+body[data-theme] .animated-keeper .keeper-torso,
+body[data-kit] .animated-keeper .keeper-torso {
   background: repeating-linear-gradient(
     90deg,
-    var(--team-primary) 0px,
-    var(--team-primary) 9px,
-    var(--team-secondary) 9px,
-    var(--team-secondary) 18px
+    var(--keeper-primary) 0px,
+    var(--keeper-primary) 9px,
+    var(--keeper-secondary) 9px,
+    var(--keeper-secondary) 18px
   ) !important;
 }
 
-body[data-kit] .keeper-arm {
-  background: var(--team-primary) !important;
+.animated-keeper .keeper-arm,
+body[data-theme] .animated-keeper .keeper-arm,
+body[data-kit] .animated-keeper .keeper-arm {
+  background: var(--keeper-primary) !important;
 }
 
-body[data-kit] .keeper-jersey-collar {
-  background: var(--team-accent) !important;
+.animated-keeper .keeper-jersey-collar,
+body[data-theme] .animated-keeper .keeper-jersey-collar,
+body[data-kit] .animated-keeper .keeper-jersey-collar {
+  background: var(--keeper-accent) !important;
 }
 
-body[data-kit] .keeper-shorts {
-  background: var(--team-shorts) !important;
+.animated-keeper .keeper-shorts,
+body[data-theme] .animated-keeper .keeper-shorts,
+body[data-kit] .animated-keeper .keeper-shorts {
+  background: var(--keeper-shorts) !important;
 }
 
-body[data-kit] .keeper-sock {
-  background: linear-gradient(180deg, var(--team-secondary) 0%, var(--team-secondary) 40%, var(--team-primary) 40%, var(--team-primary) 100%) !important;
+.animated-keeper .keeper-sock,
+body[data-theme] .animated-keeper .keeper-sock,
+body[data-kit] .animated-keeper .keeper-sock {
+  background: linear-gradient(180deg, var(--keeper-secondary) 0%, var(--keeper-secondary) 40%, var(--keeper-primary) 40%, var(--keeper-primary) 100%) !important;
+}
+
+.animated-keeper .keeper-jersey-number {
+  color: var(--keeper-num-color, #ffffff) !important;
+  background: rgba(15, 23, 42, 0.72);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 1.25rem;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.05;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 /* =========================================================

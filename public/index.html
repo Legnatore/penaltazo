@@ -198,10 +198,34 @@
 
             <div class="divider"><span>o entrena en solitario</span></div>
 
-            <button id="play-ai-btn" class="btn btn-outline">
-              <span class="btn-icon">🤖</span>
-              <span class="btn-text">Jugar contra la IA (Modo Práctica)</span>
-            </button>
+            <div class="ai-practice-box">
+              <label for="ai-personality-select" class="ai-personality-label">🧠 Personalidad y nivel de la IA:</label>
+              <select id="ai-personality-select" class="ai-personality-select">
+                <option value="novato">🐣 El Novato (Predecible y tira raso)</option>
+                <option value="psicologo" selected>🧠 El Psicólogo (Estudia tu mapa de calor)</option>
+                <option value="escuadras">🚀 Cazador de Escuadras (Arriesga siempre arriba)</option>
+                <option value="loco">🤪 El Portero Loco (Caza Panenkas y vacila)</option>
+              </select>
+              <button id="play-ai-btn" class="btn btn-outline">
+                <span class="btn-icon">🤖</span>
+                <span class="btn-text">Jugar contra la IA (Modo Práctica)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vitrina de Trofeos e Historial Local (localStorage) -->
+        <div id="career-stats-card" class="career-stats-card">
+          <div class="career-header">
+            <h3>🏅 Mi Palmarés y Estadísticas</h3>
+            <span id="career-streak-pill" class="career-streak-pill">🔥 Racha: 0</span>
+          </div>
+          <div id="career-kpi-grid" class="career-kpi-grid">
+            <!-- Rellenado dinámicamente desde localStorage -->
+          </div>
+          <div class="career-trophies-title">🏆 Vitrina de Trofeos Desbloqueables:</div>
+          <div id="career-trophies-grid" class="career-trophies-grid">
+            <!-- Rellenado dinámicamente desde localStorage -->
           </div>
         </div>
 
@@ -459,6 +483,19 @@
     <!-- 5. PANTALLA PRINCIPAL DE JUEGO (EL ESTADIO DE PENALTIS) -->
     <section id="game-screen" class="screen game-screen hidden">
 
+      <!-- Barra superior de H2H, Modo Rey de la Pista y Reloj de Posesión (12s) -->
+      <div id="match-top-meta-bar" class="match-top-meta-bar">
+        <div id="h2h-counter-badge" class="meta-pill h2h-pill">
+          ⚔️ H2H Serie: 0 - 0
+        </div>
+        <div id="king-queue-badge" class="meta-pill king-queue-pill hidden">
+          👑 En cola: 0
+        </div>
+        <div id="turn-timer-badge" class="meta-pill timer-pill">
+          ⏱️ <span id="turn-timer-seconds">12</span>s
+        </div>
+      </div>
+
       <!-- Marcador superior -->
       <div class="scoreboard-bar">
         <!-- Jugador 1 -->
@@ -494,6 +531,26 @@
           <div id="p2-dots" class="penalty-dots-row"></div>
         </div>
       </div>
+
+      <!-- Comentarista en vivo estilo Carrusel Deportivo / PC Fútbol -->
+      <div id="commentator-ticker" class="commentator-ticker">
+        <span class="commentator-mic">🎙️ CARRUSEL:</span>
+        <span id="commentator-text" class="commentator-text">¡Todo listo en el punto fatídico! El estadio contiene la respiración...</span>
+      </div>
+
+      <!-- Barra de Reacciones Rápidas / Emotes ("Trash-talk" deportivo) -->
+      <div id="emote-bar" class="emote-bar">
+        <span class="emote-bar-label">💬 Pique:</span>
+        <button type="button" class="emote-btn" data-emoji="🤫" data-text="¡Silencio en la grada!">🤫 Silencio</button>
+        <button type="button" class="emote-btn" data-emoji="🧤🧱" data-text="¡Hoy no me metes ni uno!">🧤 ¡Muro!</button>
+        <button type="button" class="emote-btn" data-emoji="🎯" data-text="¡Va directo a la escuadra!">🎯 Escuadra</button>
+        <button type="button" class="emote-btn" data-emoji="😰" data-text="¡Huele a miedo desde aquí!">😰 Nervios</button>
+        <button type="button" class="emote-btn" data-emoji="😂" data-text="¡Vaya tirito me llevas!">😂 Jajaja</button>
+        <button type="button" class="emote-btn" data-emoji="🔥" data-text="¡Vamos que nos lo llevamos!">🔥 ¡Vamos!</button>
+      </div>
+
+      <!-- Bocadillo flotante de Emotes recibidos -->
+      <div id="emote-floating-banner" class="emote-floating-banner hidden"></div>
 
       <!-- Barra de instrucciones y estado -->
       <div class="instruction-banner">
@@ -718,6 +775,16 @@
           </button>
           <button id="back-to-lobby-btn" class="btn btn-outline">
             Volver al Menú Principal 🏠
+          </button>
+        </div>
+
+        <!-- Compartir Tarjeta / Crónica del Resultado por WhatsApp -->
+        <div class="result-share-actions">
+          <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp result-share-btn">
+            <span>📲</span> Compartir Crónica en WhatsApp
+          </button>
+          <button type="button" id="download-result-card-btn" class="btn btn-secondary result-share-btn">
+            <span>📸</span> Tarjeta de Resultado (Imagen)
           </button>
         </div>
 

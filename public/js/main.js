@@ -62,6 +62,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const rematchStatus = document.getElementById('rematch-status');
   const returnBracketBtn = document.getElementById('return-bracket-btn');
   const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
+  const shareResultWaBtn = document.getElementById('share-result-wa-btn');
+  const downloadResultCardBtn = document.getElementById('download-result-card-btn');
+
+  // Nuevos elementos de partido: H2H, Rey de la Pista, Reloj 12s, Carrusel y Emotes
+  const h2hCounterBadge = document.getElementById('h2h-counter-badge');
+  const kingQueueBadge = document.getElementById('king-queue-badge');
+  const turnTimerBadge = document.getElementById('turn-timer-badge');
+  const turnTimerSecondsEl = document.getElementById('turn-timer-seconds');
+  const commentatorTextEl = document.getElementById('commentator-text');
+  const emoteBar = document.getElementById('emote-bar');
+  const emoteFloatingBanner = document.getElementById('emote-floating-banner');
+  const aiPersonalitySelect = document.getElementById('ai-personality-select');
+
+  // Elementos de Vitrina de Trofeos e Historial (localStorage)
+  const careerKpiGrid = document.getElementById('career-kpi-grid');
+  const careerTrophiesGrid = document.getElementById('career-trophies-grid');
+  const careerStreakPill = document.getElementById('career-streak-pill');
 
   // Elementos adicionales de navegación de torneo
   const tourneyLeaveBtn = document.getElementById('tourney-leave-btn');
@@ -104,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     myStatusBadge.className = 'status-badge ready';
     myStatusBadge.innerHTML = '✅ ¡Elección enviada!';
 
+    setCommentatorText(`🎯 Decisión tomada en secreto (${rowName} ${colName}). ¡Esperando el pitido del árbitro!`);
     network.submitChoice(row, col);
   });
 
@@ -415,10 +433,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   playAiBtn.addEventListener('click', () => {
     isInTournament = false;
+    activeTournament = null;
     const raw = playerNameInput.value.trim();
     const name = !isDefaultOrEmptyName(raw) ? raw : 'Jugador 1';
     const penaltiesPerPlayer = getSelectedLobbyPenalties();
-    network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer);
+    const personality = aiPersonalitySelect ? aiPersonalitySelect.value : 'psicologo';
+    network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer, personality);
   });
 
   // Salir de torneo al menú
@@ -558,10 +578,304 @@ document.addEventListener('DOMContentLoaded', () => {
   network.on('tournament_match_finished', ({ tournament, matchId, winner, scores, tournamentCompleted }) => {
     activeTournament = tournament;
     tournamentView.renderBracket(tournament, myUserId);
+    if (tournamentCompleted && winner && winner.id === myUserId) {
+      recordTournamentVictoryInCareer();
+    }
   });
 
   network.on('tournament_error', ({ message }) => {
     alert(message || 'Error al unirse al torneo');
+  });
+
+  // --- COMENTARISTA ESTILO CARRUSEL / PC FÚTBOL ---
+  const CARRUSEL_INTRO_LINES = [
+    '¡Ojo que toma carrerilla! Silencio sepulcral en la grada...',
+    '¡Duelo psicológico en el área! ¿Asegurará al centro o buscará la escuadra?',
+    '¡El portero se mueve sobre la línea de cal intentando poner nervioso al lanzador!',
+    '¡Tensión máxima desde los once metros! Nadie quiere parpadear en el estadio.',
+    '¡Atención a la mirada del delantero! En breves segundos saldremos de dudas...'
+  ];
+
+  function setCommentatorText(text, mood = 'normal') {
+    if (!commentatorTextEl) return;
+    commentatorTextEl.textContent = text;
+    const ticker = document.getElementById('commentator-ticker');
+    if (ticker) {
+      ticker.setAttribute('data-mood', mood);
+    }
+  }
+
+  // --- RELOJ DE POSESIÓN / TIEMPO LÍMITE DE TURNO (12 SEGUNDOS) ---
+  let clientTurnInterval = null;
+  let clientSecondsLeft = 12;
+
+  function stopClientTurnTimer() {
+    if (clientTurnInterval) {
+      clearInterval(clientTurnInterval);
+      clientTurnInterval = null;
+    }
+    if (turnTimerBadge) {
+      turnTimerBadge.classList.remove('timer-urgent');
+    }
+  }
+
+  function startClientTurnTimer(limitSeconds = 12) {
+    stopClientTurnTimer();
+    clientSecondsLeft = limitSeconds;
+    if (turnTimerSecondsEl) turnTimerSecondsEl.textContent = String(clientSecondsLeft);
+
+    clientTurnInterval = setInterval(() => {
+      if (isResolvingTurn) {
+        stopClientTurnTimer();
+        return;
+      }
+      clientSecondsLeft = Math.max(0, clientSecondsLeft - 1);
+      if (turnTimerSecondsEl) turnTimerSecondsEl.textContent = String(clientSecondsLeft);
+
+      if (clientSecondsLeft <= 4 && clientSecondsLeft > 0) {
+        if (turnTimerBadge) turnTimerBadge.classList.add('timer-urgent');
+        if (clientSecondsLeft === 4 && !hasConfirmedChoice && myRole !== 'spectator') {
+          setCommentatorText('⏱️ ¡¡Solo quedan 4 segundos en el reloj! ¡El árbitro se lleva el silbato a la boca!!', 'urgent');
+        }
+      }
+
+      if (clientSecondsLeft <= 0) {
+        stopClientTurnTimer();
+        // Si estamos en modo IA y no hemos elegido en 12 segundos, disparar/tirarse al azar
+        if (network.mode === 'ai' && !hasConfirmedChoice && !isResolvingTurn) {
+          const randRow = Math.random() < 0.5 ? 0 : 1;
+          const randCol = Math.floor(Math.random() * 3);
+          hasConfirmedChoice = true;
+          goalGrid.disable();
+          myStatusBadge.className = 'status-badge ready';
+          myStatusBadge.innerHTML = '⏱️ ¡Tiempo agotado (azar)!';
+          setCommentatorText('⏱️ ¡Pitido del árbitro por límite de 12 segundos! Decisión automática al azar.', 'urgent');
+          network.submitChoice(randRow, randCol);
+        }
+      }
+    }, 1000);
+  }
+
+  // --- CONTADOR H2H Y COLA DE MODO "REY DE LA PISTA" ---
+  let lastRoomState = null;
+
+  function updateMatchMetaBar(roomState) {
+    if (!roomState) return;
+    lastRoomState = roomState;
+
+    const p1 = roomState.players ? roomState.players.find(p => p.role === 'P1') : null;
+    const p2 = roomState.players ? roomState.players.find(p => p.role === 'P2') : null;
+    const p1Label = p1 ? p1.name : playerNames.P1;
+    const p2Label = p2 ? p2.name : playerNames.P2;
+    const sWins = roomState.seriesWins || { P1: 0, P2: 0 };
+    const streak = roomState.kingStreak || 0;
+
+    if (h2hCounterBadge) {
+      const streakTxt = streak >= 2 ? ` • 👑 Racha: ${streak}` : '';
+      h2hCounterBadge.innerHTML = `⚔️ H2H: <strong>${p1Label} ${sWins.P1 || 0}</strong> - <strong>${sWins.P2 || 0} ${p2Label}</strong>${streakTxt}`;
+    }
+
+    const queue = roomState.challengerQueue || [];
+    if (kingQueueBadge) {
+      if (queue.length > 0) {
+        kingQueueBadge.classList.remove('hidden');
+        const queueNames = queue.map(c => c.name).join(', ');
+        kingQueueBadge.innerHTML = `👑 Rey de la Pista • En cola (${queue.length}): <strong>${queueNames}</strong>`;
+      } else {
+        kingQueueBadge.classList.add('hidden');
+      }
+    }
+  }
+
+  // --- SISTEMA DE HISTORIAL Y TROFEOS LOCALES (localStorage) ---
+  const CAREER_STORAGE_KEY = 'penaltazo_career_stats_v1';
+  const TROPHY_DEFINITIONS = [
+    { id: 'debut', icon: '🏆', title: 'Debut Oficial', desc: 'Juega tu primera tanda de penaltis' },
+    { id: 'muro', icon: '🧱', title: 'El Muro', desc: 'Para 3 o más penaltis en un partido' },
+    { id: 'francotirador', icon: '🎯', title: 'Francotirador', desc: 'Anota 4 o más goles en una tanda' },
+    { id: 'racha3', icon: '🔥', title: 'Imparable', desc: 'Logra una racha de 3 victorias seguidas' },
+    { id: 'sangre_fria', icon: '⚡', title: 'Sangre Fría', desc: 'Gana un duelo en la Muerte Súbita' },
+    { id: 'rey_copas', icon: '👑', title: 'Rey de Copas', desc: 'Proclámate campeón de un Torneo' }
+  ];
+
+  function loadCareerStats() {
+    try {
+      const raw = localStorage.getItem(CAREER_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          matchesPlayed: Number(parsed.matchesPlayed) || 0,
+          wins: Number(parsed.wins) || 0,
+          currentStreak: Number(parsed.currentStreak) || 0,
+          bestStreak: Number(parsed.bestStreak) || 0,
+          goalsScored: Number(parsed.goalsScored) || 0,
+          savesMade: Number(parsed.savesMade) || 0,
+          tournamentsWon: Number(parsed.tournamentsWon) || 0,
+          unlockedTrophies: Array.isArray(parsed.unlockedTrophies) ? parsed.unlockedTrophies : []
+        };
+      }
+    } catch (e) {}
+    return {
+      matchesPlayed: 0,
+      wins: 0,
+      currentStreak: 0,
+      bestStreak: 0,
+      goalsScored: 0,
+      savesMade: 0,
+      tournamentsWon: 0,
+      unlockedTrophies: []
+    };
+  }
+
+  function saveCareerStats(stats) {
+    try {
+      localStorage.setItem(CAREER_STORAGE_KEY, JSON.stringify(stats));
+    } catch (e) {}
+  }
+
+  function renderCareerCabinet() {
+    const stats = loadCareerStats();
+    if (careerStreakPill) {
+      careerStreakPill.textContent = `🔥 Racha: ${stats.currentStreak} (Récord: ${stats.bestStreak})`;
+    }
+    if (careerKpiGrid) {
+      const winRate = stats.matchesPlayed > 0 ? Math.round((stats.wins / stats.matchesPlayed) * 100) : 0;
+      careerKpiGrid.innerHTML = `
+        <div class="career-kpi-item">
+          <span class="kpi-val">${stats.wins}/${stats.matchesPlayed}</span>
+          <span class="kpi-lbl">Victorias (${winRate}%)</span>
+        </div>
+        <div class="career-kpi-item">
+          <span class="kpi-val">⚽ ${stats.goalsScored}</span>
+          <span class="kpi-lbl">Goles Totales</span>
+        </div>
+        <div class="career-kpi-item">
+          <span class="kpi-val">🧤 ${stats.savesMade}</span>
+          <span class="kpi-lbl">Paradas</span>
+        </div>
+        <div class="career-kpi-item">
+          <span class="kpi-val">🏆 ${stats.tournamentsWon}</span>
+          <span class="kpi-lbl">Copas</span>
+        </div>
+      `;
+    }
+    if (careerTrophiesGrid) {
+      careerTrophiesGrid.innerHTML = TROPHY_DEFINITIONS.map(t => {
+        const unlocked = stats.unlockedTrophies.includes(t.id);
+        return `
+          <div class="trophy-badge ${unlocked ? 'unlocked' : 'locked'}" title="${t.desc}">
+            <span class="trophy-icon">${unlocked ? t.icon : '🔒'}</span>
+            <div class="trophy-meta">
+              <strong class="trophy-name">${t.title}</strong>
+              <span class="trophy-desc">${t.desc}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  function recordMatchInCareer(data) {
+    if (myRole === 'spectator') return;
+    const stats = loadCareerStats();
+    const iWon = (data.winner === myRole);
+    const rivalRole = (myRole === 'P1') ? 'P2' : 'P1';
+    const myHistory = (data.history && data.history[myRole]) ? data.history[myRole] : [];
+    const rivalHistory = (data.history && data.history[rivalRole]) ? data.history[rivalRole] : [];
+
+    const myGoalsInMatch = myHistory.filter(h => h.isGoal).length;
+    const mySavesInMatch = rivalHistory.filter(h => !h.isGoal && !h.isOut).length;
+    const hadSuddenDeath = myHistory.some(h => h.isSuddenDeath) || rivalHistory.some(h => h.isSuddenDeath);
+
+    stats.matchesPlayed += 1;
+    stats.goalsScored += myGoalsInMatch;
+    stats.savesMade += mySavesInMatch;
+
+    if (iWon) {
+      stats.wins += 1;
+      stats.currentStreak += 1;
+      if (stats.currentStreak > stats.bestStreak) {
+        stats.bestStreak = stats.currentStreak;
+      }
+    } else {
+      stats.currentStreak = 0;
+    }
+
+    const newlyUnlocked = [];
+    const unlock = (id) => {
+      if (!stats.unlockedTrophies.includes(id)) {
+        stats.unlockedTrophies.push(id);
+        const def = TROPHY_DEFINITIONS.find(t => t.id === id);
+        if (def) newlyUnlocked.push(def);
+      }
+    };
+
+    unlock('debut');
+    if (mySavesInMatch >= 3) unlock('muro');
+    if (myGoalsInMatch >= 4) unlock('francotirador');
+    if (stats.currentStreak >= 3) unlock('racha3');
+    if (iWon && hadSuddenDeath) unlock('sangre_fria');
+
+    saveCareerStats(stats);
+    renderCareerCabinet();
+
+    if (newlyUnlocked.length > 0) {
+      showToast(`🏅 ¡Trofeo desbloqueado: ${newlyUnlocked.map(t => `${t.icon} ${t.title}`).join(', ')}!`);
+    }
+  }
+
+  function recordTournamentVictoryInCareer() {
+    const stats = loadCareerStats();
+    stats.tournamentsWon += 1;
+    if (!stats.unlockedTrophies.includes('rey_copas')) {
+      stats.unlockedTrophies.push('rey_copas');
+      showToast('👑 ¡Trofeo desbloqueado: Rey de Copas!');
+    }
+    saveCareerStats(stats);
+    renderCareerCabinet();
+  }
+
+  renderCareerCabinet();
+
+  // --- REACCIONES RÁPIDAS / EMOTES ("TRASH-TALK") ---
+  let lastEmoteSentAt = 0;
+  let emoteHideTimeout = null;
+
+  if (emoteBar) {
+    emoteBar.querySelectorAll('.emote-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const now = Date.now();
+        if (now - lastEmoteSentAt < 1200) return;
+        lastEmoteSentAt = now;
+        const emoji = btn.getAttribute('data-emoji') || '⚽';
+        const text = btn.getAttribute('data-text') || '';
+        network.sendEmote(emoji, text);
+      });
+    });
+  }
+
+  network.on('emote_received', ({ role, playerName, emoji, text }) => {
+    if (!emoteFloatingBanner) return;
+    emoteFloatingBanner.classList.remove('hidden');
+    emoteFloatingBanner.innerHTML = `<span class="emote-pop-emoji">${emoji}</span> <strong>${playerName}:</strong> "${text}"`;
+    setCommentatorText(`💬 ¡Ojo al pique en el área! ${playerName} dice: "${text}" ${emoji}`, 'emote');
+
+    if (emoteHideTimeout) clearTimeout(emoteHideTimeout);
+    emoteHideTimeout = setTimeout(() => {
+      emoteFloatingBanner.classList.add('hidden');
+    }, 3200);
+  });
+
+  network.on('turn_timeout_auto', ({ timedOutRoles }) => {
+    setCommentatorText('⏱️ ¡El árbitro hace sonar el silbato! Tiempo de 12 segundos agotado y decisión obligada al azar.', 'urgent');
+    showToast('⏱️ ¡12 segundos agotados! Elección automática al azar.');
+  });
+
+  network.on('role_swapped', ({ myNewRole, newChallengerName, roomState }) => {
+    myRole = myNewRole;
+    if (roomState) updateMatchMetaBar(roomState);
+    showToast(`👑 ¡Modo Rey de la Pista! Entra ${newChallengerName} a retar al campeón.`);
+    setCommentatorText(`👑 ¡Salta al césped un nuevo retador: ${newChallengerName} busca destronar al Rey de la Pista!`, 'goal');
   });
 
   // --- ACTUALIZACIÓN DE INTERFAZ DEL JUEGO ---
@@ -587,19 +901,24 @@ document.addEventListener('DOMContentLoaded', () => {
       goalGrid.enable('shooter');
       roleInstructions.innerHTML = `
         <div class="role-title shooter">⚽ ERES EL TIRADOR</div>
-        <p class="role-desc">Haz clic directamente en la zona a la que quieres disparar (cualquier tiro salvo raso al centro tiene un pequeño riesgo de irse fuera).</p>
+        <p class="role-desc">Haz clic directamente en la zona a la que quieres disparar (tienes 12 segundos).</p>
       `;
     } else if (amIKeeper) {
       goalGrid.enable('keeper');
       roleInstructions.innerHTML = `
         <div class="role-title keeper">🧤 ERES EL PORTERO</div>
-        <p class="role-desc">Haz clic directamente en la zona hacia la que quieras lanzarte a parar.</p>
+        <p class="role-desc">Haz clic directamente en la zona hacia la que quieras lanzarte a parar (tienes 12 segundos).</p>
       `;
     } else {
       goalGrid.disable();
+      const queue = (roomState && roomState.challengerQueue) ? roomState.challengerQueue : [];
+      const myQueueIndex = queue.findIndex(c => c.clientId === network.clientId);
+      const queueHint = myQueueIndex !== -1
+        ? `¡Estás en el puesto #${myQueueIndex + 1} de la cola! Jugarás automáticamente contra el ganador.`
+        : 'Observando la tanda de penaltis en vivo.';
       roleInstructions.innerHTML = `
-        <div class="role-title spectator">👀 MODO ESPECTADOR</div>
-        <p class="role-desc">Observando la tanda de penaltis en vivo.</p>
+        <div class="role-title spectator">👑 MODO REY DE LA PISTA / ESPECTADOR</div>
+        <p class="role-desc">${queueHint}</p>
       `;
     }
 
@@ -659,6 +978,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    if (roomState) {
+      updateMatchMetaBar(roomState);
+    }
+
     if (roomState && roomState.scores) {
       lastScores = roomState.scores;
     }
@@ -677,6 +1000,17 @@ document.addEventListener('DOMContentLoaded', () => {
       penaltiesPerPlayer: currentPenaltiesPerPlayer,
       myRole
     });
+
+    const shooterDisplayName = playerNames[shooterRole] || 'El delantero';
+    const keeperDisplayName = playerNames[keeperRole] || 'el guardameta';
+    if (isSuddenDeath) {
+      setCommentatorText(`🔥 ¡MUERTE SÚBITA (Ronda ${suddenDeathRound})! Chuta ${shooterDisplayName} ante ${keeperDisplayName}. ¡El que falle se queda sin red!`, 'urgent');
+    } else {
+      const introLine = CARRUSEL_INTRO_LINES[(turnIndex || 0) % CARRUSEL_INTRO_LINES.length];
+      setCommentatorText(`🎙️ Turno de ${shooterDisplayName} frente a ${keeperDisplayName}. ${introLine}`, 'normal');
+    }
+
+    startClientTurnTimer(12);
   }
 
   // --- EVENTOS DE RED GENERALES ---
@@ -687,6 +1021,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tournamentContext) {
       isInTournament = false;
       activeTournament = null;
+    }
+    if (roomState) {
+      updateMatchMetaBar(roomState);
     }
     headerRoomBadge.textContent = tournamentContext ? `Partido de Torneo` : `Sala: ${roomId}`;
     headerRoomBadge.classList.remove('hidden');
@@ -699,6 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   network.on('room_update', (roomState) => {
+    updateMatchMetaBar(roomState);
     if (roomState.players.length >= 2 && roomState.state === 'waiting') {
       showToast('¡Oponente conectado! Preparando el terreno de juego...');
     }
@@ -796,8 +1134,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   network.on('turn_resolved', (data) => {
     isResolvingTurn = true;
+    stopClientTurnTimer();
     goalGrid.disable();
     recordTurnStats(data);
+    if (data.roomState) {
+      updateMatchMetaBar(data.roomState);
+    }
 
     myStatusBadge.className = 'status-badge resolving';
     myStatusBadge.innerHTML = '⚡ ¡Resolviendo penalti!';
@@ -806,6 +1148,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const shooterName = playerNames[data.shooterRole] || (data.shooterRole === 'P1' ? 'Jugador 1' : 'Jugador 2');
     const keeperName = playerNames[data.keeperRole] || (data.keeperRole === 'P1' ? 'Jugador 1' : 'Jugador 2');
+    const zoneLabel = ZONE_LABELS[data.shooterChoice?.row]?.[data.shooterChoice?.col] || 'la portería';
+
+    setCommentatorText(`⚡ ¡Toma carrerilla ${shooterName}, golpea con el alma hacia ${zoneLabel}...!`);
 
     // Actualizar el marcador en cuanto el balón impacta en la portería
     animator.playResolution({
@@ -818,6 +1163,18 @@ document.addEventListener('DOMContentLoaded', () => {
       isMyShot: data.shooterRole === myRole,
       isMySave: data.keeperRole === myRole,
       onImpact: () => {
+        if (data.isGoal) {
+          if (data.shooterChoice?.row === 0 && (data.shooterChoice?.col === 0 || data.shooterChoice?.col === 2)) {
+            setCommentatorText(`⚽ ¡¡GOOOOOLAZO POR LA ESCUADRA DE ${shooterName.toUpperCase()}!! ¡Imposible para ${keeperName}, quitó las telarañas!`, 'goal');
+          } else {
+            setCommentatorText(`⚽ ¡¡GOOOOOL DE ${shooterName.toUpperCase()}!! Engañó por completo a ${keeperName} (${data.scores.P1}-${data.scores.P2}).`, 'goal');
+          }
+        } else if (data.isOut) {
+          setCommentatorText(`💨 ¡¡FUERAAAA!! ¡${shooterName} buscó ajustar demasiado a ${zoneLabel} y el balón se marcha desviado! ¡Se lleva las manos a la cabeza!`, 'urgent');
+        } else {
+          setCommentatorText(`🧤 ¡¡PARADÓOOOON ANTOLÓGICO DE ${keeperName.toUpperCase()}!! ¡Adivinó la intención de ${shooterName} en ${zoneLabel} y voló como un gato!`, 'save');
+        }
+
         lastScores = data.scores;
         lastHistory = data.history;
         if (data.penaltiesPerPlayer !== undefined) {
@@ -838,6 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       onComplete: () => {
         if (data.gameOver) {
+          recordMatchInCareer(data);
           showGameOverScreen(data);
         }
       }
@@ -866,6 +1224,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     returnBracketBtn.classList.add('hidden');
     rematchBtn.classList.remove('hidden');
+
+    const queue = (lastRoomState && Array.isArray(lastRoomState.challengerQueue)) ? lastRoomState.challengerQueue : [];
+    if (queue.length > 0 && !isInTournament) {
+      const nextChallenger = queue[0].name;
+      rematchStatus.innerHTML = `👑 <strong>¡Modo Rey de la Pista!</strong> Siguiente retador en cola: <strong>${nextChallenger}</strong>`;
+      rematchStatus.classList.add('rematch-requested-alert');
+      if (myRole === 'spectator') {
+        rematchBtn.setAttribute('disabled', 'true');
+        rematchBtn.textContent = `👑 Esperando a que el Rey acepte el reto de ${nextChallenger}...`;
+      } else {
+        rematchBtn.removeAttribute('disabled');
+        rematchBtn.classList.remove('btn-primary');
+        rematchBtn.classList.add('btn-confirm', 'pulse-btn');
+        rematchBtn.innerHTML = `👑 ¡DEFENDER TRONO VS ${nextChallenger.toUpperCase()}!`;
+      }
+      return;
+    }
 
     const rivalRole = (myRole === 'P1') ? 'P2' : 'P1';
     const rivalWantsRematch = Array.isArray(votes) && votes.includes(rivalRole);
@@ -899,7 +1274,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let lastGameOverData = null;
+
   function showGameOverScreen(data) {
+    lastGameOverData = data;
     setTimeout(() => {
       gameOverModal.classList.remove('hidden');
       const modalCard = gameOverModal.querySelector('.modal-card');
@@ -981,6 +1359,133 @@ document.addEventListener('DOMContentLoaded', () => {
   backToLobbyBtn.addEventListener('click', () => {
     window.location.href = window.location.pathname;
   });
+
+  // --- COMPARTIR CRÓNICA Y TARJETA DE RESULTADO (IMAGEN CANVAS) PARA WHATSAPP ---
+  function buildMatchChronicleText() {
+    const scores = (lastGameOverData && lastGameOverData.scores) ? lastGameOverData.scores : lastScores;
+    const winnerRole = (lastGameOverData && lastGameOverData.winner) ? lastGameOverData.winner : (scores.P1 >= scores.P2 ? 'P1' : 'P2');
+    const loserRole = winnerRole === 'P1' ? 'P2' : 'P1';
+    const winnerName = playerNames[winnerRole] || 'Campeón';
+    const loserName = playerNames[loserRole] || 'Rival';
+    const wScore = scores[winnerRole] ?? 0;
+    const lScore = scores[loserRole] ?? 0;
+    const sWins = (lastRoomState && lastRoomState.seriesWins) ? lastRoomState.seriesWins : { P1: 0, P2: 0 };
+
+    let shareUrl = window.location.origin;
+    if (network.mode === 'multiplayer' && network.roomId && !String(network.roomId).includes('_r')) {
+      shareUrl = `${window.location.origin}/?room=${encodeURIComponent(network.roomId)}`;
+    }
+
+    return (
+      `📰 *CRÓNICA OFICIAL ¡PENALTAZO!* ⚽\n` +
+      `🏆 *¡${winnerName.toUpperCase()} TOMA LA PORTERÍA (${wScore} - ${lScore}) ANTE ${loserName.toUpperCase()}!*\n` +
+      `⚔️ Balance H2H Serie: ${playerNames.P1} ${sWins.P1 || 0} - ${sWins.P2 || 0} ${playerNames.P2}\n` +
+      `🔥 ¿Alguien se atreve a quitarle la corona desde los 11 metros?\n` +
+      `👉 Entra aquí: ${shareUrl}`
+    );
+  }
+
+  if (shareResultWaBtn) {
+    shareResultWaBtn.addEventListener('click', () => {
+      const text = buildMatchChronicleText();
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  if (downloadResultCardBtn) {
+    downloadResultCardBtn.addEventListener('click', () => {
+      const scores = (lastGameOverData && lastGameOverData.scores) ? lastGameOverData.scores : lastScores;
+      const winnerRole = (lastGameOverData && lastGameOverData.winner) ? lastGameOverData.winner : (scores.P1 >= scores.P2 ? 'P1' : 'P2');
+      const winnerName = playerNames[winnerRole] || 'Campeón';
+      const sWins = (lastRoomState && lastRoomState.seriesWins) ? lastRoomState.seriesWins : { P1: 0, P2: 0 };
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 460;
+      const ctx = canvas.getContext('2d');
+
+      // Fondo estilo estadio nocturno deportivo
+      const grad = ctx.createLinearGradient(0, 0, 800, 460);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(0.55, '#0369a1');
+      grad.addColorStop(1, '#15803d');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 800, 460);
+
+      // Marco arcade amarillo
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(16, 16, 768, 428);
+
+      // Cabecera periódico deportivo
+      ctx.fillStyle = '#facc15';
+      ctx.font = '900 32px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚽ DIARIO ¡PENALTAZO! — MARCADOR OFICIAL', 400, 68);
+
+      // Subtítulo del ganador
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 26px Montserrat, sans-serif';
+      ctx.fillText(`🏆 ¡${winnerName.toUpperCase()} SE LLEVA LA TANDA DE PENALTIS!`, 400, 118);
+
+      // Caja central del marcador
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      ctx.fillRect(80, 148, 640, 165);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(80, 148, 640, 165);
+
+      // Nombres y goles
+      ctx.fillStyle = '#e0f2fe';
+      ctx.font = '800 24px Montserrat, sans-serif';
+      ctx.fillText(String(playerNames.P1 || 'Jugador 1').slice(0, 18), 230, 195);
+      ctx.fillText(String(playerNames.P2 || 'Jugador 2').slice(0, 18), 570, 195);
+
+      ctx.fillStyle = '#facc15';
+      ctx.font = '900 74px Montserrat, sans-serif';
+      ctx.fillText(`${scores.P1 ?? 0}`, 230, 278);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 44px Montserrat, sans-serif';
+      ctx.fillText('VS', 400, 265);
+      ctx.fillStyle = '#facc15';
+      ctx.font = '900 74px Montserrat, sans-serif';
+      ctx.fillText(`${scores.P2 ?? 0}`, 570, 278);
+
+      // Serie H2H
+      ctx.fillStyle = '#fef08a';
+      ctx.font = '700 20px Montserrat, sans-serif';
+      ctx.fillText(`⚔️ Balance H2H Serie: ${playerNames.P1} ${sWins.P1 || 0} - ${sWins.P2 || 0} ${playerNames.P2}`, 400, 358);
+
+      // Pie de firma
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '700 16px Montserrat, sans-serif';
+      ctx.fillText('⚽ Juego hecho por Legnatore en 2026 • ¡Juega gratis en tu navegador!', 400, 412);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'penaltazo-resultado.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: '¡PENALTAZO! - Resultado del Partido',
+              text: buildMatchChronicleText(),
+              files: [file]
+            });
+            return;
+          } catch (e) {}
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'penaltazo-resultado.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('📸 ¡Tarjeta de resultado descargada!');
+      }, 'image/png');
+    });
+  }
 
   // --- MODAL LEGAL (PRIVACIDAD, COOKIES Y CONDICIONES PARA ADSENSE) ---
   const legalModal = document.getElementById('legal-modal');

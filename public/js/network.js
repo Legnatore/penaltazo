@@ -132,6 +132,28 @@ class NetworkManager {
         this.trigger('rematch_status', data);
       });
 
+      this.socket.on('emote_received', (data) => {
+        this.trigger('emote_received', data);
+      });
+
+      this.socket.on('turn_timeout_auto', (data) => {
+        this.trigger('turn_timeout_auto', data);
+      });
+
+      this.socket.on('role_swapped', (data) => {
+        if (data && data.p1ClientId === this.clientId) {
+          this.playerRole = 'P1';
+        } else if (data && data.p2ClientId === this.clientId) {
+          this.playerRole = 'P2';
+        } else {
+          this.playerRole = 'spectator';
+        }
+        this.trigger('role_swapped', {
+          ...data,
+          myNewRole: this.playerRole
+        });
+      });
+
       // Eventos del sistema de torneos
       this.socket.on('tournament_joined', (data) => {
         if (data && data.tournament && data.tournament.id) {
@@ -196,6 +218,31 @@ class NetworkManager {
     }
   }
 
+  sendEmote(emoji, text) {
+    if (this.mode === 'multiplayer' && this.socket) {
+      this.socket.emit('send_emote', { emoji, text });
+    } else if (this.mode === 'ai') {
+      this.trigger('emote_received', {
+        role: 'P1',
+        playerName: this.playerName,
+        emoji,
+        text
+      });
+      // La IA responde con un emote de su personalidad
+      if (Math.random() < 0.78) {
+        setTimeout(() => {
+          const aiEmote = this.ai.getRandomEmote();
+          this.trigger('emote_received', {
+            role: 'P2',
+            playerName: this.aiName || 'IA',
+            emoji: aiEmote.emoji,
+            text: aiEmote.text
+          });
+        }, 750);
+      }
+    }
+  }
+
   // --- SISTEMA DE TORNEOS ---
   createTournament(size, name, playerName, penaltiesPerPlayer = 5) {
     this.initMultiplayer();
@@ -224,13 +271,17 @@ class NetworkManager {
   }
 
   // --- MODO OFFLINE / CONTRA LA IA ---
-  initAIMode(roomId = 'SOLO-AI', playerName = 'Tirador', penaltiesPerPlayer = 5) {
+  initAIMode(roomId = 'SOLO-AI', playerName = 'Tirador', penaltiesPerPlayer = 5, personality = 'psicologo') {
     this.mode = 'ai';
     this.roomId = roomId;
     this.playerRole = 'P1';
     this.playerName = playerName;
-    this.aiName = this.ai.getRandomBotName();
+    this.ai.setPersonality(personality || 'psicologo');
+    this.aiName = this.ai.getRandomBotName(this.ai.personality);
     this.penaltiesPerPlayer = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
+    this.localSeriesWins = { P1: 0, P2: 0 };
+    this.localKingRole = null;
+    this.localKingStreak = 0;
 
     setTimeout(() => {
       this.trigger('joined_room', {
@@ -239,6 +290,9 @@ class NetworkManager {
         roomState: {
           id: this.roomId,
           penaltiesPerPlayer: this.penaltiesPerPlayer,
+          seriesWins: { ...this.localSeriesWins },
+          kingStreak: this.localKingStreak,
+          challengerQueue: [],
           players: [
             { role: 'P1', name: this.playerName, connected: true },
             { role: 'P2', name: this.aiName, connected: true }
@@ -252,7 +306,8 @@ class NetworkManager {
 
   startAIGame() {
     this.ai.reset();
-    if (!this.aiName) this.aiName = this.ai.getRandomBotName();
+    if (!this.aiName) this.aiName = this.ai.getRandomBotName(this.ai.personality);
+    if (!this.localSeriesWins) this.localSeriesWins = { P1: 0, P2: 0 };
     const basePenalties = this.penaltiesPerPlayer !== undefined ? this.penaltiesPerPlayer : 5;
     this.localState = {
       penaltiesPerPlayer: basePenalties,
@@ -271,9 +326,14 @@ class NetworkManager {
       isSuddenDeath: this.localState.isSuddenDeath,
       suddenDeathRound: this.localState.suddenDeathRound,
       penaltiesPerPlayer: basePenalties,
+      turnTimeLimit: 12,
       roomState: {
         id: this.roomId,
         penaltiesPerPlayer: basePenalties,
+        seriesWins: { ...this.localSeriesWins },
+        kingRole: this.localKingRole,
+        kingStreak: this.localKingStreak || 0,
+        challengerQueue: [],
         players: [
           { role: 'P1', name: this.playerName, connected: true },
           { role: 'P2', name: this.aiName, connected: true }
@@ -302,6 +362,8 @@ class NetworkManager {
 
       if (isHumanShooter) {
         this.ai.recordHumanChoice(humanRow, humanCol);
+      } else {
+        this.ai.recordHumanKeeperChoice(humanRow, humanCol);
       }
 
       // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una mínima probabilidad (12%) de irse fuera
@@ -361,6 +423,17 @@ class NetworkManager {
         }
       }
 
+      if (gameOver && winner) {
+        if (!this.localSeriesWins) this.localSeriesWins = { P1: 0, P2: 0 };
+        this.localSeriesWins[winner] = (this.localSeriesWins[winner] || 0) + 1;
+        if (this.localKingRole === winner) {
+          this.localKingStreak = (this.localKingStreak || 1) + 1;
+        } else {
+          this.localKingRole = winner;
+          this.localKingStreak = 1;
+        }
+      }
+
       this.trigger('turn_resolved', {
         turnIndex: this.localState.turnIndex,
         shooterRole,
@@ -379,7 +452,24 @@ class NetworkManager {
         nextIsSuddenDeath,
         nextSuddenDeathRound,
         nextTurnIndex,
-        penaltiesPerPlayer: this.localState.penaltiesPerPlayer
+        penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
+        roomState: {
+          id: this.roomId,
+          penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
+          seriesWins: { ...(this.localSeriesWins || { P1: 0, P2: 0 }) },
+          kingRole: this.localKingRole,
+          kingStreak: this.localKingStreak || 0,
+          challengerQueue: [],
+          players: [
+            { role: 'P1', name: this.playerName, connected: true },
+            { role: 'P2', name: this.aiName || 'Robot IA', connected: true }
+          ],
+          scores: { ...this.localState.scores },
+          history: {
+            P1: [...this.localState.history.P1],
+            P2: [...this.localState.history.P2]
+          }
+        }
       });
 
       this.localState.turnIndex = nextTurnIndex;
@@ -399,9 +489,14 @@ class NetworkManager {
             isSuddenDeath: this.localState.isSuddenDeath,
             suddenDeathRound: this.localState.suddenDeathRound,
             penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
+            turnTimeLimit: 12,
             roomState: {
               id: this.roomId,
               penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
+              seriesWins: { ...(this.localSeriesWins || { P1: 0, P2: 0 }) },
+              kingRole: this.localKingRole,
+              kingStreak: this.localKingStreak || 0,
+              challengerQueue: [],
               players: [
                 { role: 'P1', name: this.playerName, connected: true },
                 { role: 'P2', name: this.aiName || 'Robot IA', connected: true }

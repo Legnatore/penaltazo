@@ -53,18 +53,28 @@ function generateRoomId() {
   return code;
 }
 
+const TURN_TIME_LIMIT_SEC = 12;
+
 function createNewGameRoom(roomId, penaltiesPerPlayer = 5) {
   const basePenalties = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
   return {
     id: roomId,
-    players: [], // [{ id, socketId, role: 'P1'|'P2', name, connected: true, isBot: false }]
+    players: [], // [{ id, clientId, role: 'P1'|'P2', name, connected: true, isBot: false }]
     spectators: [],
+    challengerQueue: [], // [{ id, clientId, name, connected: true }] -> Cola para Modo "Rey de la Pista"
     state: 'waiting', // 'waiting', 'playing', 'resolving', 'game_over'
     penaltiesPerPlayer: basePenalties,
     turnIndex: 0,
     isSuddenDeath: basePenalties === 0,
     suddenDeathRound: basePenalties === 0 ? 1 : 0,
     scores: { P1: 0, P2: 0 },
+    seriesWins: { P1: 0, P2: 0 },
+    h2hWins: {},
+    kingRole: null,
+    kingStreak: 0,
+    lastWinnerRole: null,
+    turnDeadline: null,
+    turnTimer: null,
     history: {
       P1: [],
       P2: []
@@ -73,6 +83,46 @@ function createNewGameRoom(roomId, penaltiesPerPlayer = 5) {
     rematchVotes: new Set(),
     tournamentContext: null // { tournamentId, roundIndex, matchIndex, matchId }
   };
+}
+
+function clearTurnTimer(room) {
+  if (room && room.turnTimer) {
+    clearTimeout(room.turnTimer);
+    room.turnTimer = null;
+  }
+}
+
+function scheduleTurnTimer(room) {
+  clearTurnTimer(room);
+  if (!room || room.state !== 'playing') return;
+
+  room.turnDeadline = Date.now() + TURN_TIME_LIMIT_SEC * 1000;
+  room.turnTimer = setTimeout(() => {
+    if (!room || room.state !== 'playing') return;
+    const { shooterRole, keeperRole } = getTurnRoles(room.turnIndex);
+    const timedOutRoles = [];
+
+    if (room.choices.P1 === null) {
+      const p1Type = shooterRole === 'P1' ? 'shooter' : 'keeper';
+      room.choices.P1 = getBotChoice(p1Type);
+      timedOutRoles.push('P1');
+      io.to(room.id).emit('choice_confirmed', { role: 'P1', autoTimeout: true });
+    }
+    if (room.choices.P2 === null) {
+      const p2Type = shooterRole === 'P2' ? 'shooter' : 'keeper';
+      room.choices.P2 = getBotChoice(p2Type);
+      timedOutRoles.push('P2');
+      io.to(room.id).emit('choice_confirmed', { role: 'P2', autoTimeout: true });
+    }
+
+    if (timedOutRoles.length > 0) {
+      io.to(room.id).emit('turn_timeout_auto', { timedOutRoles });
+    }
+
+    if (room.choices.P1 !== null && room.choices.P2 !== null) {
+      resolveTurn(room);
+    }
+  }, (TURN_TIME_LIMIT_SEC * 1000) + 400);
 }
 
 function getTurnRoles(turnIndex) {
@@ -131,14 +181,9 @@ io.on('connection', (socket) => {
     // o si alguien entra explícitamente por enlace a una sala cuyo partido ya había terminado
     const existingP1Before = room.players.find(p => p.role === 'P1');
     const existingP2Before = room.players.find(p => p.role === 'P2');
-    const isKnownClient = Boolean(
-      clientId && (
-        (existingP1Before && existingP1Before.clientId === clientId) ||
-        (existingP2Before && existingP2Before.clientId === clientId)
-      )
-    );
+    const bothConnected = Boolean(existingP1Before && existingP1Before.connected && existingP2Before && existingP2Before.connected);
 
-    if (room.state === 'game_over' && !isAutoReconnect) {
+    if (room.state === 'game_over' && !isAutoReconnect && !bothConnected) {
       room.state = 'waiting';
       room.rematchVotes.clear();
     }
@@ -190,8 +235,22 @@ io.on('connection', (socket) => {
       existingP2.name = (playerName && playerName.trim()) || 'Jugador 2';
       existingP2.connected = true;
     } else {
+      // 6. Modo "Rey de la Pista": ambos puestos están ocupados -> entra como retador en cola y espectador en directo
       playerRole = 'spectator';
-      room.spectators.push({ id: socket.id, name: playerName || 'Espectador' });
+      const challengerName = (playerName && playerName.trim()) || `Retador ${room.challengerQueue.length + 1}`;
+      const existingChallenger = room.challengerQueue.find(c => (clientId && c.clientId === clientId) || c.id === socket.id);
+      if (existingChallenger) {
+        existingChallenger.id = socket.id;
+        existingChallenger.name = challengerName;
+        existingChallenger.connected = true;
+      } else {
+        room.challengerQueue.push({
+          id: socket.id,
+          clientId: clientId || socket.id,
+          name: challengerName,
+          connected: true
+        });
+      }
     }
 
     socket.join(cleanRoomId);
@@ -211,8 +270,8 @@ io.on('connection', (socket) => {
       if (room.state === 'waiting' || isReplacedPlayer) {
         // Ambos jugadores ya están registrados en la sala: iniciar partida
         startNewGame(room);
-      } else if (isReconnectingSamePlayer && (room.state === 'playing' || room.state === 'resolving')) {
-        // El jugador acaba de volver (p. ej. de compartir por WhatsApp) y la partida ya está en marcha: sincronizar su pantalla
+      } else if ((isReconnectingSamePlayer || playerRole === 'spectator') && (room.state === 'playing' || room.state === 'resolving')) {
+        // Sincronizar pantalla para el jugador reconectado o el nuevo retador en cola ("Rey de la Pista")
         const { shooterRole, keeperRole } = getTurnRoles(room.turnIndex);
         socket.emit('game_started', {
           turnIndex: room.turnIndex,
@@ -221,6 +280,7 @@ io.on('connection', (socket) => {
           isSuddenDeath: room.isSuddenDeath,
           suddenDeathRound: room.suddenDeathRound,
           penaltiesPerPlayer: room.penaltiesPerPlayer,
+          turnTimeLimit: TURN_TIME_LIMIT_SEC,
           roomState: sanitizeRoomForClient(room)
         });
         if (room.choices.P1 !== null) {
@@ -230,7 +290,6 @@ io.on('connection', (socket) => {
           socket.emit('choice_confirmed', { role: 'P2' });
         }
       } else if (isReconnectingSamePlayer && room.state === 'game_over') {
-        // Si reconectó durante la pantalla de fin de partido, reenviar estado de revancha
         if (room.rematchVotes.size > 0) {
           socket.emit('rematch_status', {
             votes: Array.from(room.rematchVotes)
@@ -241,16 +300,20 @@ io.on('connection', (socket) => {
   });
 
   socket.on('submit_choice', ({ row, col }) => {
-    if (!currentRoomId || !playerRole || playerRole === 'spectator') return;
+    if (!currentRoomId) return;
     const room = rooms.get(currentRoomId);
     if (!room || room.state !== 'playing') return;
 
+    const activePlayer = room.players.find(p => p.id === socket.id);
+    const activeRole = activePlayer ? activePlayer.role : playerRole;
+    if (!activeRole || activeRole === 'spectator') return;
+
     if (row < 0 || row > 1 || col < 0 || col > 2) return;
 
-    room.choices[playerRole] = { row, col };
+    room.choices[activeRole] = { row, col };
 
     io.to(currentRoomId).emit('choice_confirmed', {
-      role: playerRole
+      role: activeRole
     });
 
     // Si el oponente es un BOT en un partido de torneo, responder automáticamente
@@ -278,12 +341,82 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('send_emote', ({ emoji, text }) => {
+    if (!currentRoomId) return;
+    const room = rooms.get(currentRoomId);
+    if (!room) return;
+
+    const activePlayer = room.players.find(p => p.id === socket.id);
+    const queuedChallenger = room.challengerQueue.find(c => c.id === socket.id);
+    const senderRole = activePlayer ? activePlayer.role : (queuedChallenger ? 'spectator' : playerRole);
+    const senderName = activePlayer ? activePlayer.name : (queuedChallenger ? queuedChallenger.name : 'Aficionado');
+
+    io.to(currentRoomId).emit('emote_received', {
+      role: senderRole || 'spectator',
+      playerName: senderName,
+      emoji: String(emoji || '⚽').slice(0, 8),
+      text: String(text || '').slice(0, 48)
+    });
+  });
+
   socket.on('request_rematch', () => {
-    if (!currentRoomId || !playerRole || playerRole === 'spectator') return;
+    if (!currentRoomId) return;
     const room = rooms.get(currentRoomId);
     if (!room || room.state !== 'game_over') return;
 
-    room.rematchVotes.add(playerRole);
+    const activePlayer = room.players.find(p => p.id === socket.id);
+    const activeRole = activePlayer ? activePlayer.role : playerRole;
+    if (!activeRole || activeRole === 'spectator') return;
+
+    // Filtrar retadores conectados en la cola de "Rey de la Pista"
+    room.challengerQueue = (room.challengerQueue || []).filter(c => c.connected !== false);
+
+    if (room.challengerQueue.length > 0 && !room.tournamentContext) {
+      // MODO REY DE LA PISTA: El ganador defiende el trono y entra el primer retador de la cola
+      const nextChallenger = room.challengerQueue.shift();
+      const winnerRole = room.lastWinnerRole || 'P1';
+      const loserRole = (winnerRole === 'P1') ? 'P2' : 'P1';
+      const loserIdx = room.players.findIndex(p => p.role === loserRole);
+
+      if (loserIdx !== -1) {
+        const previousLoser = room.players[loserIdx];
+        if (previousLoser && previousLoser.connected && !previousLoser.isBot) {
+          room.challengerQueue.push({
+            id: previousLoser.id,
+            clientId: previousLoser.clientId,
+            name: previousLoser.name,
+            connected: true
+          });
+        }
+        room.players[loserIdx] = {
+          id: nextChallenger.id,
+          clientId: nextChallenger.clientId,
+          role: loserRole,
+          name: nextChallenger.name,
+          connected: true,
+          isBot: false
+        };
+      }
+
+      // Reiniciar el H2H parcial de la tanda pero mantener el historial h2hWins y kingStreak
+      room.seriesWins = { P1: 0, P2: 0 };
+
+      const p1Obj = room.players.find(p => p.role === 'P1');
+      const p2Obj = room.players.find(p => p.role === 'P2');
+
+      io.to(currentRoomId).emit('role_swapped', {
+        p1ClientId: p1Obj ? p1Obj.clientId : null,
+        p2ClientId: p2Obj ? p2Obj.clientId : null,
+        kingRole: winnerRole,
+        newChallengerName: nextChallenger.name,
+        roomState: sanitizeRoomForClient(room)
+      });
+
+      startNewGame(room);
+      return;
+    }
+
+    room.rematchVotes.add(activeRole);
     io.to(currentRoomId).emit('rematch_status', {
       votes: Array.from(room.rematchVotes)
     });
@@ -464,6 +597,17 @@ io.on('connection', (socket) => {
             roomState: sanitizeRoomForClient(room)
           });
         }
+        if (room.challengerQueue) {
+          const c = room.challengerQueue.find(ch => ch.id === socket.id);
+          if (c) {
+            c.connected = false;
+            room.challengerQueue = room.challengerQueue.filter(ch => ch.connected !== false);
+            io.to(currentRoomId).emit('room_update', sanitizeRoomForClient(room));
+          }
+        }
+        if (!room.players.some(pl => pl.connected && !pl.isBot)) {
+          clearTurnTimer(room);
+        }
       }
     }
 
@@ -489,6 +633,8 @@ function startNewGame(room) {
   room.choices = { P1: null, P2: null };
   room.rematchVotes.clear();
 
+  scheduleTurnTimer(room);
+
   const { shooterRole, keeperRole } = getTurnRoles(room.turnIndex);
 
   io.to(room.id).emit('game_started', {
@@ -498,11 +644,13 @@ function startNewGame(room) {
     isSuddenDeath: room.isSuddenDeath,
     suddenDeathRound: room.suddenDeathRound,
     penaltiesPerPlayer: room.penaltiesPerPlayer,
+    turnTimeLimit: TURN_TIME_LIMIT_SEC,
     roomState: sanitizeRoomForClient(room)
   });
 }
 
 function resolveTurn(room) {
+  clearTurnTimer(room);
   room.state = 'resolving';
 
   const { shooterRole, keeperRole } = getTurnRoles(room.turnIndex);
@@ -571,6 +719,21 @@ function resolveTurn(room) {
     }
   }
 
+  if (gameOver && winner) {
+    room.lastWinnerRole = winner;
+    room.seriesWins[winner] = (room.seriesWins[winner] || 0) + 1;
+    const winnerPlayer = room.players.find(p => p.role === winner);
+    if (winnerPlayer && winnerPlayer.name) {
+      room.h2hWins[winnerPlayer.name] = (room.h2hWins[winnerPlayer.name] || 0) + 1;
+    }
+    if (room.kingRole === winner) {
+      room.kingStreak = (room.kingStreak || 1) + 1;
+    } else {
+      room.kingRole = winner;
+      room.kingStreak = 1;
+    }
+  }
+
   io.to(room.id).emit('turn_resolved', {
     turnIndex: room.turnIndex,
     shooterRole,
@@ -589,7 +752,8 @@ function resolveTurn(room) {
     nextIsSuddenDeath,
     nextSuddenDeathRound,
     nextTurnIndex,
-    penaltiesPerPlayer: room.penaltiesPerPlayer
+    penaltiesPerPlayer: room.penaltiesPerPlayer,
+    roomState: sanitizeRoomForClient(room)
   });
 
   room.choices = { P1: null, P2: null };
@@ -633,6 +797,7 @@ function resolveTurn(room) {
     setTimeout(() => {
       if (room.state === 'resolving') {
         room.state = 'playing';
+        scheduleTurnTimer(room);
         const nextRoles = getTurnRoles(room.turnIndex);
         io.to(room.id).emit('next_turn_ready', {
           turnIndex: room.turnIndex,
@@ -641,6 +806,7 @@ function resolveTurn(room) {
           isSuddenDeath: room.isSuddenDeath,
           suddenDeathRound: room.suddenDeathRound,
           penaltiesPerPlayer: room.penaltiesPerPlayer,
+          turnTimeLimit: TURN_TIME_LIMIT_SEC,
           roomState: sanitizeRoomForClient(room)
         });
       }
@@ -653,6 +819,7 @@ function resetGameForRematch(room) {
 }
 
 function sanitizeRoomForClient(room) {
+  const kingPlayer = room.kingRole ? room.players.find(p => p.role === room.kingRole) : null;
   return {
     id: room.id,
     players: room.players.map(p => ({
@@ -661,6 +828,15 @@ function sanitizeRoomForClient(room) {
       connected: p.connected,
       isBot: p.isBot
     })),
+    challengerQueue: (room.challengerQueue || [])
+      .filter(c => c.connected !== false)
+      .map(c => ({ name: c.name, clientId: c.clientId })),
+    seriesWins: room.seriesWins || { P1: 0, P2: 0 },
+    h2hWins: room.h2hWins || {},
+    kingRole: room.kingRole || null,
+    kingName: kingPlayer ? kingPlayer.name : null,
+    kingStreak: room.kingStreak || 0,
+    turnTimeLimit: TURN_TIME_LIMIT_SEC,
     state: room.state,
     penaltiesPerPlayer: room.penaltiesPerPlayer,
     turnIndex: room.turnIndex,

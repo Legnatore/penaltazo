@@ -33,13 +33,13 @@ class PenaltyAnimator {
       this.ballShadow.style.opacity = '0.6';
     }
 
-    // Restablecer portero al centro de la línea de gol
+    // Restablecer portero al centro de la línea de gol (de pie en la zona baja central)
     if (this.goalkeeper) {
       this.goalkeeper.style.transition = 'none';
-      this.goalkeeper.style.transform = 'translate(-50%, -50%) scale(1)';
+      this.goalkeeper.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
       this.goalkeeper.style.left = '50%';
-      this.goalkeeper.style.top = '48%';
-      this.goalkeeper.classList.remove('diving-left', 'diving-right', 'diving-top', 'diving-bottom', 'saving', 'missed');
+      this.goalkeeper.style.top = '72%';
+      this.goalkeeper.classList.remove('diving', 'jumping', 'diving-left', 'diving-right', 'diving-top', 'diving-bottom', 'saving', 'missed');
     }
 
     if (this.impactOverlay) {
@@ -95,8 +95,12 @@ class PenaltyAnimator {
       }
     }
 
-    const targetKeeperX = ((keeperCellRect.left + keeperCellRect.width / 2 - arenaRect.left) / arenaRect.width) * 100;
-    const targetKeeperY = ((keeperCellRect.top + keeperCellRect.height / 2 - arenaRect.top) / arenaRect.height) * 100;
+    const goalStructEl = this.goalkeeper ? this.goalkeeper.parentElement : this.arena;
+    const goalStructRect = goalStructEl.getBoundingClientRect();
+
+    // Coordenadas exactas del centro de la casilla del portero relativas a su contenedor (.goal-structure)
+    const targetKeeperX = ((keeperCellRect.left + keeperCellRect.width / 2 - goalStructRect.left) / goalStructRect.width) * 100;
+    const targetKeeperY = ((keeperCellRect.top + keeperCellRect.height / 2 - goalStructRect.top) / goalStructRect.height) * 100;
 
     // 2. Comienza la carrera y el Chut
     if (window.soundEngine) {
@@ -122,19 +126,29 @@ class PenaltyAnimator {
       this.ballShadow.style.opacity = '0.2';
     }
 
-    // Portero se lanza hacia la casilla que eligió
-    const keeperDuration = 780; // el portero reacciona décimas de segundo
+    // Portero se lanza claramente hacia la casilla exacta que eligió
+    const keeperDuration = 720;
     this.goalkeeper.style.transition = `left ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1), top ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`;
     this.goalkeeper.style.left = `${targetKeeperX}%`;
     this.goalkeeper.style.top = `${targetKeeperY}%`;
 
-    // Rotación del portero según dirección
+    // Postura y rotación del portero según la casilla elegida
     let diveAngle = 0;
-    if (keeperChoice.col === 0) diveAngle = -28;
-    else if (keeperChoice.col === 2) diveAngle = 28;
-    if (keeperChoice.row === 1) diveAngle *= 0.6; // estirada a ras de suelo
+    if (keeperChoice.col === 0) {
+      // Estirada a la izquierda (escuadra o raso)
+      diveAngle = keeperChoice.row === 0 ? -62 : -76;
+      this.goalkeeper.classList.add('diving');
+    } else if (keeperChoice.col === 2) {
+      // Estirada a la derecha (escuadra o raso)
+      diveAngle = keeperChoice.row === 0 ? 62 : 76;
+      this.goalkeeper.classList.add('diving');
+    } else if (keeperChoice.row === 0 && keeperChoice.col === 1) {
+      // Salto arriba al centro con brazos arriba
+      diveAngle = 0;
+      this.goalkeeper.classList.add('jumping');
+    }
 
-    this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.9) rotate(${diveAngle}deg)`;
+    this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.95) rotate(${diveAngle}deg)`;
 
     // Esperar a que el balón y portero lleguen a su destino
     await this.wait(flightDuration - 20);

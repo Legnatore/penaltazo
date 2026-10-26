@@ -769,6 +769,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- RELOJ DE POSESIÓN / TIEMPO LÍMITE DE TURNO (12 SEGUNDOS) ---
   let clientTurnInterval = null;
   let clientSecondsLeft = 12;
+  const turnTimerBarTrack = document.getElementById('turn-timer-bar-track');
+  const turnTimerBarFill = document.getElementById('turn-timer-bar-fill');
+
+  function updateTurnTimerBarState(secondsLeft, limitSeconds = 12) {
+    if (!turnTimerBarFill) return;
+    turnTimerBarFill.classList.remove('bar-ok', 'bar-warn', 'bar-danger');
+    if (secondsLeft <= 4) {
+      turnTimerBarFill.classList.add('bar-danger');
+    } else if (secondsLeft <= 7) {
+      turnTimerBarFill.classList.add('bar-warn');
+    } else {
+      turnTimerBarFill.classList.add('bar-ok');
+    }
+    if (turnTimerBarTrack) {
+      turnTimerBarTrack.setAttribute('aria-valuemax', String(limitSeconds));
+      turnTimerBarTrack.setAttribute('aria-valuenow', String(Math.max(0, secondsLeft)));
+    }
+  }
 
   function stopClientTurnTimer() {
     if (clientTurnInterval) {
@@ -778,12 +796,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (turnTimerBadge) {
       turnTimerBadge.classList.remove('timer-urgent');
     }
+    if (turnTimerBarFill && turnTimerBarTrack) {
+      // Congelar la barra exactamente en el ancho actual cuando se resuelve el turno
+      const trackWidth = turnTimerBarTrack.getBoundingClientRect().width;
+      const fillWidth = turnTimerBarFill.getBoundingClientRect().width;
+      const currentPct = trackWidth > 0 ? Math.max(0, Math.min(100, (fillWidth / trackWidth) * 100)) : 0;
+      turnTimerBarFill.style.transition = 'none';
+      turnTimerBarFill.style.width = `${currentPct.toFixed(1)}%`;
+      turnTimerBarFill.classList.remove('bar-danger');
+    }
   }
 
   function startClientTurnTimer(limitSeconds = 12) {
     stopClientTurnTimer();
     clientSecondsLeft = limitSeconds;
     if (turnTimerSecondsEl) turnTimerSecondsEl.textContent = String(clientSecondsLeft);
+
+    if (turnTimerBarFill) {
+      // Reiniciar al 100% instantáneamente y arrancar la transición lineal hacia el siguiente segundo
+      turnTimerBarFill.style.transition = 'none';
+      turnTimerBarFill.style.width = '100%';
+      updateTurnTimerBarState(clientSecondsLeft, limitSeconds);
+      void turnTimerBarFill.offsetWidth; // Forzar reflow para aplicar el 100% inicial
+      turnTimerBarFill.style.transition = 'width 1s linear, background 0.25s ease';
+      const nextPct = Math.max(0, ((clientSecondsLeft - 1) / limitSeconds) * 100);
+      turnTimerBarFill.style.width = `${nextPct.toFixed(2)}%`;
+    }
 
     clientTurnInterval = setInterval(() => {
       if (isResolvingTurn) {
@@ -792,6 +830,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       clientSecondsLeft = Math.max(0, clientSecondsLeft - 1);
       if (turnTimerSecondsEl) turnTimerSecondsEl.textContent = String(clientSecondsLeft);
+      updateTurnTimerBarState(clientSecondsLeft, limitSeconds);
+
+      if (turnTimerBarFill) {
+        // Animar hacia el siguiente segundo para que el vaciado sea 100% continuo
+        const targetAfterNextSec = Math.max(0, ((clientSecondsLeft - 1) / limitSeconds) * 100);
+        turnTimerBarFill.style.width = clientSecondsLeft <= 0 ? '0%' : `${targetAfterNextSec.toFixed(2)}%`;
+      }
 
       if (clientSecondsLeft <= 4 && clientSecondsLeft > 0) {
         if (turnTimerBadge) turnTimerBadge.classList.add('timer-urgent');
@@ -801,6 +846,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (clientSecondsLeft <= 0) {
+        if (turnTimerBarFill) {
+          turnTimerBarFill.style.transition = 'none';
+          turnTimerBarFill.style.width = '0%';
+        }
         stopClientTurnTimer();
         // Si estamos en modo IA y no hemos elegido en 12 segundos, disparar/tirarse al azar
         if (network.mode === 'ai' && !hasConfirmedChoice && !isResolvingTurn) {

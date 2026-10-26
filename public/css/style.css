@@ -4679,6 +4679,58 @@ body[data-theme="claro"] .footer-sep {
   text-decoration: underline;
 }
 
+/* =========================================================
+   9. BOTÓN DE APOYO KO-FI ("INVÍTAME A UN CAFÉ")
+   ========================================================= */
+.footer-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.kofi-support-row {
+  margin-top: 0.95rem;
+  padding-top: 0.75rem;
+  border-top: 2px dashed rgba(148, 163, 184, 0.35);
+  display: flex;
+  justify-content: center;
+}
+
+.kofi-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #ff5e5b 0%, #f97316 100%);
+  color: #ffffff !important;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+  padding: 0.36rem 0.9rem;
+  border-radius: 999px;
+  border: 2px solid #0f172a;
+  box-shadow: 0 3px 0 #0f172a;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.kofi-pill-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 #0f172a;
+  filter: brightness(1.06);
+}
+
+.kofi-pill-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #0f172a;
+}
+
+.kofi-footer-btn {
+  font-size: 0.76rem;
+  padding: 0.28rem 0.78rem;
+}
+
+
 
 
 

@@ -1695,78 +1695,6 @@ body {
 }
 
 /* =========================================================
-   RESPONSIVE DESIGN (MÓVILES Y PANTALLAS PEQUEÑAS)
-   ========================================================= */
-@media (max-width: 640px) {
-  .app-header {
-    padding: 0 1rem;
-    height: 56px;
-  }
-
-  .header-logo {
-    font-size: 1.7rem;
-  }
-
-  .game-screen {
-    padding: 0.5rem 0.6rem 1rem 0.6rem;
-    gap: 0.6rem;
-  }
-
-  .scoreboard-bar {
-    padding: 0.6rem 0.8rem;
-    gap: 0.4rem;
-  }
-
-  .team-name {
-    font-size: 0.88rem;
-    max-width: 85px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .team-score {
-    font-size: 2.2rem;
-  }
-
-  .penalty-dot {
-    width: 18px;
-    height: 18px;
-    font-size: 0.65rem;
-  }
-
-  .instruction-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.6rem 0.8rem;
-    gap: 0.5rem;
-  }
-
-  .status-indicators {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .stadium-arena {
-    height: clamp(320px, 46vh, 400px);
-  }
-
-  .goal-structure {
-    width: 95%;
-  }
-
-  .cell-label {
-    font-size: 0.65rem;
-  }
-
-  .btn-confirm {
-    width: 100%;
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
-  }
-}
-
-
-/* =========================================================
    ESTILOS DEL SISTEMA DE TORNEOS ELIMINATORIOS
    ========================================================= */
 
@@ -2434,3 +2362,545 @@ body {
   font-size: 1.05rem;
   color: #0f172a;
 }
+
+/* =========================================================
+   DISEÑO RESPONSIVE INTEGRAL (TABLETS, MÓVILES Y HORIZONTAL)
+   ========================================================= */
+
+/* 1. Tablets y pantallas medianas (<= 900px) */
+@media (max-width: 900px) {
+  .app-container {
+    max-width: 100%;
+  }
+
+  .lobby-screen,
+  .waiting-screen,
+  .tournament-lobby-screen {
+    padding: 1.2rem 0.8rem;
+  }
+
+  .tourney-lobby-card {
+    padding: 1.8rem 1.4rem;
+  }
+
+  .bracket-scroll-container {
+    padding: 1rem 0.6rem;
+    min-height: 420px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bracket-round-col {
+    width: 240px;
+  }
+}
+
+/* 2. Móviles en vertical y pantallas pequeñas (<= 640px) */
+@media (max-width: 640px) {
+  body {
+    min-height: 100dvh;
+  }
+
+  /* Encabezado compacto */
+  .app-header {
+    padding: 0 0.85rem;
+    height: 54px;
+    border-bottom-width: 3px;
+  }
+
+  .header-logo {
+    font-size: 1.65rem;
+    gap: 0.4rem;
+  }
+
+  .logo-ball {
+    font-size: 1.4rem;
+  }
+
+  .header-room-badge {
+    font-size: 0.76rem;
+    padding: 0.25rem 0.65rem;
+  }
+
+  .icon-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+    box-shadow: 0 3px 0 #0f172a;
+  }
+
+  /* Pantallas de Lobby, Espera, Torneo y Modales */
+  .lobby-screen,
+  .waiting-screen,
+  .tournament-lobby-screen {
+    padding: 0.85rem 0.65rem 1.5rem;
+    justify-content: flex-start;
+  }
+
+  .lobby-card,
+  .waiting-card,
+  .tourney-lobby-card,
+  .modal-card {
+    padding: 1.35rem 1.05rem;
+    border-radius: 20px;
+    border-width: 3px;
+  }
+
+  .lobby-hero {
+    padding: 0.9rem 0.75rem;
+    margin-bottom: 1.2rem;
+    border-radius: 16px;
+  }
+
+  .hero-icons {
+    font-size: 2rem;
+    letter-spacing: 0.25rem;
+  }
+
+  .lobby-hero h1 {
+    font-size: 2.7rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.84rem;
+  }
+
+  .input-group {
+    margin-bottom: 1.1rem;
+  }
+
+  .input-group label {
+    font-size: 0.88rem;
+  }
+
+  .input-group input,
+  .join-box input {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.96rem;
+    border-width: 2.5px;
+  }
+
+  /* Selector de penaltis / tamaño de torneo */
+  .size-selector-grid {
+    gap: 0.45rem;
+  }
+
+  .size-card {
+    padding: 0.6rem 0.25rem;
+    border-radius: 12px;
+    border-width: 2.5px;
+  }
+
+  .size-num {
+    font-size: 1.75rem;
+  }
+
+  .size-label {
+    font-size: 0.68rem;
+    text-align: center;
+  }
+
+  .size-desc {
+    font-size: 0.62rem;
+    text-align: center;
+  }
+
+  /* Botones adaptados a móvil */
+  .btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  .btn-large {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.96rem;
+  }
+
+  .btn-confirm {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+  }
+
+  .rules-card {
+    margin-top: 1.3rem;
+    padding: 0.95rem;
+    font-size: 0.82rem;
+  }
+
+  /* Sala de espera 1v1 y Torneo */
+  .waiting-header h2,
+  .tourney-lobby-header h2 {
+    font-size: 2.3rem;
+  }
+
+  .code-value {
+    font-size: 2.5rem;
+  }
+
+  .tourney-meta-row {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .meta-box {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .meta-value {
+    font-size: 1.7rem;
+  }
+
+  .participants-grid {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    max-height: 220px;
+  }
+
+  /* Cuadro del Torneo (Bracket) */
+  .tournament-bracket-screen {
+    padding: 0.65rem 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .bracket-top-bar {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 16px;
+    border-width: 3px;
+  }
+
+  .bracket-info {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .bracket-info h2 {
+    font-size: 1.65rem;
+  }
+
+  .stage-badge {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.65rem;
+  }
+
+  .tourney-match-alert {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .tourney-match-alert .btn {
+    width: 100%;
+  }
+
+  .bracket-scroll-container {
+    min-height: 360px;
+    padding: 0.85rem 0.5rem;
+    border-radius: 18px;
+    border-width: 3px;
+  }
+
+  .bracket-tree {
+    gap: 1.2rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .bracket-round-col {
+    width: 225px;
+  }
+
+  /* Pantalla de Partido (Game Screen) optimizada para caber sin scroll */
+  .game-screen {
+    padding: 0.45rem 0.55rem 0.75rem;
+    gap: 0.45rem;
+  }
+
+  .scoreboard-bar {
+    padding: 0.5rem 0.65rem;
+    gap: 0.35rem;
+    border-radius: 16px;
+    border-width: 3px;
+    box-shadow: 0 4px 0 #0f172a, 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .team-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+
+  .team-p2 .team-header {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .team-name {
+    font-size: 0.84rem;
+    max-width: 105px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role-badge {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.45rem;
+    border-width: 1.5px;
+  }
+
+  .team-score {
+    font-size: 2rem;
+    padding: 0.05rem 0.55rem 0;
+    border-radius: 8px;
+  }
+
+  .penalty-dots-row {
+    gap: 0.25rem;
+  }
+
+  .penalty-dot {
+    width: 18px;
+    height: 18px;
+    font-size: 0.62rem;
+    border-width: 1.5px;
+  }
+
+  .round-center-panel {
+    padding: 0 0.25rem;
+  }
+
+  .round-info-text {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.45rem;
+    letter-spacing: 0.3px;
+  }
+
+  .vs-badge {
+    font-size: 1.35rem;
+  }
+
+  .sudden-death-banner {
+    font-size: 0.64rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  /* Barra de instrucciones compacta */
+  .instruction-banner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5rem 0.7rem;
+    gap: 0.35rem;
+    border-radius: 13px;
+    border-width: 2.5px;
+  }
+
+  .role-title {
+    font-size: 0.94rem;
+  }
+
+  .role-desc {
+    font-size: 0.75rem;
+    margin-top: 0.05rem;
+  }
+
+  .status-indicators {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 0.28rem 0.55rem;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Estadio y Portería proporcionales a pantallas móviles */
+  .stadium-arena {
+    height: clamp(275px, 44vh, 370px);
+    height: clamp(275px, 44dvh, 370px);
+    border-radius: 18px;
+    border-width: 3px;
+    box-shadow: 0 6px 0 #0f172a, 0 12px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .goal-structure {
+    top: 11%;
+    width: 94%;
+    height: clamp(160px, 26vh, 210px);
+    height: clamp(160px, 26dvh, 210px);
+  }
+
+  .goal-crossbar {
+    height: 11px;
+    left: -7px;
+    right: -7px;
+  }
+
+  .goal-post {
+    width: 11px;
+  }
+
+  .post-left { left: -7px; }
+  .post-right { right: -7px; }
+
+  .goal-grid {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .cell-label {
+    font-size: 0.64rem;
+  }
+
+  .cell-marker {
+    width: 22px;
+    height: 22px;
+    font-size: 1.1rem;
+  }
+
+  /* Escalar portero y balón proporcionalmente en móvil sin alterar sus coordenadas % */
+  .keeper-body {
+    transform: scale(0.8);
+    transform-origin: center center;
+  }
+
+  .ball-graphic {
+    font-size: 1.85rem;
+  }
+
+  .penalty-arc {
+    width: 100px;
+    height: 56px;
+  }
+
+  .penalty-spot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .selected-zone-label {
+    font-size: 0.78rem;
+    padding: 0.45rem 0.85rem;
+    text-align: center;
+    width: 100%;
+    border-radius: 12px;
+    border-width: 2.5px;
+  }
+
+  /* Modales de Fin de Partida y Campeón */
+  .modal-overlay {
+    padding: 0.85rem;
+  }
+
+  .game-over-title,
+  .champ-title {
+    font-size: 2.4rem;
+  }
+
+  .final-score-box {
+    gap: 1rem;
+    padding: 0.9rem;
+  }
+
+  .score-team .team-score {
+    font-size: 2.6rem;
+  }
+
+  .toast {
+    width: 92%;
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+  }
+}
+
+/* 3. Móviles muy estrechos (<= 400px) */
+@media (max-width: 400px) {
+  .join-box,
+  .link-copy-row {
+    flex-direction: column;
+  }
+
+  .join-box .btn,
+  .link-copy-row .btn {
+    width: 100%;
+  }
+
+  .podium-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .participants-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-name {
+    max-width: 82px;
+    font-size: 0.78rem;
+  }
+
+  .keeper-body {
+    transform: scale(0.72);
+  }
+}
+
+/* 4. Modo Horizontal (Landscape) en móviles y pantallas bajas */
+@media (max-height: 680px) and (orientation: landscape) {
+  .app-header {
+    height: 46px;
+    padding: 0 1rem;
+  }
+
+  .header-logo {
+    font-size: 1.5rem;
+  }
+
+  .game-screen {
+    padding: 0.35rem 0.8rem 0.5rem;
+    gap: 0.35rem;
+  }
+
+  .scoreboard-bar {
+    padding: 0.35rem 0.85rem;
+  }
+
+  .team-score {
+    font-size: 1.9rem;
+  }
+
+  .instruction-banner {
+    flex-direction: row;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+  }
+
+  .role-desc {
+    display: none;
+  }
+
+  .stadium-arena {
+    height: clamp(220px, 54dvh, 320px);
+  }
+
+  .goal-structure {
+    top: 10%;
+    height: clamp(135px, 35dvh, 195px);
+    width: min(85%, 520px);
+  }
+
+  .keeper-body {
+    transform: scale(0.75);
+  }
+
+  .selected-zone-label {
+    padding: 0.3rem 1rem;
+    font-size: 0.78rem;
+  }
+}
+

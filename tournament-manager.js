@@ -92,23 +92,49 @@ class TournamentManager {
     const tournament = this.tournaments.get(tournamentId);
     if (!tournament) return { success: false, error: 'Torneo no encontrado' };
 
-    if (tournament.status !== 'lobby') {
-      return { success: false, error: 'El torneo ya ha comenzado' };
+    const cleanName = (playerName || '').trim();
+
+    // Comprobar si ya estaba dentro por socketId o por nombre (permite reconectar aunque el torneo ya esté en marcha)
+    const existing = tournament.participants.find(p =>
+      !p.isBot && (p.socketId === socketId || (cleanName && p.name.toLowerCase() === cleanName.toLowerCase()))
+    );
+    if (existing) {
+      const oldId = existing.id;
+      existing.id = socketId;
+      existing.socketId = socketId;
+      if (cleanName) existing.name = cleanName;
+      existing.connected = true;
+
+      // Actualizar también las referencias dentro del cuadro (bracket) si el torneo ya ha empezado
+      if (tournament.bracket) {
+        for (const round of tournament.bracket) {
+          for (const match of round.matches) {
+            if (match.p1 && (match.p1.id === oldId || match.p1.name.toLowerCase() === existing.name.toLowerCase())) {
+              match.p1.id = socketId;
+              match.p1.socketId = socketId;
+              match.p1.connected = true;
+            }
+            if (match.p2 && (match.p2.id === oldId || match.p2.name.toLowerCase() === existing.name.toLowerCase())) {
+              match.p2.id = socketId;
+              match.p2.socketId = socketId;
+              match.p2.connected = true;
+            }
+          }
+        }
+      }
+
+      return { success: true, tournament, isRejoin: true };
     }
 
-    // Comprobar si ya estaba dentro
-    const existing = tournament.participants.find(p => p.socketId === socketId);
-    if (existing) {
-      existing.name = playerName || existing.name;
-      existing.connected = true;
-      return { success: true, tournament, isRejoin: true };
+    if (tournament.status !== 'lobby') {
+      return { success: false, error: 'El torneo ya ha comenzado y no quedan plazas para nuevos jugadores' };
     }
 
     if (tournament.participants.length >= tournament.size) {
       return { success: false, error: 'El torneo ya está completo' };
     }
 
-    const name = (playerName && playerName.trim()) || `Jugador ${tournament.participants.length + 1}`;
+    const name = cleanName || `Jugador ${tournament.participants.length + 1}`;
     tournament.participants.push({
       id: socketId,
       socketId,

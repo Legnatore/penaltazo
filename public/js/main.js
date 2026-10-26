@@ -128,13 +128,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
   const tournamentParam = urlParams.get('tournament');
+  const directInviteBanner = document.getElementById('direct-invite-banner');
+  const inviteBadgeTitle = document.getElementById('invite-badge-title');
+  const inviteBadgeDesc = document.getElementById('invite-badge-desc');
+  const directJoinBtn = document.getElementById('direct-join-btn');
+  const lobbyFormatGroup = document.getElementById('lobby-format-group');
+
+  // Guardar/recuperar el apodo del jugador en este navegador
+  const savedPlayerName = localStorage.getItem('penaltazo_player_name');
+  if (savedPlayerName) {
+    playerNameInput.value = savedPlayerName;
+  }
 
   if (tournamentParam) {
-    joinRoomInput.value = tournamentParam.toUpperCase();
-    showToast(`Torneo detectado: ${tournamentParam.toUpperCase()}. Introduce tu apodo y únete.`);
+    const cleanCode = tournamentParam.toUpperCase();
+    joinRoomInput.value = cleanCode;
+    if (directInviteBanner) {
+      directInviteBanner.classList.remove('hidden');
+      if (lobbyFormatGroup) lobbyFormatGroup.classList.add('hidden');
+      inviteBadgeTitle.textContent = `🏆 TORNEO: ${cleanCode}`;
+      inviteBadgeDesc.textContent = 'Pon tu nombre arriba y pulsa para entrar al torneo:';
+      directJoinBtn.textContent = `⚡ ¡ENTRAR AL TORNEO ${cleanCode}!`;
+      directJoinBtn.onclick = () => {
+        const name = playerNameInput.value.trim() || 'Jugador';
+        localStorage.setItem('penaltazo_player_name', name);
+        isInTournament = true;
+        network.joinTournament(cleanCode, name);
+      };
+    }
+    // Si ya había entrado antes a este mismo torneo y ha recargado la página, reconectar automáticamente
+    const lastTourney = sessionStorage.getItem('penaltazo_active_tournament');
+    if (lastTourney === cleanCode && savedPlayerName) {
+      isInTournament = true;
+      network.joinTournament(cleanCode, savedPlayerName);
+    }
   } else if (roomParam) {
-    joinRoomInput.value = roomParam.toUpperCase();
-    showToast(`Sala 1v1 detectada: ${roomParam.toUpperCase()}. Introduce tu apodo y únete.`);
+    const cleanCode = roomParam.toUpperCase();
+    joinRoomInput.value = cleanCode;
+    if (directInviteBanner) {
+      directInviteBanner.classList.remove('hidden');
+      if (lobbyFormatGroup) lobbyFormatGroup.classList.add('hidden');
+      inviteBadgeTitle.textContent = `⚽ DUELO 1 vs 1: SALA ${cleanCode}`;
+      inviteBadgeDesc.textContent = 'Pon tu nombre arriba y pulsa para entrar a la partida:';
+      directJoinBtn.textContent = `⚡ ¡ENTRAR A LA SALA ${cleanCode}!`;
+      directJoinBtn.onclick = () => {
+        const name = playerNameInput.value.trim() || 'Jugador 2';
+        localStorage.setItem('penaltazo_player_name', name);
+        isInTournament = false;
+        network.initMultiplayer();
+        network.joinRoom(cleanCode, name, getSelectedLobbyPenalties());
+      };
+    }
   }
 
   // --- GESTIÓN DE PANTALLAS ---
@@ -204,10 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const name = playerNameInput.value.trim() || 'Jugador';
+    localStorage.setItem('penaltazo_player_name', name);
 
     if (code.startsWith('COPA-')) {
       // Unirse a un torneo
       isInTournament = true;
+      sessionStorage.setItem('penaltazo_active_tournament', code);
       network.joinTournament(code, name);
     } else {
       // Unirse a una sala 1v1
@@ -294,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isInTournament = true;
     activeTournament = tournament;
     myUserId = myId;
+    sessionStorage.setItem('penaltazo_active_tournament', tournament.id);
 
     headerRoomBadge.textContent = `Torneo: ${tournament.id}`;
     headerRoomBadge.classList.remove('hidden');

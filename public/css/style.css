@@ -267,6 +267,31 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.direct-invite-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 95, 70, 0.35));
+  border: 2px solid var(--accent-goal);
+  border-radius: 16px;
+  padding: 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+.invite-badge {
+  font-family: 'Teko', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+#invite-badge-desc {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  margin: 0.4rem 0 1rem;
+}
+
 .input-group label {
   display: block;
   font-size: 0.88rem;

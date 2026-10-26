@@ -41,7 +41,16 @@
             <input type="text" id="player-name-input" placeholder="Ej. CR7, Dibu, Pichichi..." maxlength="15" value="Jugador 1">
           </div>
 
-          <div class="input-group">
+          <!-- Bloque exclusivo cuando entras mediante enlace de invitación (?room= o ?tournament=) -->
+          <div id="direct-invite-banner" class="direct-invite-banner hidden">
+            <div class="invite-badge" id="invite-badge-title">🏆 INVITACIÓN A TORNEO</div>
+            <p id="invite-badge-desc">Escribe tu nombre arriba y pulsa el botón para entrar directamente:</p>
+            <button id="direct-join-btn" class="btn btn-confirm btn-large">
+              ⚡ ¡ENTRAR AHORA!
+            </button>
+          </div>
+
+          <div id="lobby-format-group" class="input-group">
             <label>Formato de la Tanda (1 vs 1 / IA):</label>
             <div class="size-selector-grid">
               <label class="size-option">

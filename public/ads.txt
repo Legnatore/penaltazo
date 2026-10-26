@@ -1,0 +1,3 @@
+# Archivo ads.txt para Google AdSense en ¡PENALTAZO!
+# Sustituye pub-0000000000000000 por tu ID real de editor de Google AdSense cuando te den de alta la cuenta:
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

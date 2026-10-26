@@ -981,4 +981,53 @@ document.addEventListener('DOMContentLoaded', () => {
   backToLobbyBtn.addEventListener('click', () => {
     window.location.href = window.location.pathname;
   });
+
+  // --- MODAL LEGAL (PRIVACIDAD, COOKIES Y CONDICIONES PARA ADSENSE) ---
+  const legalModal = document.getElementById('legal-modal');
+  const openPrivacyBtn = document.getElementById('open-privacy-btn');
+  const openTermsBtn = document.getElementById('open-terms-btn');
+  const closeLegalModalBtn = document.getElementById('close-legal-modal-btn');
+
+  if (openPrivacyBtn && legalModal) {
+    openPrivacyBtn.addEventListener('click', () => {
+      legalModal.classList.remove('hidden');
+    });
+  }
+  if (openTermsBtn && legalModal) {
+    openTermsBtn.addEventListener('click', () => {
+      legalModal.classList.remove('hidden');
+    });
+  }
+  if (closeLegalModalBtn && legalModal) {
+    closeLegalModalBtn.addEventListener('click', () => {
+      legalModal.classList.add('hidden');
+    });
+  }
+  if (legalModal) {
+    legalModal.addEventListener('click', (e) => {
+      if (e.target === legalModal) {
+        legalModal.classList.add('hidden');
+      }
+    });
+  }
+
+  // --- INICIALIZACIÓN SEGURA DE BLOQUES GOOGLE ADSENSE ---
+  function initAdSenseSlots() {
+    try {
+      const adSlots = document.querySelectorAll('ins.adsbygoogle');
+      adSlots.forEach((slot) => {
+        const client = slot.getAttribute('data-ad-client') || '';
+        // Solo empujar si el usuario ya ha puesto su ca-pub real (distinto del placeholder 0000000000000000)
+        if (client && !client.includes('0000000000000000') && !slot.getAttribute('data-adsbygoogle-status')) {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          const placeholder = slot.parentElement?.querySelector('.ad-placeholder-banner');
+          if (placeholder) placeholder.style.display = 'none';
+        }
+      });
+    } catch (err) {
+      // AdBlocker activo o AdSense aún no configurado
+    }
+  }
+
+  initAdSenseSlots();
 });

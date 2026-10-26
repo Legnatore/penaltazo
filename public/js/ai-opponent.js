@@ -1,10 +1,38 @@
 /**
  * Oponente inteligente para jugar en solitario / modo práctica contra la CPU.
  */
+const FUNNY_AI_NAMES = [
+  'Cristiano Rolando 🇵🇹',
+  'Leo Missi 🇦🇷',
+  'Kylian Empapé 🇫🇷',
+  'Erling Jamón 🇳🇴',
+  'Dibu Martillo 🧤',
+  'Iker Casi-llas 🧤',
+  'Luka Modricito 🇭🇷',
+  'Zidán con Pelazo 🇫🇷',
+  'Vini con Queso 🇧🇷',
+  'Lewandogski 🇵🇱',
+  'Karim Benzemago 🇫🇷',
+  'Cortois de Palo 🧤',
+  'Neymar Rodando 🇧🇷',
+  'Ronalgordito 🇧🇷',
+  'Iniesta Pelón 🇪🇸',
+  'Suárez Bocado 🇺🇾',
+  'Ter Stegen Muro 🧤',
+  'Lamine Tamal 🇪🇸',
+  'Bellingjamón 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Julián Arañita 🕷️'
+];
+
 class AIOpponent {
   constructor() {
     this.history = [];
     this.humanLastChoices = [];
+    this.name = this.getRandomBotName();
+  }
+
+  getRandomBotName() {
+    return FUNNY_AI_NAMES[Math.floor(Math.random() * FUNNY_AI_NAMES.length)];
   }
 
   reset() {

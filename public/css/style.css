@@ -1836,9 +1836,8 @@ body {
   font-size: 0.85rem;
   font-weight: 700;
   color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  word-break: break-word;
 }
 
 .participant-tag {
@@ -1982,7 +1981,7 @@ body {
 .bracket-round-col {
   display: flex;
   flex-direction: column;
-  width: 240px;
+  width: 265px;
 }
 
 .bracket-round-header {
@@ -2101,12 +2100,11 @@ body {
 }
 
 .p-name {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
+  word-break: break-word;
 }
 
 .match-p-score {

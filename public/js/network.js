@@ -164,6 +164,7 @@ class NetworkManager {
     this.roomId = roomId;
     this.playerRole = 'P1';
     this.playerName = playerName;
+    this.aiName = this.ai.getRandomBotName();
     this.penaltiesPerPlayer = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
 
     setTimeout(() => {
@@ -175,7 +176,7 @@ class NetworkManager {
           penaltiesPerPlayer: this.penaltiesPerPlayer,
           players: [
             { role: 'P1', name: this.playerName, connected: true },
-            { role: 'P2', name: 'Robot Portero (IA)', connected: true }
+            { role: 'P2', name: this.aiName, connected: true }
           ],
           state: 'waiting'
         }
@@ -186,6 +187,7 @@ class NetworkManager {
 
   startAIGame() {
     this.ai.reset();
+    if (!this.aiName) this.aiName = this.ai.getRandomBotName();
     const basePenalties = this.penaltiesPerPlayer !== undefined ? this.penaltiesPerPlayer : 5;
     this.localState = {
       penaltiesPerPlayer: basePenalties,
@@ -209,7 +211,7 @@ class NetworkManager {
         penaltiesPerPlayer: basePenalties,
         players: [
           { role: 'P1', name: this.playerName, connected: true },
-          { role: 'P2', name: 'Robot Portero (IA)', connected: true }
+          { role: 'P2', name: this.aiName, connected: true }
         ],
         scores: { P1: 0, P2: 0 },
         history: { P1: [], P2: [] }
@@ -337,7 +339,7 @@ class NetworkManager {
               penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
               players: [
                 { role: 'P1', name: this.playerName, connected: true },
-                { role: 'P2', name: 'Robot Portero (IA)', connected: true }
+                { role: 'P2', name: this.aiName || 'Robot IA', connected: true }
               ],
               scores: { ...this.localState.scores },
               history: {

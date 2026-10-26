@@ -378,22 +378,10 @@ class TournamentView {
           <div class="alert-icon">⚡</div>
           <div class="alert-texts">
             <strong>¡ES TU TURNO DE SALIR AL CAMPO!</strong>
-            <span>Te enfrentas a <strong>${opponent.name}</strong> en ${currentRound.name}</span>
+            <span>Te enfrentas a <strong>${opponent.name}</strong> en ${currentRound.name}. Pulsa en tu partido del cuadro para jugar.</span>
           </div>
         </div>
-        <button id="alert-play-btn" class="btn btn-confirm">
-          ⚽ ENTRAR A LA TANDA DE PENALTIS
-        </button>
       `;
-
-      const alertBtn = document.getElementById('alert-play-btn');
-      if (alertBtn) {
-        alertBtn.onclick = () => {
-          if (typeof this.onEnterMatch === 'function') {
-            this.onEnterMatch(tournament.id, rIdx, mIdx);
-          }
-        };
-      }
     } else {
       // Comprobar si el usuario ha sido eliminado
       let hasBeenEliminated = false;

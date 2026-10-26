@@ -153,11 +153,11 @@ class PenaltyAnimator {
     // Esperar a que el balón y portero lleguen a su destino
     await this.wait(flightDuration - 20);
 
-    // 3. Momento del IMPACTO
+    // 3. Momento del IMPACTO (sonido victorioso o de derrota según la perspectiva del jugador local)
     if (isGoal) {
-      // ¡¡GOL!!
+      // ¡¡GOL!! -> Victorioso si disparé yo, derrota si me lo metieron a mí
       if (window.soundEngine) {
-        window.soundEngine.playGoal();
+        window.soundEngine.playGoal(Boolean(isMyShot));
       }
 
       this.ball.classList.add('in-net');
@@ -170,9 +170,9 @@ class PenaltyAnimator {
       this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg);
       this.triggerGoalParticles(targetBallX, targetBallY);
     } else if (isOut) {
-      // ¡¡FUERA!!
+      // ¡¡FUERA!! -> Victorioso si estaba yo de portero, derrota si tiré yo fuera
       if (window.soundEngine) {
-        window.soundEngine.playCrowdCheer(false);
+        window.soundEngine.playMiss(Boolean(isMySave));
       }
 
       this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
@@ -184,9 +184,9 @@ class PenaltyAnimator {
         : `¡El disparo de ${shooterName || 'el rival'} se ha ido directamente fuera!`;
       this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg);
     } else {
-      // ¡¡PARADA!!
+      // ¡¡PARADA!! -> Victorioso si paré yo, derrota si me la paró el rival
       if (window.soundEngine) {
-        window.soundEngine.playSave();
+        window.soundEngine.playSave(Boolean(isMySave));
       }
 
       this.ball.classList.add('deflected');

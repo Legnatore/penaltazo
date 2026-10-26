@@ -121,7 +121,7 @@ class SoundEngine {
     noise.stop(now + 0.07);
   }
 
-  playSave() {
+  playSave(isGoodForMe = true) {
     if (this.muted) return;
     this.init();
     if (!this.ctx) return;
@@ -143,16 +143,20 @@ class SoundEngine {
     osc.start(now);
     osc.stop(now + 0.2);
 
-    // Sonido de '¡Ooooh!' del público por el paradón
-    this.playCrowdCheer(false);
+    // Sonido victorioso si paraste tú, o de derrota si te la paró el rival
+    if (isGoodForMe) {
+      this.playVictoryFanfare();
+    } else {
+      this.playDefeatSound();
+    }
   }
 
-  playGoal() {
+  playGoal(isGoodForMe = true) {
     if (this.muted) return;
     this.init();
     if (!this.ctx) return;
 
-    // Sonido de red estremeciéndose + clamor de gol
+    // Sonido de red estremeciéndose
     const now = this.ctx.currentTime;
     const bufferSize = this.ctx.sampleRate * 0.25;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -179,8 +183,88 @@ class SoundEngine {
     noise.start(now);
     noise.stop(now + 0.26);
 
-    // Clamor de Gol en las gradas
+    // Sonido victorioso si marcaste tú, o de derrota si te metieron gol
+    if (isGoodForMe) {
+      this.playVictoryFanfare();
+    } else {
+      this.playDefeatSound();
+    }
+  }
+
+  playMiss(isGoodForMe = true) {
+    if (this.muted) return;
+    if (isGoodForMe) {
+      this.playVictoryFanfare();
+    } else {
+      this.playDefeatSound();
+    }
+  }
+
+  playVictoryFanfare() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    // Clamor alegre de la grada + acorde ascendente triunfal
     this.playCrowdCheer(true);
+
+    const now = this.ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // Do5, Mi5, Sol5, Do6
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      const startTime = now + idx * 0.08;
+      const dur = idx === notes.length - 1 ? 0.45 : 0.16;
+
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(0.18, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + dur + 0.02);
+    });
+  }
+
+  playDefeatSound() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    // Lamento de la grada + notas descendentes de decepción
+    this.playCrowdCheer(false);
+
+    const now = this.ctx.currentTime;
+    const notes = [392.00, 349.23, 311.13, 261.63]; // Sol4, Fa4, Mi♭4, Do4
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      const startTime = now + idx * 0.12;
+      const dur = idx === notes.length - 1 ? 0.5 : 0.18;
+
+      osc.frequency.setValueAtTime(freq, startTime);
+      if (idx === notes.length - 1) {
+        osc.frequency.linearRampToValueAtTime(freq * 0.92, startTime + dur);
+      }
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(900, startTime);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(0.12, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + dur + 0.02);
+    });
   }
 
   playCrowdCheer(isGoal = true) {

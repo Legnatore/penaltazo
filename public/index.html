@@ -145,11 +145,25 @@
           </div>
         </div>
 
-        <!-- Código QR para escanear con móvil -->
-        <div class="qr-container">
-          <p class="qr-title">📱 Escanea con la cámara de tu móvil:</p>
-          <div class="qr-box">
-            <canvas id="qr-canvas"></canvas>
+        <!-- Compartir por redes sociales y mensajería -->
+        <div class="social-share-container">
+          <p class="social-share-title">📲 Compartir invitación directamente por:</p>
+          <div class="social-share-grid">
+            <a id="share-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-whatsapp">
+              <span>💬</span> WhatsApp
+            </a>
+            <a id="share-telegram-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-telegram">
+              <span>✈️</span> Telegram
+            </a>
+            <a id="share-twitter-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-twitter">
+              <span>🐦</span> X / Twitter
+            </a>
+            <a id="share-email-btn" href="#" class="btn social-btn btn-email">
+              <span>✉️</span> Correo
+            </a>
+            <button id="share-native-btn" type="button" class="btn social-btn btn-native-share">
+              <span>📤</span> Más apps...
+            </button>
           </div>
           <div id="local-ips-container" class="local-ips-container"></div>
         </div>
@@ -198,10 +212,24 @@
           </div>
         </div>
 
-        <div class="qr-container tourney-qr">
-          <p class="qr-title">📱 Escanea con tu móvil para unirte al torneo:</p>
-          <div class="qr-box">
-            <canvas id="tourney-qr-canvas"></canvas>
+        <div class="social-share-container tourney-social-share">
+          <p class="social-share-title">📲 Invita a tus amigos al torneo por:</p>
+          <div class="social-share-grid">
+            <a id="tourney-share-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-whatsapp">
+              <span>💬</span> WhatsApp
+            </a>
+            <a id="tourney-share-telegram-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-telegram">
+              <span>✈️</span> Telegram
+            </a>
+            <a id="tourney-share-twitter-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-twitter">
+              <span>🐦</span> X / Twitter
+            </a>
+            <a id="tourney-share-email-btn" href="#" class="btn social-btn btn-email">
+              <span>✉️</span> Correo
+            </a>
+            <button id="tourney-share-native-btn" type="button" class="btn social-btn btn-native-share">
+              <span>📤</span> Más apps...
+            </button>
           </div>
         </div>
 
@@ -534,7 +562,6 @@
   <!-- Scripts: Socket.io primero, luego módulos -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/qr.js"></script>
   <script src="js/ai-opponent.js"></script>
   <script src="js/goal-grid.js"></script>
   <script src="js/animation.js"></script>

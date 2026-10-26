@@ -33,7 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareLinkInput = document.getElementById('share-link-input');
   const copyLinkBtn = document.getElementById('copy-link-btn');
   const copyToast = document.getElementById('copy-toast');
-  const qrCanvas = document.getElementById('qr-canvas');
+  const shareWhatsappBtn = document.getElementById('share-whatsapp-btn');
+  const shareTelegramBtn = document.getElementById('share-telegram-btn');
+  const shareTwitterBtn = document.getElementById('share-twitter-btn');
+  const shareEmailBtn = document.getElementById('share-email-btn');
+  const shareNativeBtn = document.getElementById('share-native-btn');
   const openSecondTabBtn = document.getElementById('open-second-tab-btn');
   const localIpsContainer = document.getElementById('local-ips-container');
 
@@ -301,8 +305,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     shareLinkInput.value = shareUrl;
 
-    if (window.renderQRCode && qrCanvas) {
-      window.renderQRCode(qrCanvas, shareUrl, 160);
+    const shareText = `⚽ ¡Te reto a una tanda de penaltis en ¡PENALTAZO! (Sala ${roomId})! Entra aquí para jugar contra mí:`;
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(shareText);
+    const encodedFull = encodeURIComponent(`${shareText} ${shareUrl}`);
+
+    if (shareWhatsappBtn) {
+      shareWhatsappBtn.href = `https://api.whatsapp.com/send?text=${encodedFull}`;
+    }
+    if (shareTelegramBtn) {
+      shareTelegramBtn.href = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+    }
+    if (shareTwitterBtn) {
+      shareTwitterBtn.href = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+    }
+    if (shareEmailBtn) {
+      const subject = encodeURIComponent(`⚽ ¡Reto de penaltis en ¡PENALTAZO! (Sala ${roomId})`);
+      shareEmailBtn.href = `mailto:?subject=${subject}&body=${encodedFull}`;
+    }
+    if (shareNativeBtn) {
+      shareNativeBtn.onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: '¡PENALTAZO! - Duelo de Penaltis',
+              text: shareText,
+              url: shareUrl
+            });
+          } catch (err) {
+            // Cancelado por el usuario
+          }
+        } else {
+          navigator.clipboard.writeText(`${shareText} ${shareUrl}`).then(() => {
+            showToast('¡Invitación copiada al portapapeles!');
+          });
+        }
+      };
     }
 
     if (localIpsContainer && serverLocalIps.length > 0) {

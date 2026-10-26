@@ -25,7 +25,11 @@ class TournamentView {
     this.participantsGridEl = document.getElementById('tourney-participants-grid');
     this.shareLinkInput = document.getElementById('tourney-share-link-input');
     this.copyLinkBtn = document.getElementById('tourney-copy-link-btn');
-    this.qrCanvas = document.getElementById('tourney-qr-canvas');
+    this.shareWhatsappBtn = document.getElementById('tourney-share-whatsapp-btn');
+    this.shareTelegramBtn = document.getElementById('tourney-share-telegram-btn');
+    this.shareTwitterBtn = document.getElementById('tourney-share-twitter-btn');
+    this.shareEmailBtn = document.getElementById('tourney-share-email-btn');
+    this.shareNativeBtn = document.getElementById('tourney-share-native-btn');
     this.startBtn = document.getElementById('tourney-start-btn');
     this.guestWaitingMsg = document.getElementById('tourney-guest-waiting-msg');
 
@@ -113,14 +117,49 @@ class TournamentView {
       `;
     }
 
-    // Configurar enlace y QR
+    // Configurar enlace y botones de compartir en redes
     let baseUrl = window.location.origin;
     let shareUrl = `${baseUrl}/?tournament=${encodeURIComponent(tournament.id)}`;
     if (this.shareLinkInput) {
       this.shareLinkInput.value = shareUrl;
     }
-    if (this.qrCanvas && window.renderQRCode) {
-      window.renderQRCode(this.qrCanvas, shareUrl, 150);
+
+    const shareText = `🏆 ¡Únete a mi torneo eliminatorio "${tournament.name}" (${tournament.id}) en ¡PENALTAZO!! Entra aquí:`;
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(shareText);
+    const encodedFull = encodeURIComponent(`${shareText} ${shareUrl}`);
+
+    if (this.shareWhatsappBtn) {
+      this.shareWhatsappBtn.href = `https://api.whatsapp.com/send?text=${encodedFull}`;
+    }
+    if (this.shareTelegramBtn) {
+      this.shareTelegramBtn.href = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+    }
+    if (this.shareTwitterBtn) {
+      this.shareTwitterBtn.href = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+    }
+    if (this.shareEmailBtn) {
+      const subject = encodeURIComponent(`🏆 Torneo ${tournament.name} en ¡PENALTAZO! (${tournament.id})`);
+      this.shareEmailBtn.href = `mailto:?subject=${subject}&body=${encodedFull}`;
+    }
+    if (this.shareNativeBtn) {
+      this.shareNativeBtn.onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `Torneo ${tournament.name} - ¡PENALTAZO!`,
+              text: shareText,
+              url: shareUrl
+            });
+          } catch (err) {
+            // Cancelado por el usuario
+          }
+        } else {
+          navigator.clipboard.writeText(`${shareText} ${shareUrl}`).then(() => {
+            this.showToast('¡Invitación del torneo copiada al portapapeles!');
+          });
+        }
+      };
     }
 
     // Renderizar tarjetas de participantes y plazas vacías

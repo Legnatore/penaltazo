@@ -593,34 +593,99 @@ body {
   font-size: 0.9rem;
 }
 
-.qr-container {
+.social-share-container {
   background: #f0f9ff;
   border: 3px solid #bae6fd;
   border-radius: 18px;
-  padding: 1.2rem;
+  padding: 1.15rem;
   margin-bottom: 1.5rem;
+  text-align: center;
 }
 
-.qr-title {
+.social-share-title {
   font-size: 0.92rem;
-  font-weight: 700;
-  margin-bottom: 0.8rem;
+  font-weight: 800;
+  margin-bottom: 0.85rem;
   color: #0369a1;
 }
 
-.qr-box {
+.social-share-grid {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
-  margin-bottom: 0.8rem;
+  gap: 0.65rem;
+  margin-bottom: 0.6rem;
 }
 
-.qr-box canvas {
+.social-btn {
+  flex: 1 1 calc(50% - 0.65rem);
+  min-width: 135px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.88rem;
   border-radius: 12px;
-  border: 3px solid #0f172a;
-  background: #fff;
-  padding: 4px;
-  box-shadow: 0 5px 0 rgba(15, 23, 42, 0.15);
+  color: #ffffff;
+  border: 2px solid #0f172a;
+}
+
+.btn-whatsapp {
+  background: linear-gradient(180deg, #25d366 0%, #16a34a 100%);
+  text-shadow: 0 1px 0 #14532d;
+  box-shadow: 0 4px 0 #15803d;
+}
+
+.btn-whatsapp:hover {
+  background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #15803d;
+}
+
+.btn-telegram {
+  background: linear-gradient(180deg, #38bdf8 0%, #0088cc 100%);
+  text-shadow: 0 1px 0 #0c4a6e;
+  box-shadow: 0 4px 0 #0369a1;
+}
+
+.btn-telegram:hover {
+  background: linear-gradient(180deg, #7dd3fc 0%, #0284c7 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #0369a1;
+}
+
+.btn-twitter {
+  background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+  text-shadow: 0 1px 0 #000000;
+  box-shadow: 0 4px 0 #020617;
+}
+
+.btn-twitter:hover {
+  background: linear-gradient(180deg, #475569 0%, #1e293b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #020617;
+}
+
+.btn-email {
+  background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%);
+  text-shadow: 0 1px 0 #7c2d12;
+  box-shadow: 0 4px 0 #9a3412;
+}
+
+.btn-email:hover {
+  background: linear-gradient(180deg, #fdba74 0%, #f97316 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #9a3412;
+}
+
+.btn-native-share {
+  flex: 1 1 100%;
+  background: linear-gradient(180deg, #a855f7 0%, #7e22ce 100%);
+  text-shadow: 0 1px 0 #581c87;
+  box-shadow: 0 4px 0 #581c87;
+}
+
+.btn-native-share:hover {
+  background: linear-gradient(180deg, #c084fc 0%, #9333ea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #581c87;
 }
 
 .local-ips-container {

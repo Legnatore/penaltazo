@@ -1,6 +1,7 @@
 /**
  * Gestor de red y multijugador con Socket.io.
- * También soporta modo local/IA simulando el mismo protocolo de eventos.
+ * Soporta partidas rápidas 1v1, torneos eliminatorios de 4, 8 y 16 competidores,
+ * y modo local/IA simulando el mismo protocolo de eventos.
  */
 class NetworkManager {
   constructor() {
@@ -35,6 +36,8 @@ class NetworkManager {
 
   initMultiplayer(serverUrl = '') {
     this.mode = 'multiplayer';
+    if (this.socket) return; // Ya inicializado
+
     if (typeof io !== 'undefined') {
       this.socket = io(serverUrl, {
         reconnectionAttempts: 5,
@@ -74,18 +77,41 @@ class NetworkManager {
       this.socket.on('rematch_status', (data) => {
         this.trigger('rematch_status', data);
       });
+
+      // Eventos del sistema de torneos
+      this.socket.on('tournament_joined', (data) => {
+        this.trigger('tournament_joined', data);
+      });
+
+      this.socket.on('tournament_updated', (data) => {
+        this.trigger('tournament_updated', data);
+      });
+
+      this.socket.on('tournament_started', (data) => {
+        this.trigger('tournament_started', data);
+      });
+
+      this.socket.on('tournament_match_finished', (data) => {
+        this.trigger('tournament_match_finished', data);
+      });
+
+      this.socket.on('tournament_error', (data) => {
+        this.trigger('tournament_error', data);
+      });
+
     } else {
       console.warn('Socket.io no encontrado. Iniciando en modo offline/IA.');
       this.initAIMode();
     }
   }
 
-  joinRoom(roomId, playerName) {
+  // --- PARTIDAS 1v1 ---
+  joinRoom(roomId, playerName, penaltiesPerPlayer = 5) {
     this.playerName = playerName || 'Jugador 1';
     if (this.mode === 'multiplayer' && this.socket) {
-      this.socket.emit('join_room', { roomId, playerName: this.playerName });
+      this.socket.emit('join_room', { roomId, playerName: this.playerName, penaltiesPerPlayer });
     } else {
-      this.initAIMode(roomId, playerName);
+      this.initAIMode(roomId, playerName, penaltiesPerPlayer);
     }
   }
 
@@ -105,12 +131,40 @@ class NetworkManager {
     }
   }
 
+  // --- SISTEMA DE TORNEOS ---
+  createTournament(size, name, playerName, penaltiesPerPlayer = 5) {
+    this.initMultiplayer();
+    if (this.socket) {
+      this.socket.emit('create_tournament', { size, name, playerName, penaltiesPerPlayer });
+    }
+  }
+
+  joinTournament(tournamentId, playerName) {
+    this.initMultiplayer();
+    if (this.socket) {
+      this.socket.emit('join_tournament', { tournamentId, playerName });
+    }
+  }
+
+  startTournament(tournamentId) {
+    if (this.socket) {
+      this.socket.emit('start_tournament', { tournamentId });
+    }
+  }
+
+  enterTournamentMatch(tournamentId, roundIndex, matchIndex) {
+    if (this.socket) {
+      this.socket.emit('enter_tournament_match', { tournamentId, roundIndex, matchIndex });
+    }
+  }
+
   // --- MODO OFFLINE / CONTRA LA IA ---
-  initAIMode(roomId = 'SOLO-AI', playerName = 'Tirador') {
+  initAIMode(roomId = 'SOLO-AI', playerName = 'Tirador', penaltiesPerPlayer = 5) {
     this.mode = 'ai';
     this.roomId = roomId;
     this.playerRole = 'P1';
     this.playerName = playerName;
+    this.penaltiesPerPlayer = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
 
     setTimeout(() => {
       this.trigger('joined_room', {
@@ -118,6 +172,7 @@ class NetworkManager {
         role: 'P1',
         roomState: {
           id: this.roomId,
+          penaltiesPerPlayer: this.penaltiesPerPlayer,
           players: [
             { role: 'P1', name: this.playerName, connected: true },
             { role: 'P2', name: 'Robot Portero (IA)', connected: true }
@@ -131,12 +186,14 @@ class NetworkManager {
 
   startAIGame() {
     this.ai.reset();
+    const basePenalties = this.penaltiesPerPlayer !== undefined ? this.penaltiesPerPlayer : 5;
     this.localState = {
+      penaltiesPerPlayer: basePenalties,
       turnIndex: 0,
       scores: { P1: 0, P2: 0 },
       history: { P1: [], P2: [] },
-      isSuddenDeath: false,
-      suddenDeathRound: 0,
+      isSuddenDeath: basePenalties === 0,
+      suddenDeathRound: basePenalties === 0 ? 1 : 0,
       state: 'playing'
     };
 
@@ -144,9 +201,12 @@ class NetworkManager {
       turnIndex: 0,
       shooterRole: 'P1',
       keeperRole: 'P2',
-      isSuddenDeath: false,
+      isSuddenDeath: this.localState.isSuddenDeath,
+      suddenDeathRound: this.localState.suddenDeathRound,
+      penaltiesPerPlayer: basePenalties,
       roomState: {
         id: this.roomId,
+        penaltiesPerPlayer: basePenalties,
         players: [
           { role: 'P1', name: this.playerName, connected: true },
           { role: 'P2', name: 'Robot Portero (IA)', connected: true }
@@ -158,15 +218,12 @@ class NetworkManager {
   }
 
   handleAIChoice(humanRow, humanCol) {
-    // Turno: si turnIndex es par: P1 (Humano) tira, P2 (IA) para
-    // Si turnIndex es impar: P2 (IA) tira, P1 (Humano) para
     const isHumanShooter = (this.localState.turnIndex % 2 === 0);
     const shooterRole = isHumanShooter ? 'P1' : 'P2';
     const keeperRole = isHumanShooter ? 'P2' : 'P1';
 
     this.trigger('choice_confirmed', { role: 'P1' });
 
-    // La IA elige con un leve retardo realista (400-800ms)
     setTimeout(() => {
       this.trigger('choice_confirmed', { role: 'P2' });
 
@@ -180,7 +237,11 @@ class NetworkManager {
         this.ai.recordHumanChoice(humanRow, humanCol);
       }
 
-      const isGoal = (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
+      // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una mínima probabilidad (12%) de irse fuera
+      const isLowCenter = (shooterChoice.row === 1 && shooterChoice.col === 1);
+      const isOut = !isLowCenter && (Math.random() < 0.12);
+
+      const isGoal = !isOut && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
 
       if (isGoal) {
         this.localState.scores[shooterRole] += 1;
@@ -190,6 +251,7 @@ class NetworkManager {
         turnIndex: this.localState.turnIndex,
         attempt: this.localState.history[shooterRole].length + 1,
         isGoal,
+        isOut,
         shooterChoice,
         keeperChoice,
         isSuddenDeath: this.localState.isSuddenDeath
@@ -201,9 +263,10 @@ class NetworkManager {
       let winner = null;
       let nextIsSuddenDeath = this.localState.isSuddenDeath;
       let nextSuddenDeathRound = this.localState.suddenDeathRound;
+      const totalRegularTurns = (this.localState.penaltiesPerPlayer || 0) * 2;
 
       if (!this.localState.isSuddenDeath) {
-        if (nextTurnIndex >= 10) {
+        if (nextTurnIndex >= totalRegularTurns) {
           if (this.localState.scores.P1 > this.localState.scores.P2) {
             gameOver = true;
             winner = 'P1';
@@ -236,6 +299,7 @@ class NetworkManager {
         shooterChoice,
         keeperChoice,
         isGoal,
+        isOut,
         scores: { ...this.localState.scores },
         history: {
           P1: [...this.localState.history.P1],
@@ -245,7 +309,8 @@ class NetworkManager {
         winner,
         nextIsSuddenDeath,
         nextSuddenDeathRound,
-        nextTurnIndex
+        nextTurnIndex,
+        penaltiesPerPlayer: this.localState.penaltiesPerPlayer
       });
 
       this.localState.turnIndex = nextTurnIndex;
@@ -263,7 +328,21 @@ class NetworkManager {
             shooterRole: nextRoles.shooterRole,
             keeperRole: nextRoles.keeperRole,
             isSuddenDeath: this.localState.isSuddenDeath,
-            suddenDeathRound: this.localState.suddenDeathRound
+            suddenDeathRound: this.localState.suddenDeathRound,
+            penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
+            roomState: {
+              id: this.roomId,
+              penaltiesPerPlayer: this.localState.penaltiesPerPlayer,
+              players: [
+                { role: 'P1', name: this.playerName, connected: true },
+                { role: 'P2', name: 'Robot Portero (IA)', connected: true }
+              ],
+              scores: { ...this.localState.scores },
+              history: {
+                P1: [...this.localState.history.P1],
+                P2: [...this.localState.history.P2]
+              }
+            }
           });
         }, 4200);
       }

@@ -41,16 +41,54 @@
             <input type="text" id="player-name-input" placeholder="Ej. CR7, Dibu, Pichichi..." maxlength="15" value="Jugador 1">
           </div>
 
+          <div class="input-group">
+            <label>Formato de la Tanda (1 vs 1 / IA):</label>
+            <div class="size-selector-grid">
+              <label class="size-option">
+                <input type="radio" name="lobby-penalties" value="0">
+                <div class="size-card">
+                  <span class="size-num">🔥</span>
+                  <span class="size-label">Muerte Súbita</span>
+                  <span class="size-desc">Al fallo directo</span>
+                </div>
+              </label>
+
+              <label class="size-option">
+                <input type="radio" name="lobby-penalties" value="3">
+                <div class="size-card">
+                  <span class="size-num">3</span>
+                  <span class="size-label">3 Penaltis</span>
+                  <span class="size-desc">Tanda rápida</span>
+                </div>
+              </label>
+
+              <label class="size-option">
+                <input type="radio" name="lobby-penalties" value="5" checked>
+                <div class="size-card">
+                  <span class="size-num">5</span>
+                  <span class="size-label">5 Penaltis</span>
+                  <span class="size-desc">Tanda oficial</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div class="actions-grid">
             <button id="create-room-btn" class="btn btn-primary btn-large">
               <span class="btn-icon">➕</span>
-              <span class="btn-text">Crear Sala Privada</span>
+              <span class="btn-text">Crear Duelo 1 vs 1</span>
+            </button>
+
+            <!-- NUEVO: Botón de Modo Torneo -->
+            <button id="open-tourney-modal-btn" class="btn btn-tournament btn-large">
+              <span class="btn-icon">🏆</span>
+              <span class="btn-text">Crear Torneo Eliminatorio</span>
             </button>
 
             <div class="divider"><span>o únete con código</span></div>
 
             <div class="join-box">
-              <input type="text" id="join-room-input" placeholder="Código (ej. ABC-123)" maxlength="10">
+              <input type="text" id="join-room-input" placeholder="Código (ej. ABC-123 o COPA-...)" maxlength="16">
               <button id="join-room-btn" class="btn btn-secondary">Unirse</button>
             </div>
 
@@ -77,7 +115,7 @@
       </div>
     </section>
 
-    <!-- 2. PANTALLA DE SALA DE ESPERA -->
+    <!-- 2. PANTALLA DE SALA DE ESPERA (DUELO 1v1) -->
     <section id="waiting-screen" class="screen waiting-screen hidden">
       <div class="waiting-card">
         <div class="waiting-header">
@@ -121,7 +159,92 @@
       </div>
     </section>
 
-    <!-- 3. PANTALLA PRINCIPAL DE JUEGO -->
+    <!-- 3. SALA DE ESPERA DE TORNEO (LOBBY DE TORNEO) -->
+    <section id="tournament-lobby-screen" class="screen tournament-lobby-screen hidden">
+      <div class="tourney-lobby-card">
+        <div class="tourney-lobby-header">
+          <div class="tourney-trophy-icon">🏆</div>
+          <h2 id="tourney-lobby-title">Copa Penaltazo</h2>
+          <p>Sala de espera del torneo eliminatorio</p>
+        </div>
+
+        <div class="tourney-meta-row">
+          <div class="meta-box">
+            <span class="meta-label">Código del Torneo:</span>
+            <span id="tourney-lobby-code" class="meta-value">COPA-123</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-label">Estado de plazas:</span>
+            <div id="tourney-slots-count" class="slots-info">
+              <!-- Renderizado dinámicamente -->
+            </div>
+          </div>
+        </div>
+
+        <div class="share-box">
+          <label for="tourney-share-link-input">Enlace de invitación para competidores:</label>
+          <div class="link-copy-row">
+            <input type="text" id="tourney-share-link-input" readonly>
+            <button id="tourney-copy-link-btn" class="btn btn-primary">Copiar 📋</button>
+          </div>
+        </div>
+
+        <div class="qr-container tourney-qr">
+          <p class="qr-title">📱 Escanea con tu móvil para unirte al torneo:</p>
+          <div class="qr-box">
+            <canvas id="tourney-qr-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Lista de participantes y huecos libres para IA -->
+        <div class="tourney-participants-section">
+          <h3>Participantes Inscritos:</h3>
+          <div id="tourney-participants-grid" class="participants-grid">
+            <!-- Renderizado dinámicamente por tournament.js -->
+          </div>
+        </div>
+
+        <!-- Botón del organizador o mensaje de espera -->
+        <div class="tourney-lobby-actions">
+          <button id="tourney-start-btn" class="btn btn-confirm btn-large hidden">
+            <span class="btn-icon">⚡</span>
+            <span class="btn-text">¡Empezar Torneo Ahora! (Rellenar huecos con IA)</span>
+          </button>
+          <div id="tourney-guest-waiting-msg" class="waiting-status hidden">
+            <div class="pulse-loader"></div>
+            <span>Esperando a que el organizador cierre las plazas y comience el torneo...</span>
+          </div>
+          <button id="tourney-leave-btn" class="btn btn-outline btn-small">
+            Salir al Menú Principal 🏠
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PANTALLA DEL CUADRO ELIMINATORIO (BRACKET) -->
+    <section id="tournament-bracket-screen" class="screen tournament-bracket-screen hidden">
+      <div class="bracket-top-bar">
+        <div class="bracket-info">
+          <h2 id="tourney-bracket-title">🏆 Copa Penaltazo</h2>
+          <span id="tourney-stage-badge" class="stage-badge">CUARTOS DE FINAL</span>
+        </div>
+        <button id="bracket-back-menu-btn" class="btn btn-outline btn-small">
+          Menú 🏠
+        </button>
+      </div>
+
+      <!-- Alerta interactiva si te toca jugar -->
+      <div id="tourney-my-match-alert" class="tourney-match-alert hidden">
+        <!-- Rellenado por tournament.js -->
+      </div>
+
+      <!-- Contenedor del Cuadro / Árbol de Eliminatorias -->
+      <div id="tourney-bracket-container" class="bracket-scroll-container">
+        <!-- Renderizado dinámicamente por tournament.js -->
+      </div>
+    </section>
+
+    <!-- 5. PANTALLA PRINCIPAL DE JUEGO (EL ESTADIO DE PENALTIS) -->
     <section id="game-screen" class="screen game-screen hidden">
 
       <!-- Marcador superior -->
@@ -135,9 +258,7 @@
           <div class="team-score-wrapper">
             <span id="p1-score" class="team-score">0</span>
           </div>
-          <div id="p1-dots" class="penalty-dots-row">
-            <!-- Puntos de penalti renderizados por JS -->
-          </div>
+          <div id="p1-dots" class="penalty-dots-row"></div>
         </div>
 
         <!-- Info central de ronda -->
@@ -158,17 +279,13 @@
           <div class="team-score-wrapper">
             <span id="p2-score" class="team-score">0</span>
           </div>
-          <div id="p2-dots" class="penalty-dots-row">
-            <!-- Puntos de penalti renderizados por JS -->
-          </div>
+          <div id="p2-dots" class="penalty-dots-row"></div>
         </div>
       </div>
 
       <!-- Barra de instrucciones y estado -->
       <div class="instruction-banner">
-        <div id="role-instructions" class="role-instructions">
-          <!-- Renderizado dinámico según rol -->
-        </div>
+        <div id="role-instructions" class="role-instructions"></div>
         <div class="status-indicators">
           <div id="my-status-badge" class="status-badge waiting">⏳ Esperando tu elección...</div>
           <div id="rival-status-badge" class="status-badge waiting">⏳ Rival pensando...</div>
@@ -177,7 +294,6 @@
 
       <!-- ESCENARIO DEL ESTADIO Y PORTERÍA -->
       <div id="stadium-arena" class="stadium-arena">
-        <!-- Fondos de gradas y focos -->
         <div class="stadium-lights"></div>
         <div class="stadium-crowd"></div>
 
@@ -190,16 +306,13 @@
 
         <!-- Estructura de la portería de fútbol -->
         <div class="goal-structure">
-          <!-- Postes físicos y larguero -->
           <div class="goal-post post-left"></div>
           <div class="goal-crossbar"></div>
           <div class="goal-post post-right"></div>
           <div class="goal-net-background"></div>
 
           <!-- CUADRÍCULA INTERACTIVA 3x2 (6 CASILLAS) -->
-          <div id="goal-grid" class="goal-grid interactive">
-            <!-- 6 casillas renderizadas dinámicamente por GoalGrid.js -->
-          </div>
+          <div id="goal-grid" class="goal-grid interactive"></div>
 
           <!-- Portero con guantes animados -->
           <div id="animated-keeper" class="animated-keeper">
@@ -230,20 +343,110 @@
         <div id="banner-overlay" class="banner-overlay hidden"></div>
       </div>
 
-      <!-- Barra de controles y confirmación -->
+      <!-- Barra de controles y estado de selección -->
       <div class="controls-bar">
         <div id="selected-zone-label" class="selected-zone-label">
-          Haz clic en una de las 6 zonas de la portería
+          Haz clic en una de las 6 zonas de la portería para lanzar o parar al instante
         </div>
-        <button id="confirm-choice-btn" class="btn btn-confirm" disabled>
-          <span class="btn-icon">🔒</span>
-          <span class="btn-text">Confirmar Elección Secreta</span>
-        </button>
       </div>
 
     </section>
 
-    <!-- 4. MODAL / PANTALLA DE FIN DE PARTIDA -->
+    <!-- 6. MODAL DE CREACIÓN DE TORNEO -->
+    <div id="tourney-create-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🏆 CREAR TORNEO ELIMINATORIO</h2>
+          <p>Organiza un campeonato y compite con amigos o la IA</p>
+        </div>
+
+        <div class="tourney-form">
+          <div class="input-group">
+            <label for="tourney-name-input">Nombre del Torneo:</label>
+            <input type="text" id="tourney-name-input" placeholder="Ej. Champions de Amigos" maxlength="22" value="Copa Penaltazo">
+          </div>
+
+          <div class="input-group">
+            <label>Tamaño del Torneo (Competidores):</label>
+            <div class="size-selector-grid">
+              <label class="size-option">
+                <input type="radio" name="tourney-size" value="4">
+                <div class="size-card">
+                  <span class="size-num">4</span>
+                  <span class="size-label">Semifinales</span>
+                  <span class="size-desc">2 rondas</span>
+                </div>
+              </label>
+
+              <label class="size-option">
+                <input type="radio" name="tourney-size" value="8" checked>
+                <div class="size-card">
+                  <span class="size-num">8</span>
+                  <span class="size-label">Cuartos</span>
+                  <span class="size-desc">3 rondas</span>
+                </div>
+              </label>
+
+              <label class="size-option">
+                <input type="radio" name="tourney-size" value="16">
+                <div class="size-card">
+                  <span class="size-num">16</span>
+                  <span class="size-label">Octavos</span>
+                  <span class="size-desc">4 rondas</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Formato de Penaltis en el Torneo:</label>
+            <div class="size-selector-grid">
+              <label class="size-option">
+                <input type="radio" name="tourney-penalties" value="0">
+                <div class="size-card">
+                  <span class="size-num">🔥</span>
+                  <span class="size-label">Muerte Súbita</span>
+                  <span class="size-desc">Al fallo directo</span>
+                </div>
+              </label>
+
+              <label class="size-option">
+                <input type="radio" name="tourney-penalties" value="3">
+                <div class="size-card">
+                  <span class="size-num">3</span>
+                  <span class="size-label">3 Penaltis</span>
+                  <span class="size-desc">Tanda rápida</span>
+                </div>
+              </label>
+
+              <label class="size-option">
+                <input type="radio" name="tourney-penalties" value="5" checked>
+                <div class="size-card">
+                  <span class="size-num">5</span>
+                  <span class="size-label">5 Penaltis</span>
+                  <span class="size-desc">Tanda oficial</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="tourney-ai-note">
+            🤖 <strong>Relleno Inteligente con IA:</strong> Comparte el enlace con quien quieras; cuando decidas empezar, todos los huecos libres se cubrirán automáticamente con futbolistas de parodia como <em>Cristiano Rolando</em>, <em>Leo Missi</em> o <em>Erling Jamón</em>.
+          </div>
+
+          <div class="modal-actions">
+            <button id="confirm-create-tourney-btn" class="btn btn-confirm btn-large">
+              ¡Crear Torneo e Invitar! 🏆
+            </button>
+            <button id="cancel-create-tourney-btn" class="btn btn-outline">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. MODAL / PANTALLA DE FIN DE PARTIDO -->
     <div id="game-over-modal" class="modal-overlay hidden">
       <div class="modal-card">
         <div id="game-over-title" class="game-over-title victory">
@@ -253,17 +456,39 @@
           Resultado final del partido
         </p>
 
-        <div id="game-over-scores" class="game-over-scores">
-          <!-- Rellenado por JS -->
-        </div>
+        <div id="game-over-scores" class="game-over-scores"></div>
 
         <div id="rematch-status" class="rematch-status"></div>
 
         <div class="modal-actions">
+          <!-- Botón cuando estamos en torneo -->
+          <button id="return-bracket-btn" class="btn btn-confirm btn-large hidden">
+            🏆 Volver al Cuadro del Torneo
+          </button>
+          <!-- Botones normales 1v1 -->
           <button id="rematch-btn" class="btn btn-primary btn-large">
             Pedir Revancha 🔄
           </button>
           <button id="back-to-lobby-btn" class="btn btn-outline">
+            Volver al Menú Principal 🏠
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. MODAL DE CAMPEÓN DEL TORNEO -->
+    <div id="tournament-champion-modal" class="modal-overlay hidden">
+      <div class="modal-card champ-card">
+        <div id="tourney-champion-name" class="champion-hero">
+          <!-- Rellenado dinámicamente -->
+        </div>
+
+        <div id="tourney-podium-details" class="podium-grid">
+          <!-- Rellenado dinámicamente -->
+        </div>
+
+        <div class="modal-actions">
+          <button id="tourney-champion-back-btn" class="btn btn-primary btn-large">
             Volver al Menú Principal 🏠
           </button>
         </div>
@@ -283,6 +508,7 @@
   <script src="js/goal-grid.js"></script>
   <script src="js/animation.js"></script>
   <script src="js/scoreboard.js"></script>
+  <script src="js/tournament.js"></script>
   <script src="js/network.js"></script>
   <script src="js/main.js"></script>
 </body>

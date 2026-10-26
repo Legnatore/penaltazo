@@ -31,6 +31,7 @@ class Scoreboard {
     keeperRole = 'P2',
     isSuddenDeath = false,
     suddenDeathRound = 0,
+    penaltiesPerPlayer = 5,
     myRole = 'P1'
   }) {
     // 1. Actualizar números del marcador
@@ -50,8 +51,8 @@ class Scoreboard {
       this.p2RoleEl.innerHTML = isShooter ? '⚽ Tirador' : '🧤 Portero';
     }
 
-    // 3. Determinar número total de intentos a mostrar (5 normales + rondas de muerte súbita)
-    const baseAttempts = 5;
+    // 3. Determinar número total de intentos a mostrar (1 si es muerte súbita directa, 3 o 5 + rondas de desempate)
+    const baseAttempts = penaltiesPerPlayer > 0 ? penaltiesPerPlayer : 1;
     const totalSlots = Math.max(
       baseAttempts,
       history.P1.length + (shooterRole === 'P1' ? 1 : 0),
@@ -59,8 +60,8 @@ class Scoreboard {
     );
 
     // 4. Renderizar puntos de P1 y P2
-    this.renderDots(this.p1DotsContainer, history.P1, totalSlots, shooterRole === 'P1');
-    this.renderDots(this.p2DotsContainer, history.P2, totalSlots, shooterRole === 'P2');
+    this.renderDots(this.p1DotsContainer, history.P1, totalSlots, shooterRole === 'P1', penaltiesPerPlayer);
+    this.renderDots(this.p2DotsContainer, history.P2, totalSlots, shooterRole === 'P2', penaltiesPerPlayer);
 
     // 5. Banner de muerte súbita
     if (this.suddenDeathBanner) {
@@ -68,7 +69,7 @@ class Scoreboard {
         this.suddenDeathBanner.classList.remove('hidden');
         this.suddenDeathBanner.innerHTML = `
           <span class="sd-flame">🔥</span>
-          <strong>¡MUERTE SÚBITA!</strong> Ronda de desempate #${suddenDeathRound || 1}
+          <strong>¡MUERTE SÚBITA!</strong> Ronda #${suddenDeathRound || 1}
         `;
       } else {
         this.suddenDeathBanner.classList.add('hidden');
@@ -78,16 +79,15 @@ class Scoreboard {
     // 6. Texto de información del turno
     if (this.roundInfoEl) {
       if (isSuddenDeath) {
-        const roundNum = Math.floor(currentTurnIndex / 2) + 1;
-        this.roundInfoEl.innerHTML = `Muerte Súbita - Tiro #${currentTurnIndex + 1}`;
+        this.roundInfoEl.innerHTML = `Muerte Súbita (Ronda #${suddenDeathRound || 1}) &bull; Tiro #${currentTurnIndex + 1}`;
       } else {
         const roundNum = Math.floor(currentTurnIndex / 2) + 1;
-        this.roundInfoEl.innerHTML = `Ronda ${roundNum} de 5 &bull; Penalti #${currentTurnIndex + 1}`;
+        this.roundInfoEl.innerHTML = `Ronda ${roundNum} de ${penaltiesPerPlayer} &bull; Penalti #${currentTurnIndex + 1}`;
       }
     }
   }
 
-  renderDots(container, historyArray, totalSlots, isCurrentShooter) {
+  renderDots(container, historyArray, totalSlots, isCurrentShooter, penaltiesPerPlayer = 5) {
     if (!container) return;
     container.innerHTML = '';
 
@@ -116,8 +116,8 @@ class Scoreboard {
         dot.setAttribute('title', `Tiro ${i + 1}: Pendiente`);
       }
 
-      // Si es de muerte súbita (más de 5), añadir indicador especial
-      if (i >= 5) {
+      // Si es de muerte súbita (más allá de los tiros base), añadir indicador especial
+      if (i >= penaltiesPerPlayer) {
         dot.classList.add('dot-sudden-death');
       }
 

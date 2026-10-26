@@ -6,6 +6,8 @@ class SoundEngine {
   constructor() {
     this.ctx = null;
     this.muted = false;
+    this.themeAudio = new Audio('assets/audio/penaltazo.mp3');
+    this.themeAudio.preload = 'auto';
   }
 
   init() {
@@ -22,7 +24,19 @@ class SoundEngine {
 
   toggleMute() {
     this.muted = !this.muted;
+    if (this.muted && this.themeAudio) {
+      this.themeAudio.pause();
+      this.themeAudio.currentTime = 0;
+    }
     return this.muted;
+  }
+
+  playPenaltazoTheme() {
+    if (this.muted) return;
+    try {
+      this.themeAudio.currentTime = 0;
+      this.themeAudio.play().catch(() => {});
+    } catch (e) {}
   }
 
   playWhistle() {

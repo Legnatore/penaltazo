@@ -56,7 +56,7 @@ class PenaltyAnimator {
   /**
    * Ejecuta la secuencia completa de animación
    */
-  async playResolution({ shooterChoice, keeperChoice, isGoal, shooterName, onComplete }) {
+  async playResolution({ shooterChoice, keeperChoice, isGoal, isOut, shooterName, keeperName, isMyShot, isMySave, onImpact, onComplete }) {
     this.resetPositions();
 
     // 1. Silbato inicial de preparación
@@ -76,8 +76,24 @@ class PenaltyAnimator {
     const keeperCellRect = keeperCellEl.getBoundingClientRect();
 
     // Coordenadas relativas en porcentajes para que sea responsive
-    const targetBallX = ((shooterCellRect.left + shooterCellRect.width / 2 - arenaRect.left) / arenaRect.width) * 100;
-    const targetBallY = ((shooterCellRect.top + shooterCellRect.height / 2 - arenaRect.top) / arenaRect.height) * 100;
+    let targetBallX = ((shooterCellRect.left + shooterCellRect.width / 2 - arenaRect.left) / arenaRect.width) * 100;
+    let targetBallY = ((shooterCellRect.top + shooterCellRect.height / 2 - arenaRect.top) / arenaRect.height) * 100;
+
+    // Si el disparo se marcha fuera, desviar las coordenadas fuera de los tres palos
+    if (isOut) {
+      if (shooterChoice.row === 0 && shooterChoice.col === 1) {
+        // Arriba centro -> por encima del larguero
+        targetBallY -= 16;
+      } else if (shooterChoice.col === 0) {
+        // Izquierda -> fuera por el poste izquierdo (y alto si era escuadra)
+        targetBallX -= 14;
+        if (shooterChoice.row === 0) targetBallY -= 10;
+      } else if (shooterChoice.col === 2) {
+        // Derecha -> fuera por el poste derecho (y alto si era escuadra)
+        targetBallX += 14;
+        if (shooterChoice.row === 0) targetBallY -= 10;
+      }
+    }
 
     const targetKeeperX = ((keeperCellRect.left + keeperCellRect.width / 2 - arenaRect.left) / arenaRect.width) * 100;
     const targetKeeperY = ((keeperCellRect.top + keeperCellRect.height / 2 - arenaRect.top) / arenaRect.height) * 100;
@@ -134,8 +150,25 @@ class PenaltyAnimator {
       shooterCellEl.classList.add('net-ripple');
 
       // Efecto visual de gol
-      this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', `¡Gran disparo de ${shooterName || 'Tirador'}!`);
+      const goalMsg = isMyShot
+        ? '¡Qué gran disparo acabas de marcar!'
+        : `¡Gran disparo de ${shooterName || 'el rival'}!`;
+      this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg);
       this.triggerGoalParticles(targetBallX, targetBallY);
+    } else if (isOut) {
+      // ¡¡FUERA!!
+      if (window.soundEngine) {
+        window.soundEngine.playCrowdCheer(false);
+      }
+
+      this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
+      this.ball.style.transform = 'translate(-50%, -50%) scale(0.45) rotate(900deg)';
+      this.ball.style.opacity = '0.5';
+
+      const outMsg = isMyShot
+        ? '¡Buscaste ajustar demasiado y el balón se marchó fuera!'
+        : `¡El disparo de ${shooterName || 'el rival'} se ha ido directamente fuera!`;
+      this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg);
     } else {
       // ¡¡PARADA!!
       if (window.soundEngine) {
@@ -154,12 +187,18 @@ class PenaltyAnimator {
       this.ball.style.transform = 'translate(-50%, -50%) scale(0.65) rotate(180deg)';
 
       // Efecto visual de parada
-      this.showCelebrationBanner('¡¡PARADÓN!!', 'save', '¡El portero leyó las intenciones!');
+      const saveMsg = isMySave
+        ? '¡Adivinaste la intención y detuviste el penalti!'
+        : `¡${keeperName || 'El portero'} adivinó la dirección del tiro!`;
+      this.showCelebrationBanner('¡¡PARADÓN!!', 'save', saveMsg);
       this.triggerSaveFlash(targetBallX, targetBallY);
     }
 
-    // Resaltar casillas en la cuadrícula
+    // Resaltar casillas en la cuadrícula y actualizar marcador en el momento del impacto
     this.goalGrid.revealResolution(shooterChoice, keeperChoice, isGoal);
+    if (typeof onImpact === 'function') {
+      onImpact();
+    }
 
     // Dejar tiempo para disfrutar la repetición/celebración
     await this.wait(2600);

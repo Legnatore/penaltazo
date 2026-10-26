@@ -1,22 +1,34 @@
 /**
- * Controlador principal de la aplicación.
- * Conecta UI, Grid, Animador, Marcador y Red.
+ * Controlador principal de ¡PENALTAZO!
+ * Conecta UI, Grid, Animador, Marcador, Red y el Sistema de Torneos Eliminatorios.
  */
 document.addEventListener('DOMContentLoaded', () => {
   // Elementos de pantalla
   const lobbyScreen = document.getElementById('lobby-screen');
   const waitingScreen = document.getElementById('waiting-screen');
+  const tournamentLobbyScreen = document.getElementById('tournament-lobby-screen');
+  const tournamentBracketScreen = document.getElementById('tournament-bracket-screen');
   const gameScreen = document.getElementById('game-screen');
-  const gameOverModal = document.getElementById('game-over-modal');
 
-  // Elementos del lobby
+  // Modales
+  const gameOverModal = document.getElementById('game-over-modal');
+  const tourneyCreateModal = document.getElementById('tourney-create-modal');
+  const tourneyChampionModal = document.getElementById('tournament-champion-modal');
+
+  // Elementos del lobby principal
   const playerNameInput = document.getElementById('player-name-input');
   const createRoomBtn = document.getElementById('create-room-btn');
+  const openTourneyModalBtn = document.getElementById('open-tourney-modal-btn');
   const joinRoomInput = document.getElementById('join-room-input');
   const joinRoomBtn = document.getElementById('join-room-btn');
   const playAiBtn = document.getElementById('play-ai-btn');
 
-  // Elementos de sala de espera
+  // Elementos del modal de creación de torneo
+  const tourneyNameInput = document.getElementById('tourney-name-input');
+  const confirmCreateTourneyBtn = document.getElementById('confirm-create-tourney-btn');
+  const cancelCreateTourneyBtn = document.getElementById('cancel-create-tourney-btn');
+
+  // Elementos de sala de espera 1v1
   const waitingRoomCode = document.getElementById('waiting-room-code');
   const shareLinkInput = document.getElementById('share-link-input');
   const copyLinkBtn = document.getElementById('copy-link-btn');
@@ -25,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const openSecondTabBtn = document.getElementById('open-second-tab-btn');
   const localIpsContainer = document.getElementById('local-ips-container');
 
-  // Elementos del juego
+  // Elementos del juego (Estadio de penaltis)
   const goalGridContainer = document.getElementById('goal-grid');
   const stadiumArena = document.getElementById('stadium-arena');
   const confirmChoiceBtn = document.getElementById('confirm-choice-btn');
@@ -42,30 +54,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const gameOverScores = document.getElementById('game-over-scores');
   const rematchBtn = document.getElementById('rematch-btn');
   const rematchStatus = document.getElementById('rematch-status');
+  const returnBracketBtn = document.getElementById('return-bracket-btn');
   const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
+
+  // Elementos adicionales de navegación de torneo
+  const tourneyLeaveBtn = document.getElementById('tourney-leave-btn');
+  const bracketBackMenuBtn = document.getElementById('bracket-back-menu-btn');
 
   // Instancias de módulos
   const network = new NetworkManager();
   const scoreboard = new Scoreboard();
   let goalGrid = null;
   let animator = null;
+  let tournamentView = null;
 
   // Estado local del cliente
   let myRole = 'P1'; // 'P1' | 'P2' | 'spectator'
+  let playerNames = { P1: 'Jugador 1', P2: 'Jugador 2' };
+  let lastScores = { P1: 0, P2: 0 };
+  let lastHistory = { P1: [], P2: [] };
+  let currentPenaltiesPerPlayer = 5;
   let currentShooterRole = 'P1';
   let currentKeeperRole = 'P2';
   let mySelectedCell = null;
   let hasConfirmedChoice = false;
   let isResolvingTurn = false;
   let serverLocalIps = [];
+  let isInTournament = false;
+  let activeTournament = null;
+  let myUserId = null;
 
   // Inicializar Grid y Animador
   goalGrid = new GoalGrid(goalGridContainer, (row, col) => {
+    if (hasConfirmedChoice || isResolvingTurn) return;
     mySelectedCell = { row, col };
-    updateConfirmButton();
+    hasConfirmedChoice = true;
+    goalGrid.disable();
+
+    const rowName = row === 0 ? 'Arriba' : 'Raso';
+    const colName = col === 0 ? 'Izquierda' : (col === 1 ? 'Centro' : 'Derecha');
+    selectedZoneLabel.textContent = `Zona seleccionada: ${rowName} - ${colName}`;
+
+    myStatusBadge.className = 'status-badge ready';
+    myStatusBadge.innerHTML = '✅ ¡Elección enviada!';
+
+    network.submitChoice(row, col);
   });
 
   animator = new PenaltyAnimator(stadiumArena, goalGrid);
+
+  // Inicializar Gestor de Vistas de Torneo
+  tournamentView = new TournamentView({
+    onStartTournament: (tournamentId) => {
+      network.startTournament(tournamentId);
+    },
+    onEnterMatch: (tournamentId, roundIndex, matchIndex) => {
+      network.enterTournamentMatch(tournamentId, roundIndex, matchIndex);
+    },
+    onBackToLobby: () => {
+      window.location.href = window.location.pathname;
+    }
+  });
 
   // Obtener IPs locales del servidor para conexiones por Wi-Fi
   fetch('/api/info')
@@ -75,18 +124,25 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(() => {});
 
-  // Comprobar parámetros en la URL (?room=XYZ)
+  // Comprobar parámetros en la URL (?room=XYZ o ?tournament=COPA-XYZ)
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
-  if (roomParam) {
+  const tournamentParam = urlParams.get('tournament');
+
+  if (tournamentParam) {
+    joinRoomInput.value = tournamentParam.toUpperCase();
+    showToast(`Torneo detectado: ${tournamentParam.toUpperCase()}. Introduce tu apodo y únete.`);
+  } else if (roomParam) {
     joinRoomInput.value = roomParam.toUpperCase();
-    showToast(`Sala detectada: ${roomParam.toUpperCase()}. Introduce tu nombre y únete.`);
+    showToast(`Sala 1v1 detectada: ${roomParam.toUpperCase()}. Introduce tu apodo y únete.`);
   }
 
   // --- GESTIÓN DE PANTALLAS ---
   function showScreen(screen) {
     lobbyScreen.classList.add('hidden');
     waitingScreen.classList.add('hidden');
+    tournamentLobbyScreen.classList.add('hidden');
+    tournamentBracketScreen.classList.add('hidden');
     gameScreen.classList.add('hidden');
     gameOverModal.classList.add('hidden');
 
@@ -100,44 +156,96 @@ document.addEventListener('DOMContentLoaded', () => {
     soundToggleBtn.setAttribute('title', isMuted ? 'Sonido desactivado' : 'Sonido activado');
   });
 
-  // Habilitar audio al primer toque/clic
   document.addEventListener('click', () => {
     if (window.soundEngine) window.soundEngine.init();
   }, { once: true });
 
-  // --- EVENTOS DEL LOBBY ---
+  // --- EVENTOS DEL LOBBY PRINCIPAL ---
+  function getSelectedLobbyPenalties() {
+    const el = document.querySelector('input[name="lobby-penalties"]:checked');
+    return el ? parseInt(el.value, 10) : 5;
+  }
+
   createRoomBtn.addEventListener('click', () => {
+    isInTournament = false;
     const name = playerNameInput.value.trim() || 'Jugador 1';
+    const penaltiesPerPlayer = getSelectedLobbyPenalties();
     network.initMultiplayer();
-    network.joinRoom(null, name);
+    network.joinRoom(null, name, penaltiesPerPlayer);
+  });
+
+  // Abrir modal de creación de torneo
+  openTourneyModalBtn.addEventListener('click', () => {
+    tourneyCreateModal.classList.remove('hidden');
+  });
+
+  cancelCreateTourneyBtn.addEventListener('click', () => {
+    tourneyCreateModal.classList.add('hidden');
+  });
+
+  confirmCreateTourneyBtn.addEventListener('click', () => {
+    const tourneyName = tourneyNameInput.value.trim() || 'Copa Penaltazo';
+    const selectedSizeEl = document.querySelector('input[name="tourney-size"]:checked');
+    const size = selectedSizeEl ? parseInt(selectedSizeEl.value, 10) : 8;
+    const selectedPenaltiesEl = document.querySelector('input[name="tourney-penalties"]:checked');
+    const penaltiesPerPlayer = selectedPenaltiesEl ? parseInt(selectedPenaltiesEl.value, 10) : 5;
+    const playerName = playerNameInput.value.trim() || 'Organizador';
+
+    tourneyCreateModal.classList.add('hidden');
+    isInTournament = true;
+
+    network.createTournament(size, tourneyName, playerName, penaltiesPerPlayer);
   });
 
   joinRoomBtn.addEventListener('click', () => {
     const code = joinRoomInput.value.trim().toUpperCase();
     if (!code) {
-      alert('Por favor introduce un código de sala válido.');
+      alert('Por favor introduce un código de sala o torneo.');
       return;
     }
-    const name = playerNameInput.value.trim() || 'Jugador 2';
-    network.initMultiplayer();
-    network.joinRoom(code, name);
+    const name = playerNameInput.value.trim() || 'Jugador';
+
+    if (code.startsWith('COPA-')) {
+      // Unirse a un torneo
+      isInTournament = true;
+      network.joinTournament(code, name);
+    } else {
+      // Unirse a una sala 1v1
+      isInTournament = false;
+      network.initMultiplayer();
+      network.joinRoom(code, name, getSelectedLobbyPenalties());
+    }
   });
 
   playAiBtn.addEventListener('click', () => {
+    isInTournament = false;
     const name = playerNameInput.value.trim() || 'Jugador';
-    network.initAIMode('SOLO-CPU', name);
+    const penaltiesPerPlayer = getSelectedLobbyPenalties();
+    network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer);
   });
 
-  // --- SALA DE ESPERA / COMPARTIR ---
+  // Salir de torneo al menú
+  if (tourneyLeaveBtn) {
+    tourneyLeaveBtn.addEventListener('click', () => {
+      window.location.href = window.location.pathname;
+    });
+  }
+  if (bracketBackMenuBtn) {
+    bracketBackMenuBtn.addEventListener('click', () => {
+      if (confirm('¿Seguro que deseas salir al menú principal?')) {
+        window.location.href = window.location.pathname;
+      }
+    });
+  }
+
+  // --- SALA DE ESPERA 1v1 ---
   function setupWaitingRoom(roomId) {
     showScreen(waitingScreen);
     waitingRoomCode.textContent = roomId;
     headerRoomBadge.textContent = `Sala: ${roomId}`;
     headerRoomBadge.classList.remove('hidden');
 
-    // Construir URL compartible
     let baseUrl = window.location.origin;
-    // Si tenemos una IP local detectada y estamos en localhost, ofrecer la IP local
     let shareUrl = `${baseUrl}/?room=${encodeURIComponent(roomId)}`;
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       if (serverLocalIps.length > 0) {
@@ -147,12 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     shareLinkInput.value = shareUrl;
 
-    // Renderizar código QR
     if (window.renderQRCode && qrCanvas) {
       window.renderQRCode(qrCanvas, shareUrl, 160);
     }
 
-    // Mostrar lista de IPs si existen
     if (localIpsContainer && serverLocalIps.length > 0) {
       localIpsContainer.innerHTML = `
         <span class="wifi-hint">Para jugar desde tu móvil en la misma Wi-Fi:</span>
@@ -160,7 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // Botón de abrir en otra pestaña para pruebas rápidas
     openSecondTabBtn.onclick = () => {
       window.open(`/?room=${encodeURIComponent(roomId)}`, '_blank');
     };
@@ -184,67 +289,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
-  // --- INTERACCIÓN CON LA CUADRÍCULA ---
-  function updateConfirmButton() {
-    if (mySelectedCell && !hasConfirmedChoice && !isResolvingTurn) {
-      confirmChoiceBtn.removeAttribute('disabled');
-      const rowName = mySelectedCell.row === 0 ? 'Arriba' : 'Raso';
-      const colName = mySelectedCell.col === 0 ? 'Izquierda' : (mySelectedCell.col === 1 ? 'Centro' : 'Derecha');
-      selectedZoneLabel.textContent = `Zona elegida: ${rowName} - ${colName}`;
+  // --- EVENTOS DEL SISTEMA DE TORNEOS ---
+  network.on('tournament_joined', ({ tournament, myId, isHost }) => {
+    isInTournament = true;
+    activeTournament = tournament;
+    myUserId = myId;
+
+    headerRoomBadge.textContent = `Torneo: ${tournament.id}`;
+    headerRoomBadge.classList.remove('hidden');
+
+    if (tournament.status === 'lobby') {
+      showScreen(tournamentLobbyScreen);
+      tournamentView.renderLobby(tournament, myId, isHost);
     } else {
-      confirmChoiceBtn.setAttribute('disabled', 'true');
-      if (!mySelectedCell) {
-        selectedZoneLabel.textContent = 'Haz clic en una de las 6 zonas de la portería';
-      }
+      showScreen(tournamentBracketScreen);
+      tournamentView.renderBracket(tournament, myId);
     }
-  }
+  });
 
-  confirmChoiceBtn.addEventListener('click', () => {
-    if (!mySelectedCell || hasConfirmedChoice || isResolvingTurn) return;
-
-    hasConfirmedChoice = true;
-    confirmChoiceBtn.setAttribute('disabled', 'true');
-    goalGrid.disable();
-
-    // Actualizar estado propio
-    myStatusBadge.className = 'status-badge ready';
-    myStatusBadge.innerHTML = '✅ ¡Selección confirmada!';
-
-    if (window.soundEngine) {
-      window.soundEngine.playSelect();
+  network.on('tournament_updated', (tournament) => {
+    activeTournament = tournament;
+    if (tournament.status === 'lobby') {
+      tournamentView.renderLobby(tournament, myUserId);
+    } else {
+      tournamentView.renderBracket(tournament, myUserId);
     }
+  });
 
-    // Enviar elección al servidor
-    network.submitChoice(mySelectedCell.row, mySelectedCell.col);
+  network.on('tournament_started', (tournament) => {
+    activeTournament = tournament;
+    showScreen(tournamentBracketScreen);
+    tournamentView.renderBracket(tournament, myUserId);
+    showToast('⚽ ¡El torneo ha comenzado! Revisa tu emparejamiento.');
+  });
+
+  network.on('tournament_match_finished', ({ tournament, matchId, winner, scores, tournamentCompleted }) => {
+    activeTournament = tournament;
+    tournamentView.renderBracket(tournament, myUserId);
+  });
+
+  network.on('tournament_error', ({ message }) => {
+    alert(message || 'Error al unirse al torneo');
   });
 
   // --- ACTUALIZACIÓN DE INTERFAZ DEL JUEGO ---
-  function prepareTurn({ turnIndex, shooterRole, keeperRole, isSuddenDeath, suddenDeathRound, roomState }) {
+  function prepareTurn({ turnIndex, shooterRole, keeperRole, isSuddenDeath, suddenDeathRound, penaltiesPerPlayer, roomState }) {
     isResolvingTurn = false;
     hasConfirmedChoice = false;
     mySelectedCell = null;
     currentShooterRole = shooterRole;
     currentKeeperRole = keeperRole;
+    if (penaltiesPerPlayer !== undefined) {
+      currentPenaltiesPerPlayer = penaltiesPerPlayer;
+    } else if (roomState && roomState.penaltiesPerPlayer !== undefined) {
+      currentPenaltiesPerPlayer = roomState.penaltiesPerPlayer;
+    }
 
     animator.resetPositions();
     goalGrid.clearSelection();
 
-    // Determinar si soy el tirador o el portero
     const amIShooter = (myRole === shooterRole);
     const amIKeeper = (myRole === keeperRole);
 
-    // Habilitar la portería según rol
     if (amIShooter) {
       goalGrid.enable('shooter');
       roleInstructions.innerHTML = `
         <div class="role-title shooter">⚽ ERES EL TIRADOR</div>
-        <p class="role-desc">Elige en secreto a cuál de las 6 zonas quieres disparar.</p>
+        <p class="role-desc">Haz clic directamente en la zona a la que quieres disparar (cualquier tiro salvo raso al centro tiene un pequeño riesgo de irse fuera).</p>
       `;
     } else if (amIKeeper) {
       goalGrid.enable('keeper');
       roleInstructions.innerHTML = `
         <div class="role-title keeper">🧤 ERES EL PORTERO</div>
-        <p class="role-desc">Adivina a qué zona se lanzará el tiro para atraparlo.</p>
+        <p class="role-desc">Haz clic directamente en la zona hacia la que quieras lanzarte a parar.</p>
       `;
     } else {
       goalGrid.disable();
@@ -254,46 +371,52 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // Reiniciar badges de estado
     myStatusBadge.className = 'status-badge waiting';
     myStatusBadge.innerHTML = '⏳ Esperando tu elección...';
 
     rivalStatusBadge.className = 'status-badge waiting';
     rivalStatusBadge.innerHTML = '⏳ Rival pensando...';
 
-    selectedZoneLabel.textContent = 'Haz clic en una de las 6 zonas de la portería';
-    confirmChoiceBtn.setAttribute('disabled', 'true');
+    selectedZoneLabel.textContent = 'Haz clic en una de las 6 zonas de la portería para elegir al instante';
 
-    // Actualizar nombres en el marcador
     if (roomState && roomState.players) {
       const p1 = roomState.players.find(p => p.role === 'P1');
       const p2 = roomState.players.find(p => p.role === 'P2');
+      if (p1 && p1.name) playerNames.P1 = p1.name;
+      if (p2 && p2.name) playerNames.P2 = p2.name;
       scoreboard.updatePlayerNames(
         p1 ? (p1.role === myRole ? `${p1.name} (Tú)` : p1.name) : 'Jugador 1',
         p2 ? (p2.role === myRole ? `${p2.name} (Tú)` : p2.name) : 'Jugador 2'
       );
     }
 
-    // Renderizar marcador
+    if (roomState && roomState.scores) {
+      lastScores = roomState.scores;
+    }
+    if (roomState && roomState.history) {
+      lastHistory = roomState.history;
+    }
+
     scoreboard.render({
-      scores: roomState ? roomState.scores : { P1: 0, P2: 0 },
-      history: roomState ? roomState.history : { P1: [], P2: [] },
+      scores: lastScores,
+      history: lastHistory,
       currentTurnIndex: turnIndex,
       shooterRole,
       keeperRole,
       isSuddenDeath,
       suddenDeathRound,
+      penaltiesPerPlayer: currentPenaltiesPerPlayer,
       myRole
     });
   }
 
-  // --- EVENTOS DE RED ---
-  network.on('joined_room', ({ roomId, role, roomState }) => {
+  // --- EVENTOS DE RED GENERALES ---
+  network.on('joined_room', ({ roomId, role, roomState, tournamentContext }) => {
     myRole = role;
-    headerRoomBadge.textContent = `Sala: ${roomId}`;
+    headerRoomBadge.textContent = tournamentContext ? `Partido de Torneo` : `Sala: ${roomId}`;
     headerRoomBadge.classList.remove('hidden');
 
-    if (roomState.state === 'waiting' && myRole === 'P1') {
+    if (!tournamentContext && roomState.state === 'waiting' && myRole === 'P1') {
       setupWaitingRoom(roomId);
     } else {
       showScreen(gameScreen);
@@ -302,13 +425,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   network.on('room_update', (roomState) => {
     if (roomState.players.length >= 2 && roomState.state === 'waiting') {
-      // Ambos jugadores están conectados
       showToast('¡Oponente conectado! Preparando el terreno de juego...');
     }
   });
 
   network.on('game_started', (data) => {
     showScreen(gameScreen);
+    if (window.soundEngine) {
+      window.soundEngine.playPenaltazoTheme();
+    }
     prepareTurn(data);
   });
 
@@ -325,34 +450,44 @@ document.addEventListener('DOMContentLoaded', () => {
   network.on('turn_resolved', (data) => {
     isResolvingTurn = true;
     goalGrid.disable();
-    confirmChoiceBtn.setAttribute('disabled', 'true');
 
     myStatusBadge.className = 'status-badge resolving';
     myStatusBadge.innerHTML = '⚡ ¡Resolviendo penalti!';
     rivalStatusBadge.className = 'status-badge resolving';
     rivalStatusBadge.innerHTML = '⚡ ¡Resolviendo penalti!';
 
-    const shooterName = data.shooterRole === myRole ? 'tu disparo' : 'el disparo rival';
+    const shooterName = playerNames[data.shooterRole] || (data.shooterRole === 'P1' ? 'Jugador 1' : 'Jugador 2');
+    const keeperName = playerNames[data.keeperRole] || (data.keeperRole === 'P1' ? 'Jugador 1' : 'Jugador 2');
 
-    // Ejecutar la animación visual (balón y guantes)
+    // Actualizar el marcador en cuanto el balón impacta en la portería
     animator.playResolution({
       shooterChoice: data.shooterChoice,
       keeperChoice: data.keeperChoice,
       isGoal: data.isGoal,
+      isOut: data.isOut,
       shooterName,
-      onComplete: () => {
-        // Actualizar el marcador tras finalizar la animación
+      keeperName,
+      isMyShot: data.shooterRole === myRole,
+      isMySave: data.keeperRole === myRole,
+      onImpact: () => {
+        lastScores = data.scores;
+        lastHistory = data.history;
+        if (data.penaltiesPerPlayer !== undefined) {
+          currentPenaltiesPerPlayer = data.penaltiesPerPlayer;
+        }
         scoreboard.render({
           scores: data.scores,
           history: data.history,
-          currentTurnIndex: data.nextTurnIndex,
+          currentTurnIndex: data.turnIndex,
           shooterRole: data.shooterRole,
           keeperRole: data.keeperRole,
           isSuddenDeath: data.nextIsSuddenDeath,
           suddenDeathRound: data.nextSuddenDeathRound,
+          penaltiesPerPlayer: currentPenaltiesPerPlayer,
           myRole
         });
-
+      },
+      onComplete: () => {
         if (data.gameOver) {
           showGameOverScreen(data);
         }
@@ -370,26 +505,30 @@ document.addEventListener('DOMContentLoaded', () => {
     rivalStatusBadge.innerHTML = '❌ Rival desconectado';
   });
 
-  // --- FIN DE PARTIDA & REVANCHA ---
+  // --- FIN DE PARTIDO & REVANCHA / RETORNO A TORNEO ---
   function showGameOverScreen(data) {
     setTimeout(() => {
       gameOverModal.classList.remove('hidden');
+
+      if (window.soundEngine) {
+        window.soundEngine.playPenaltazoTheme();
+      }
 
       const iWon = (data.winner === myRole);
       const isSpectator = (myRole === 'spectator');
 
       if (isSpectator) {
-        gameOverTitle.textContent = `🏆 ¡${data.winner === 'P1' ? 'Jugador 1' : 'Jugador 2'} es el Campeón!`;
+        gameOverTitle.textContent = `🏆 ¡${data.winner === 'P1' ? 'Jugador 1' : 'Jugador 2'} se lleva el partido!`;
         gameOverSubtitle.textContent = 'Partidazo resuelto en la tanda.';
       } else if (iWon) {
         gameOverTitle.innerHTML = '🏆 ¡¡HAS GANADO LA TANDA!!';
         gameOverTitle.className = 'game-over-title victory';
-        gameOverSubtitle.textContent = '¡Precisión milimétrica y reflejos felinos!';
+        gameOverSubtitle.textContent = isInTournament ? '¡Avanzas a la siguiente ronda del torneo!' : '¡Precisión milimétrica y reflejos felinos!';
         if (window.soundEngine) window.soundEngine.playCrowdCheer(true);
       } else {
         gameOverTitle.innerHTML = '💔 DERROTA EN LOS PENALTIS';
         gameOverTitle.className = 'game-over-title defeat';
-        gameOverSubtitle.textContent = 'Esta vez la suerte cayó del lado del rival.';
+        gameOverSubtitle.textContent = isInTournament ? 'Has quedado apeado del torneo, pero puedes seguir como espectador.' : 'Esta vez la suerte cayó del lado del rival.';
       }
 
       gameOverScores.innerHTML = `
@@ -406,11 +545,29 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      rematchStatus.textContent = '';
-      rematchBtn.removeAttribute('disabled');
-      rematchBtn.textContent = 'Pedir Revancha 🔄';
+      // Si estamos en un torneo, mostrar botón para regresar al cuadro del torneo
+      if (isInTournament && activeTournament) {
+        returnBracketBtn.classList.remove('hidden');
+        rematchBtn.classList.add('hidden');
+        rematchStatus.textContent = '';
+      } else {
+        returnBracketBtn.classList.add('hidden');
+        rematchBtn.classList.remove('hidden');
+        rematchStatus.textContent = '';
+        rematchBtn.removeAttribute('disabled');
+        rematchBtn.textContent = 'Pedir Revancha 🔄';
+      }
     }, 1200);
   }
+
+  // Botón para volver al cuadro del torneo
+  returnBracketBtn.addEventListener('click', () => {
+    gameOverModal.classList.add('hidden');
+    showScreen(tournamentBracketScreen);
+    if (activeTournament) {
+      tournamentView.renderBracket(activeTournament, myUserId);
+    }
+  });
 
   rematchBtn.addEventListener('click', () => {
     rematchBtn.setAttribute('disabled', 'true');

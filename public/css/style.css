@@ -1118,6 +1118,71 @@ body {
   pointer-events: none;
 }
 
+/* Pancartas de ánimo al jugador en la grada */
+.stadium-cheer-banners {
+  position: absolute;
+  top: 2.2%;
+  left: 3%;
+  right: 3%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.stadium-cheer-banner {
+  background: linear-gradient(180deg, #ffffff 0%, #fef08a 100%);
+  color: #0f172a;
+  border: 2.5px solid #0f172a;
+  border-radius: 8px;
+  padding: 0.25rem 0.75rem;
+  font-family: 'Teko', sans-serif;
+  font-size: clamp(0.95rem, 1.9vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 #0f172a, 0 5px 10px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: bannerWave 2.4s ease-in-out infinite alternate;
+}
+
+.stadium-cheer-banner.banner-main {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  color: #fef08a;
+  border-color: #ffffff;
+  font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+  padding: 0.28rem 1.1rem;
+  text-shadow: 0 2px 0 #7f1d1d;
+  box-shadow: 0 4px 0 #7f1d1d, 0 6px 14px rgba(0, 0, 0, 0.35);
+  animation-delay: -1.2s;
+}
+
+@keyframes bannerWave {
+  0% { transform: translateY(0) rotate(-0.8deg); }
+  100% { transform: translateY(-3px) rotate(0.8deg); }
+}
+
+@media (max-width: 640px) {
+  .stadium-cheer-banners {
+    justify-content: center;
+    top: 1.5%;
+  }
+
+  .stadium-cheer-banner.banner-side {
+    display: none;
+  }
+
+  .stadium-cheer-banner.banner-main {
+    font-size: 0.95rem;
+    padding: 0.18rem 0.75rem;
+    max-width: 94%;
+  }
+}
+
 /* Césped vibrante recién cortado en perspectiva 3D */
 .pitch-turf {
   position: absolute;
@@ -3124,8 +3189,68 @@ body[data-theme="claro"] .btn-outline {
 }
 
 body[data-theme="claro"] .stadium-arena {
+  background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 36%, #f8fafc 48%, #4ade80 48%);
   border: 1px solid #cbd5e1;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
+}
+
+body[data-theme="claro"] .stadium-lights {
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+}
+
+body[data-theme="claro"] .stadium-crowd {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #0284c7 0px,
+      #0284c7 80px,
+      #ffffff 80px,
+      #ffffff 160px,
+      #38bdf8 160px,
+      #38bdf8 240px
+    ) 0 100% / 100% 16px no-repeat,
+    radial-gradient(circle, #0284c7 2px, transparent 2.5px) 0 0 / 16px 12px,
+    radial-gradient(circle, #38bdf8 2px, transparent 2.5px) 8px 6px / 16px 12px,
+    radial-gradient(circle, #94a3b8 2px, transparent 2.5px) 4px 10px / 16px 12px,
+    linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-top: 2px solid #ffffff;
+  border-bottom: 2px solid #94a3b8;
+}
+
+body[data-theme="claro"] .stadium-cheer-banner {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #94a3b8;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="claro"] .stadium-cheer-banner.banner-main {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 1px solid #bae6fd;
+  text-shadow: none;
+}
+
+body[data-theme="claro"] .pitch-turf {
+  background: repeating-linear-gradient(
+    180deg,
+    #4ade80 0px,
+    #4ade80 26px,
+    #22c55e 26px,
+    #22c55e 52px
+  );
+  box-shadow: inset 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="claro"] .keeper-torso,
+body[data-theme="claro"] .keeper-arm {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #ffffff;
+}
+
+body[data-theme="claro"] .keeper-shorts {
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 body[data-theme="claro"] .selected-zone-label {
@@ -3321,23 +3446,49 @@ body[data-theme="oscuro"] .match-row {
 }
 
 body[data-theme="oscuro"] .stadium-arena {
-  background: radial-gradient(circle at 50% 15%, #1e293b 0%, #0a0f1d 85%);
+  background: radial-gradient(circle at 50% 15%, #1e293b 0%, #050811 85%);
   border: 1px solid #334155;
-  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.85), 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme="oscuro"] .stadium-lights {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.32) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 0%, rgba(255, 255, 255, 0.32) 0%, transparent 60%);
 }
 
 body[data-theme="oscuro"] .stadium-crowd {
-  top: 0;
-  height: 52%;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.02) 0px,
-    rgba(255, 255, 255, 0.02) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-  border: none;
-  opacity: 0.5;
+  top: 16%;
+  height: 32%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #0f172a 0px,
+      #0f172a 90px,
+      #0284c7 90px,
+      #0284c7 180px
+    ) 0 100% / 100% 14px no-repeat,
+    radial-gradient(circle, rgba(255, 255, 255, 0.35) 1.5px, transparent 2px) 0 0 / 22px 16px,
+    radial-gradient(circle, rgba(56, 189, 248, 0.3) 2px, transparent 2.5px) 10px 7px / 22px 16px,
+    linear-gradient(180deg, #090d16 0%, #111827 100%);
+  border-top: 1px solid #1e293b;
+  border-bottom: 2px solid #38bdf8;
+  opacity: 0.9;
+}
+
+body[data-theme="oscuro"] .stadium-cheer-banner {
+  background: rgba(15, 23, 42, 0.9);
+  color: #38bdf8;
+  border: 1px solid #334155;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+body[data-theme="oscuro"] .stadium-cheer-banner.banner-main {
+  background: rgba(15, 23, 42, 0.95);
+  color: #facc15;
+  border: 1px solid #facc15;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.3);
 }
 
 body[data-theme="oscuro"] .pitch-turf {
@@ -3348,6 +3499,21 @@ body[data-theme="oscuro"] .pitch-turf {
     #166534 24px,
     #166534 48px
   );
+  box-shadow: inset 0 20px 30px rgba(0, 0, 0, 0.65);
+}
+
+body[data-theme="oscuro"] .keeper-torso,
+body[data-theme="oscuro"] .keeper-arm {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+body[data-theme="oscuro"] .keeper-shorts {
+  background: #0f172a;
+}
+
+body[data-theme="oscuro"] .keeper-sock {
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 30%, #0284c7 30%, #0284c7 100%);
 }
 
 body[data-theme="oscuro"] .selected-zone-label {
@@ -3548,18 +3714,98 @@ body[data-theme="pcfutbol"] .stadium-arena {
   border-left: 3px solid #404040;
   border-right: 3px solid #ffffff;
   border-bottom: 3px solid #ffffff;
-  background: linear-gradient(180deg, #000c24 0%, #001f4d 48%, #006622 48%);
+  background: linear-gradient(180deg, #00081c 0%, #001a4d 48%, #006622 48%);
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.7);
 }
 
+body[data-theme="pcfutbol"] .stadium-lights {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 80px,
+      rgba(255, 255, 204, 0.25) 80px,
+      rgba(255, 255, 204, 0.25) 110px
+    );
+}
+
+body[data-theme="pcfutbol"] .stadium-crowd {
+  top: 16%;
+  height: 32%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #ffcc00 0px,
+      #ffcc00 65px,
+      #cc0000 65px,
+      #cc0000 130px,
+      #ffffff 130px,
+      #ffffff 195px,
+      #003399 195px,
+      #003399 260px
+    ) 0 100% / 100% 18px no-repeat,
+    radial-gradient(square, #c0c0c0 2px, transparent 2px) 0 0 / 10px 10px,
+    repeating-linear-gradient(
+      0deg,
+      #222222 0px,
+      #222222 6px,
+      #3b3b3b 6px,
+      #3b3b3b 12px
+    );
+  border-top: 3px solid #808080;
+  border-bottom: 3px solid #000000;
+}
+
+body[data-theme="pcfutbol"] .stadium-cheer-banner {
+  background: #001a09;
+  color: #00ff41;
+  border-radius: 0 !important;
+  border-top: 2px solid #404040;
+  border-left: 2px solid #404040;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  font-family: 'VT323', monospace;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  box-shadow: 3px 3px 0 #000000;
+}
+
+body[data-theme="pcfutbol"] .stadium-cheer-banner.banner-main {
+  background: #000080;
+  color: #ffcc00;
+  text-shadow: 1px 1px 0 #000000;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+}
+
 body[data-theme="pcfutbol"] .pitch-turf {
-  background: repeating-linear-gradient(
-    180deg,
-    #006622 0px,
-    #006622 24px,
-    #00551b 24px,
-    #00551b 48px
-  );
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 40px 40px,
+    repeating-linear-gradient(
+      180deg,
+      #007a29 0px,
+      #007a29 24px,
+      #005c1f 24px,
+      #005c1f 48px
+    );
+}
+
+body[data-theme="pcfutbol"] .goal-crossbar,
+body[data-theme="pcfutbol"] .goal-post,
+body[data-theme="pcfutbol"] .goal-cell {
+  border-radius: 0 !important;
+}
+
+body[data-theme="pcfutbol"] .keeper-torso,
+body[data-theme="pcfutbol"] .keeper-arm {
+  background: linear-gradient(135deg, #008000 0%, #ffcc00 100%);
+  border-radius: 0 !important;
+}
+
+body[data-theme="pcfutbol"] .keeper-shorts {
+  background: #000000;
+  border-radius: 0 !important;
 }
 
 body[data-theme="pcfutbol"] .selected-zone-label {
@@ -3758,7 +4004,67 @@ body[data-theme="sensible"] .stadium-arena {
   border-radius: 0 !important;
   border: 4px solid #ffcc00;
   box-shadow: 6px 6px 0 #000000;
-  background: linear-gradient(180deg, #003399 0%, #0055cc 48%, #20a020 48%);
+  background: linear-gradient(180deg, #001144 0%, #003399 48%, #20a020 48%);
+}
+
+body[data-theme="sensible"] .stadium-lights {
+  display: none;
+}
+
+body[data-theme="sensible"] .stadium-crowd {
+  top: 16%;
+  height: 32%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #cc0000 0px,
+      #cc0000 56px,
+      #ffffff 56px,
+      #ffffff 112px
+    ) 0 100% / 100% 18px no-repeat,
+    repeating-linear-gradient(
+      90deg,
+      #ffcc00 0px,
+      #ffcc00 6px,
+      transparent 6px,
+      transparent 18px
+    ) 0 0 / 18px 12px,
+    repeating-linear-gradient(
+      90deg,
+      #ff3300 0px,
+      #ff3300 6px,
+      transparent 6px,
+      transparent 24px
+    ) 6px 6px / 24px 12px,
+    repeating-linear-gradient(
+      0deg,
+      #001144 0px,
+      #001144 8px,
+      #002266 8px,
+      #002266 16px
+    );
+  border-top: 4px solid #ffffff;
+  border-bottom: 4px solid #000000;
+}
+
+body[data-theme="sensible"] .stadium-cheer-banner {
+  background: #001144;
+  color: #ffcc00;
+  border: 3px solid #ffffff;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #000000;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.55rem, 1.1vw, 0.72rem);
+  padding: 0.35rem 0.6rem;
+}
+
+body[data-theme="sensible"] .stadium-cheer-banner.banner-main {
+  background: #aa0000;
+  color: #ffcc00;
+  border: 3px solid #ffcc00;
+  text-shadow: 2px 2px 0 #000000;
+  box-shadow: 4px 4px 0 #000000;
+  font-size: clamp(0.6rem, 1.25vw, 0.8rem);
 }
 
 body[data-theme="sensible"] .pitch-turf {
@@ -3769,6 +4075,30 @@ body[data-theme="sensible"] .pitch-turf {
     #188818 24px,
     #188818 48px
   );
+  box-shadow: none;
+}
+
+body[data-theme="sensible"] .penalty-spot,
+body[data-theme="sensible"] .goal-crossbar,
+body[data-theme="sensible"] .goal-post,
+body[data-theme="sensible"] .keeper-head,
+body[data-theme="sensible"] .keeper-torso,
+body[data-theme="sensible"] .keeper-arm,
+body[data-theme="sensible"] .keeper-shorts,
+body[data-theme="sensible"] .keeper-sock,
+body[data-theme="sensible"] .keeper-boot {
+  border-radius: 0 !important;
+}
+
+body[data-theme="sensible"] .keeper-torso,
+body[data-theme="sensible"] .keeper-arm {
+  background: #cc0000;
+  border: 2px solid #ffffff;
+}
+
+body[data-theme="sensible"] .keeper-shorts {
+  background: #ffffff;
+  border: 2px solid #000000;
 }
 
 body[data-theme="sensible"] .goal-cell {

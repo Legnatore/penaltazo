@@ -529,6 +529,43 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     }
 
+    // Actualizar pancartas de ánimo en las gradas del estadio para el jugador actual
+    const cheerLeft = document.getElementById('cheer-banner-left');
+    const cheerCenter = document.getElementById('cheer-banner-center');
+    const cheerRight = document.getElementById('cheer-banner-right');
+    const activeMyName = (myRole === 'P1' ? playerNames.P1 : (myRole === 'P2' ? playerNames.P2 : playerNames[shooterRole])) || 'CAMPEÓN';
+    const upperName = activeMyName.toUpperCase();
+
+    const shooterChants = [
+      `🔥 ¡CHUTA A GOL, ${upperName}! 🔥`,
+      `⚽ ¡${upperName} NUNCA FALLA! ⚽`,
+      `🚀 ¡RÓMPELA, ${upperName}! 🚀`,
+      `🏆 ¡A LA ESCUADRA, ${upperName}! 🏆`
+    ];
+    const keeperChants = [
+      `🧤 ¡PÁRALO, ${upperName}, ERES UN MURO! 🧤`,
+      `🧱 ¡SAN ${upperName} BAJO PALOS! 🧱`,
+      `🦅 ¡VUELA, ${upperName}, QUE NO PASE! 🦅`,
+      `🛡️ ¡PORTERÍA A CERO, ${upperName}! 🛡️`
+    ];
+
+    const chantIdx = (turnIndex || 0) % shooterChants.length;
+    if (cheerLeft && cheerCenter && cheerRight) {
+      if (amIShooter) {
+        cheerLeft.textContent = `🚩 ¡VAMOS ${upperName}!`;
+        cheerCenter.textContent = shooterChants[chantIdx];
+        cheerRight.textContent = `🎺 ¡${upperName} GOL!`;
+      } else if (amIKeeper) {
+        cheerLeft.textContent = `🧤 ¡FUERZA ${upperName}!`;
+        cheerCenter.textContent = keeperChants[chantIdx];
+        cheerRight.textContent = `🚩 ¡MURO ${upperName}!`;
+      } else {
+        cheerLeft.textContent = `🚩 ¡VAMOS ${playerNames.P1.toUpperCase()}!`;
+        cheerCenter.textContent = `⚽ ¡QUÉ PARTIDAZO DE PENALTIS! ⚽`;
+        cheerRight.textContent = `🎺 ¡VAMOS ${playerNames.P2.toUpperCase()}!`;
+      }
+    }
+
     if (roomState && roomState.scores) {
       lastScores = roomState.scores;
     }

@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareEmailBtn = document.getElementById('share-email-btn');
   const shareNativeBtn = document.getElementById('share-native-btn');
   const openSecondTabBtn = document.getElementById('open-second-tab-btn');
+  const cancelWaitBtn = document.getElementById('cancel-wait-btn');
   const localIpsContainer = document.getElementById('local-ips-container');
 
   // Elementos del juego (Estadio de penaltis)
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const gameOverTitle = document.getElementById('game-over-title');
   const gameOverSubtitle = document.getElementById('game-over-subtitle');
   const gameOverScores = document.getElementById('game-over-scores');
+  const gameOverHeatmap = document.getElementById('game-over-heatmap');
   const rematchBtn = document.getElementById('rematch-btn');
   const rematchStatus = document.getElementById('rematch-status');
   const returnBracketBtn = document.getElementById('return-bracket-btn');
@@ -211,9 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = requireValidPlayerName();
         if (!name) return;
         isInTournament = false;
+        activeTournament = null;
         network.initMultiplayer();
         network.joinRoom(cleanCode, name, getSelectedLobbyPenalties());
       };
+    }
+    // Si el jugador ya tiene su apodo guardado de una partida anterior (ej. al recibir un 2º enlace por WhatsApp), entrar directamente
+    if (savedPlayerName && !isDefaultOrEmptyName(savedPlayerName)) {
+      isInTournament = false;
+      activeTournament = null;
+      network.initMultiplayer();
+      network.joinRoom(cleanCode, savedPlayerName, getSelectedLobbyPenalties());
     }
   }
 
@@ -670,14 +680,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- EVENTOS DE RED GENERALES ---
+  let pendingRematchVotes = [];
+
   network.on('joined_room', ({ roomId, role, roomState, tournamentContext }) => {
     myRole = role;
+    if (!tournamentContext) {
+      isInTournament = false;
+      activeTournament = null;
+    }
     headerRoomBadge.textContent = tournamentContext ? `Partido de Torneo` : `Sala: ${roomId}`;
     headerRoomBadge.classList.remove('hidden');
 
-    if (!tournamentContext && roomState.state === 'waiting' && myRole === 'P1') {
+    if (!tournamentContext && roomState.state === 'waiting') {
       setupWaitingRoom(roomId);
-    } else {
+    } else if (roomState.state !== 'game_over') {
       showScreen(gameScreen);
     }
   });
@@ -759,6 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   network.on('game_started', (data) => {
     matchZoneStats = createEmptyZoneStats();
+    pendingRematchVotes = [];
+    gameOverModal.classList.add('hidden');
     showScreen(gameScreen);
     if (window.soundEngine) {
       window.soundEngine.playPenaltazoTheme();
@@ -837,9 +855,55 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- FIN DE PARTIDO & REVANCHA / RETORNO A TORNEO ---
+  function updateRematchUI(votes = pendingRematchVotes) {
+    if (isInTournament && activeTournament) {
+      returnBracketBtn.classList.remove('hidden');
+      rematchBtn.classList.add('hidden');
+      rematchStatus.textContent = '';
+      rematchStatus.classList.remove('rematch-requested-alert');
+      return;
+    }
+
+    returnBracketBtn.classList.add('hidden');
+    rematchBtn.classList.remove('hidden');
+
+    const rivalRole = (myRole === 'P1') ? 'P2' : 'P1';
+    const rivalWantsRematch = Array.isArray(votes) && votes.includes(rivalRole);
+    const iWantRematch = Array.isArray(votes) && votes.includes(myRole);
+
+    if (rivalWantsRematch && !iWantRematch) {
+      rematchStatus.innerHTML = '🔥 <strong>¡Tu rival pide la revancha!</strong> Pulsa el botón verde para aceptarla:';
+      rematchStatus.classList.add('rematch-requested-alert');
+      rematchBtn.removeAttribute('disabled');
+      rematchBtn.classList.remove('btn-primary');
+      rematchBtn.classList.add('btn-confirm', 'pulse-btn');
+      rematchBtn.innerHTML = '✅ ¡ACEPTAR REVANCHA AHORA! 🔄';
+    } else if (iWantRematch && !rivalWantsRematch) {
+      rematchStatus.textContent = 'Has solicitado la revancha. Esperando a que tu rival acepte...';
+      rematchStatus.classList.remove('rematch-requested-alert');
+      rematchBtn.setAttribute('disabled', 'true');
+      rematchBtn.classList.remove('btn-confirm', 'pulse-btn');
+      rematchBtn.classList.add('btn-primary');
+      rematchBtn.textContent = '⏳ Esperando al rival...';
+    } else if (iWantRematch && rivalWantsRematch) {
+      rematchStatus.textContent = '⚡ ¡Revancha aceptada! Iniciando nuevo partido...';
+      rematchStatus.classList.remove('rematch-requested-alert');
+      rematchBtn.setAttribute('disabled', 'true');
+    } else {
+      rematchStatus.textContent = '';
+      rematchStatus.classList.remove('rematch-requested-alert');
+      rematchBtn.removeAttribute('disabled');
+      rematchBtn.classList.remove('btn-confirm', 'pulse-btn');
+      rematchBtn.classList.add('btn-primary');
+      rematchBtn.textContent = 'Pedir Revancha 🔄';
+    }
+  }
+
   function showGameOverScreen(data) {
     setTimeout(() => {
       gameOverModal.classList.remove('hidden');
+      const modalCard = gameOverModal.querySelector('.modal-card');
+      if (modalCard) modalCard.scrollTop = 0;
 
       if (window.soundEngine) {
         window.soundEngine.playPenaltazoTheme();
@@ -874,21 +938,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="team-label">${myRole === 'P2' ? `${playerNames.P2} (Tú)` : playerNames.P2}</span>
           </div>
         </div>
-        ${renderHeatmapReportHTML()}
       `;
 
-      // Si estamos en un torneo, mostrar botón para regresar al cuadro del torneo
-      if (isInTournament && activeTournament) {
-        returnBracketBtn.classList.remove('hidden');
-        rematchBtn.classList.add('hidden');
-        rematchStatus.textContent = '';
-      } else {
-        returnBracketBtn.classList.add('hidden');
-        rematchBtn.classList.remove('hidden');
-        rematchStatus.textContent = '';
-        rematchBtn.removeAttribute('disabled');
-        rematchBtn.textContent = 'Pedir Revancha 🔄';
+      if (gameOverHeatmap) {
+        gameOverHeatmap.innerHTML = renderHeatmapReportHTML();
       }
+
+      updateRematchUI(pendingRematchVotes);
     }, 1200);
   }
 
@@ -902,17 +958,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   rematchBtn.addEventListener('click', () => {
-    rematchBtn.setAttribute('disabled', 'true');
-    rematchBtn.textContent = 'Esperando al rival...';
-    rematchStatus.textContent = 'Has solicitado la revancha.';
+    if (!pendingRematchVotes.includes(myRole)) {
+      pendingRematchVotes.push(myRole);
+    }
+    updateRematchUI(pendingRematchVotes);
     network.requestRematch();
   });
 
   network.on('rematch_status', ({ votes }) => {
-    if (votes.includes(myRole === 'P1' ? 'P2' : 'P1')) {
-      rematchStatus.textContent = '¡El rival quiere la revancha!';
-    }
+    pendingRematchVotes = Array.isArray(votes) ? votes : [];
+    // Si el modal aún no se había terminado de mostrar por el timeout, asegurarnos de actualizar su estado
+    gameOverModal.classList.remove('hidden');
+    updateRematchUI(pendingRematchVotes);
   });
+
+  if (cancelWaitBtn) {
+    cancelWaitBtn.addEventListener('click', () => {
+      window.location.href = window.location.pathname;
+    });
+  }
 
   backToLobbyBtn.addEventListener('click', () => {
     window.location.href = window.location.pathname;

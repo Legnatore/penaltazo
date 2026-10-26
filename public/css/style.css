@@ -1833,7 +1833,21 @@ body {
   font-weight: 800;
   color: var(--primary);
   min-height: 1.4rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.rematch-status.rematch-requested-alert {
+  background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+  color: #0f172a;
+  border: 3px solid #0f172a;
+  border-radius: 14px;
+  padding: 0.65rem 0.9rem;
+  box-shadow: 0 4px 0 #0f172a;
+  animation: pulse-badge 1.2s infinite ease-in-out;
+}
+
+.game-over-heatmap {
+  margin-top: 1.1rem;
 }
 
 .modal-actions {

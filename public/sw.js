@@ -1,7 +1,7 @@
 /**
  * Service Worker de ¡PENALTAZO! (PWA Offline-First para modo práctica vs IA)
  */
-const CACHE_NAME = 'penaltazo-pwa-v1.2';
+const CACHE_NAME = 'penaltazo-pwa-v1.3';
 const CORE_ASSETS = [
   '/',
   '/index.html',
@@ -42,31 +42,31 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Estrategia Stale-While-Revalidate para estáticos (excluyendo Socket.io)
+// 3. Estrategia Network-First con fallback a Caché para modo offline (garantiza que los enlaces de WhatsApp y salas online estén siempre al día)
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Ignorar peticiones que no sean GET o que vayan al endpoint en tiempo real de Socket.io
-  if (request.method !== 'GET' || url.pathname.startsWith('/socket.io/')) {
+  // Ignorar peticiones que no sean GET o que vayan al endpoint en tiempo real de Socket.io / API
+  if (request.method !== 'GET' || url.pathname.startsWith('/socket.io/') || url.pathname.startsWith('/api/')) {
     return;
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      const networkFetch = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse || caches.match('/index.html'));
-
-      return cachedResponse || networkFetch;
-    })
+    fetch(request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(request).then((cachedResponse) => {
+          return cachedResponse || caches.match('/index.html');
+        });
+      })
   );
 });

@@ -106,8 +106,19 @@ io.on('connection', (socket) => {
   let currentTournamentId = null;
 
   // --- PARTIDAS RÁPIDAS / 1v1 ---
-  socket.on('join_room', ({ roomId, playerName, penaltiesPerPlayer }) => {
+  socket.on('join_room', ({ roomId, playerName, penaltiesPerPlayer, clientId, isAutoReconnect }) => {
     const cleanRoomId = (roomId || generateRoomId()).trim().toUpperCase();
+
+    // Si el socket estaba en otra sala distinta anteriormente, limpiarlo de esa sala
+    if (currentRoomId && currentRoomId !== cleanRoomId) {
+      socket.leave(currentRoomId);
+      const prevRoom = rooms.get(currentRoomId);
+      if (prevRoom) {
+        const prevP = prevRoom.players.find(pl => pl.id === socket.id);
+        if (prevP) prevP.connected = false;
+      }
+    }
+
     currentRoomId = cleanRoomId;
 
     let room = rooms.get(cleanRoomId);
@@ -116,29 +127,68 @@ io.on('connection', (socket) => {
       rooms.set(cleanRoomId, room);
     }
 
+    // Si todos los jugadores de una sala anterior estaban desconectados y no es una autoreconexión de quien acaba de crearla,
+    // o si alguien entra explícitamente por enlace a una sala cuyo partido ya había terminado
+    const existingP1Before = room.players.find(p => p.role === 'P1');
+    const existingP2Before = room.players.find(p => p.role === 'P2');
+    const isKnownClient = Boolean(
+      clientId && (
+        (existingP1Before && existingP1Before.clientId === clientId) ||
+        (existingP2Before && existingP2Before.clientId === clientId)
+      )
+    );
+
+    if (room.state === 'game_over' && !isAutoReconnect) {
+      room.state = 'waiting';
+      room.rematchVotes.clear();
+    }
+
     const existingP1 = room.players.find(p => p.role === 'P1');
     const existingP2 = room.players.find(p => p.role === 'P2');
+    let isReconnectingSamePlayer = false;
+    let isReplacedPlayer = false;
 
-    if (!existingP1 || !existingP1.connected) {
+    // 1. Comprobar si es el mismo jugador reconectando (ej. al volver de WhatsApp al navegador móvil)
+    if (existingP1 && ((clientId && existingP1.clientId === clientId) || existingP1.id === socket.id)) {
+      playerRole = 'P1';
+      isReconnectingSamePlayer = true;
+      existingP1.id = socket.id;
+      if (clientId) existingP1.clientId = clientId;
+      if (playerName && playerName.trim()) existingP1.name = playerName.trim();
+      existingP1.connected = true;
+    } else if (existingP2 && ((clientId && existingP2.clientId === clientId) || existingP2.id === socket.id)) {
+      playerRole = 'P2';
+      isReconnectingSamePlayer = true;
+      existingP2.id = socket.id;
+      if (clientId) existingP2.clientId = clientId;
+      if (playerName && playerName.trim()) existingP2.name = playerName.trim();
+      existingP2.connected = true;
+    } else if (!existingP1) {
+      // 2. No hay P1 todavía -> asignar P1
       playerRole = 'P1';
       const name = (playerName && playerName.trim()) || 'Jugador 1';
-      if (!existingP1) {
-        room.players.push({ id: socket.id, role: 'P1', name, connected: true, isBot: false });
-      } else {
-        existingP1.id = socket.id;
-        existingP1.name = name;
-        existingP1.connected = true;
-      }
-    } else if (!existingP2 || !existingP2.connected) {
+      room.players.push({ id: socket.id, clientId: clientId || socket.id, role: 'P1', name, connected: true, isBot: false });
+    } else if (!existingP2) {
+      // 3. Ya existe P1 (incluso si P1 está temporalmente en segundo plano enviando el enlace por WhatsApp) -> asignar P2 al invitado
       playerRole = 'P2';
       const name = (playerName && playerName.trim()) || 'Jugador 2';
-      if (!existingP2) {
-        room.players.push({ id: socket.id, role: 'P2', name, connected: true, isBot: false });
-      } else {
-        existingP2.id = socket.id;
-        existingP2.name = name;
-        existingP2.connected = true;
-      }
+      room.players.push({ id: socket.id, clientId: clientId || socket.id, role: 'P2', name, connected: true, isBot: false });
+    } else if (!existingP1.connected) {
+      // 4. Ambos existían pero P1 se desconectó y entra un jugador nuevo
+      playerRole = 'P1';
+      isReplacedPlayer = true;
+      existingP1.id = socket.id;
+      existingP1.clientId = clientId || socket.id;
+      existingP1.name = (playerName && playerName.trim()) || 'Jugador 1';
+      existingP1.connected = true;
+    } else if (!existingP2.connected) {
+      // 5. Ambos existían pero P2 se desconectó y entra un jugador nuevo
+      playerRole = 'P2';
+      isReplacedPlayer = true;
+      existingP2.id = socket.id;
+      existingP2.clientId = clientId || socket.id;
+      existingP2.name = (playerName && playerName.trim()) || 'Jugador 2';
+      existingP2.connected = true;
     } else {
       playerRole = 'spectator';
       room.spectators.push({ id: socket.id, name: playerName || 'Espectador' });
@@ -154,11 +204,39 @@ io.on('connection', (socket) => {
 
     io.to(cleanRoomId).emit('room_update', sanitizeRoomForClient(room));
 
-    const p1 = room.players.find(p => p.role === 'P1' && p.connected);
-    const p2 = room.players.find(p => p.role === 'P2' && p.connected);
+    const hasP1 = room.players.some(p => p.role === 'P1');
+    const hasP2 = room.players.some(p => p.role === 'P2');
 
-    if (p1 && p2 && room.state === 'waiting') {
-      startNewGame(room);
+    if (hasP1 && hasP2) {
+      if (room.state === 'waiting' || isReplacedPlayer) {
+        // Ambos jugadores ya están registrados en la sala: iniciar partida
+        startNewGame(room);
+      } else if (isReconnectingSamePlayer && (room.state === 'playing' || room.state === 'resolving')) {
+        // El jugador acaba de volver (p. ej. de compartir por WhatsApp) y la partida ya está en marcha: sincronizar su pantalla
+        const { shooterRole, keeperRole } = getTurnRoles(room.turnIndex);
+        socket.emit('game_started', {
+          turnIndex: room.turnIndex,
+          shooterRole,
+          keeperRole,
+          isSuddenDeath: room.isSuddenDeath,
+          suddenDeathRound: room.suddenDeathRound,
+          penaltiesPerPlayer: room.penaltiesPerPlayer,
+          roomState: sanitizeRoomForClient(room)
+        });
+        if (room.choices.P1 !== null) {
+          socket.emit('choice_confirmed', { role: 'P1' });
+        }
+        if (room.choices.P2 !== null) {
+          socket.emit('choice_confirmed', { role: 'P2' });
+        }
+      } else if (isReconnectingSamePlayer && room.state === 'game_over') {
+        // Si reconectó durante la pantalla de fin de partido, reenviar estado de revancha
+        if (room.rematchVotes.size > 0) {
+          socket.emit('rematch_status', {
+            votes: Array.from(room.rematchVotes)
+          });
+        }
+      }
     }
   });
 

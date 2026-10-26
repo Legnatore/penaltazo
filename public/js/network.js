@@ -8,10 +8,25 @@ class NetworkManager {
     this.socket = null;
     this.mode = 'multiplayer'; // 'multiplayer' | 'ai'
     this.roomId = null;
+    this.activeTournamentId = null;
     this.playerRole = null;
     this.playerName = 'Tú';
+    this.penaltiesPerPlayer = 5;
     this.ai = new AIOpponent();
     this.callbacks = {};
+
+    // Identificador único de pestaña para reconexiones transparentes al volver de WhatsApp/Telegram
+    let savedClientId = null;
+    try {
+      savedClientId = sessionStorage.getItem('penaltazo_client_id');
+      if (!savedClientId) {
+        savedClientId = 'cid_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+        sessionStorage.setItem('penaltazo_client_id', savedClientId);
+      }
+    } catch (e) {
+      savedClientId = 'cid_' + Math.random().toString(36).substring(2, 10);
+    }
+    this.clientId = savedClientId;
 
     // Estado simulado para el modo IA
     this.localState = {
@@ -22,6 +37,25 @@ class NetworkManager {
       suddenDeathRound: 0,
       state: 'waiting'
     };
+
+    // Cuando el usuario vuelve de la app de WhatsApp/Telegram al navegador móvil, reconectar y sincronizar sala
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.mode === 'multiplayer' && this.socket) {
+          if (!this.socket.connected) {
+            this.socket.connect();
+          } else if (this.roomId && !this.activeTournamentId && !String(this.roomId).includes('_r')) {
+            this.socket.emit('join_room', {
+              roomId: this.roomId,
+              playerName: this.playerName,
+              penaltiesPerPlayer: this.penaltiesPerPlayer,
+              clientId: this.clientId,
+              isAutoReconnect: true
+            });
+          }
+        }
+      });
+    }
   }
 
   on(event, callback) {
@@ -40,8 +74,28 @@ class NetworkManager {
 
     if (typeof io !== 'undefined') {
       this.socket = io(serverUrl, {
-        reconnectionAttempts: 5,
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 500,
         timeout: 10000
+      });
+
+      this.socket.on('connect', () => {
+        // Si estábamos en una sala 1v1 y el socket se reconectó (ej. tras volver de WhatsApp), re-entrar automáticamente
+        if (this.mode === 'multiplayer' && this.roomId && !this.activeTournamentId && !String(this.roomId).includes('_r')) {
+          this.socket.emit('join_room', {
+            roomId: this.roomId,
+            playerName: this.playerName,
+            penaltiesPerPlayer: this.penaltiesPerPlayer,
+            clientId: this.clientId,
+            isAutoReconnect: true
+          });
+        } else if (this.mode === 'multiplayer' && this.activeTournamentId) {
+          this.socket.emit('join_tournament', {
+            tournamentId: this.activeTournamentId,
+            playerName: this.playerName
+          });
+        }
       });
 
       this.socket.on('joined_room', (data) => {
@@ -80,6 +134,9 @@ class NetworkManager {
 
       // Eventos del sistema de torneos
       this.socket.on('tournament_joined', (data) => {
+        if (data && data.tournament && data.tournament.id) {
+          this.activeTournamentId = data.tournament.id;
+        }
         this.trigger('tournament_joined', data);
       });
 
@@ -106,10 +163,18 @@ class NetworkManager {
   }
 
   // --- PARTIDAS 1v1 ---
-  joinRoom(roomId, playerName, penaltiesPerPlayer = 5) {
+  joinRoom(roomId, playerName, penaltiesPerPlayer = 5, isAutoReconnect = false) {
     this.playerName = playerName || 'Jugador 1';
+    this.penaltiesPerPlayer = penaltiesPerPlayer;
+    this.activeTournamentId = null;
     if (this.mode === 'multiplayer' && this.socket) {
-      this.socket.emit('join_room', { roomId, playerName: this.playerName, penaltiesPerPlayer });
+      this.socket.emit('join_room', {
+        roomId,
+        playerName: this.playerName,
+        penaltiesPerPlayer,
+        clientId: this.clientId,
+        isAutoReconnect
+      });
     } else {
       this.initAIMode(roomId, playerName, penaltiesPerPlayer);
     }

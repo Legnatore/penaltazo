@@ -126,6 +126,7 @@
     <!-- 1. PANTALLA DE LOBBY / MENÚ -->
     <section id="lobby-screen" class="screen lobby-screen">
       <div class="lobby-card">
+        <div class="lobby-col-left">
         <div class="lobby-hero">
           <div class="hero-icons">⚽ 🆚 🧤</div>
           <h1>¡PENALTAZO!</h1>
@@ -180,16 +181,18 @@
           </div>
 
           <div class="actions-grid">
-            <button id="create-room-btn" class="btn btn-primary btn-large">
-              <span class="btn-icon">➕</span>
-              <span class="btn-text">Crear Duelo 1 vs 1</span>
-            </button>
+            <div class="primary-actions-row">
+              <button id="create-room-btn" class="btn btn-primary btn-large">
+                <span class="btn-icon">➕</span>
+                <span class="btn-text">Crear Duelo 1 vs 1</span>
+              </button>
 
-            <!-- NUEVO: Botón de Modo Torneo -->
-            <button id="open-tourney-modal-btn" class="btn btn-tournament btn-large">
-              <span class="btn-icon">🏆</span>
-              <span class="btn-text">Crear Torneo Eliminatorio</span>
-            </button>
+              <!-- NUEVO: Botón de Modo Torneo -->
+              <button id="open-tourney-modal-btn" class="btn btn-tournament btn-large">
+                <span class="btn-icon">🏆</span>
+                <span class="btn-text">Crear Torneo Eliminatorio</span>
+              </button>
+            </div>
 
             <div class="divider"><span>o únete con código</span></div>
 
@@ -202,20 +205,24 @@
 
             <div class="ai-practice-box">
               <label for="ai-personality-select" class="ai-personality-label">🧠 Personalidad y nivel de la IA:</label>
-              <select id="ai-personality-select" class="ai-personality-select">
-                <option value="novato">🐣 El Novato (Predecible y tira raso)</option>
-                <option value="psicologo" selected>🧠 El Psicólogo (Estudia tu mapa de calor)</option>
-                <option value="escuadras">🚀 Cazador de Escuadras (Arriesga siempre arriba)</option>
-                <option value="loco">🤪 El Portero Loco (Caza Panenkas y vacila)</option>
-              </select>
-              <button id="play-ai-btn" class="btn btn-outline">
-                <span class="btn-icon">🤖</span>
-                <span class="btn-text">Jugar contra la IA (Modo Práctica)</span>
-              </button>
+              <div class="ai-practice-controls">
+                <select id="ai-personality-select" class="ai-personality-select">
+                  <option value="novato">🐣 El Novato (Predecible y tira raso)</option>
+                  <option value="psicologo" selected>🧠 El Psicólogo (Estudia tu mapa de calor)</option>
+                  <option value="escuadras">🚀 Cazador de Escuadras (Arriesga siempre arriba)</option>
+                  <option value="loco">🤪 El Portero Loco (Caza Panenkas y vacila)</option>
+                </select>
+                <button id="play-ai-btn" class="btn btn-outline">
+                  <span class="btn-icon">🤖</span>
+                  <span class="btn-text">Jugar contra la IA (Modo Práctica)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
+        </div>
 
+        <div class="lobby-col-right">
         <!-- Vitrina de Trofeos e Historial Local (localStorage) -->
         <div id="career-stats-card" class="career-stats-card">
           <div class="career-header">
@@ -302,6 +309,7 @@
             </details>
           </div>
         </article>
+        </div>
       </div>
     </section>
 

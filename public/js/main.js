@@ -484,7 +484,8 @@ document.addEventListener('DOMContentLoaded', () => {
           isSuddenDeath: data.nextIsSuddenDeath,
           suddenDeathRound: data.nextSuddenDeathRound,
           penaltiesPerPlayer: currentPenaltiesPerPlayer,
-          myRole
+          myRole,
+          showActiveDot: false
         });
       },
       onComplete: () => {

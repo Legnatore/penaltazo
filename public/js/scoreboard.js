@@ -32,7 +32,8 @@ class Scoreboard {
     isSuddenDeath = false,
     suddenDeathRound = 0,
     penaltiesPerPlayer = 5,
-    myRole = 'P1'
+    myRole = 'P1',
+    showActiveDot = true
   }) {
     // 1. Actualizar números del marcador
     if (this.p1ScoreEl) this.p1ScoreEl.textContent = scores.P1;
@@ -55,13 +56,13 @@ class Scoreboard {
     const baseAttempts = penaltiesPerPlayer > 0 ? penaltiesPerPlayer : 1;
     const totalSlots = Math.max(
       baseAttempts,
-      history.P1.length + (shooterRole === 'P1' ? 1 : 0),
-      history.P2.length + (shooterRole === 'P2' ? 1 : 0)
+      history.P1.length + (showActiveDot && shooterRole === 'P1' ? 1 : 0),
+      history.P2.length + (showActiveDot && shooterRole === 'P2' ? 1 : 0)
     );
 
     // 4. Renderizar puntos de P1 y P2
-    this.renderDots(this.p1DotsContainer, history.P1, totalSlots, shooterRole === 'P1', penaltiesPerPlayer);
-    this.renderDots(this.p2DotsContainer, history.P2, totalSlots, shooterRole === 'P2', penaltiesPerPlayer);
+    this.renderDots(this.p1DotsContainer, history.P1, totalSlots, showActiveDot && shooterRole === 'P1', penaltiesPerPlayer);
+    this.renderDots(this.p2DotsContainer, history.P2, totalSlots, showActiveDot && shooterRole === 'P2', penaltiesPerPlayer);
 
     // 5. Banner de muerte súbita
     if (this.suddenDeathBanner) {

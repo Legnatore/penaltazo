@@ -4116,4 +4116,111 @@ body[data-theme="sensible"] .selected-zone-label {
   line-height: 1.4;
 }
 
+/* =========================================================
+   CRÉDITOS DE AUTORÍA: VALLAS PUBLICITARIAS Y PIE DE PÁGINA
+   ========================================================= */
+.stadium-ad-boards {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3%;
+  pointer-events: none;
+}
+
+.ad-board {
+  font-family: 'Teko', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+  background: #0f172a;
+  padding: 0 0.55rem;
+  line-height: 16px;
+  border-left: 2px solid #facc15;
+  border-right: 2px solid #facc15;
+}
+
+.app-footer {
+  width: 100%;
+  padding: 0.6rem 1rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.footer-credit-badge {
+  background: rgba(15, 23, 42, 0.88);
+  color: #ffffff;
+  border: 2px solid #facc15;
+  border-radius: 9999px;
+  padding: 0.38rem 1.2rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  box-shadow: 0 3px 0 #0f172a, 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.footer-credit-badge strong {
+  color: #facc15;
+  font-weight: 800;
+}
+
+body[data-theme="claro"] .footer-credit-badge {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+body[data-theme="claro"] .footer-credit-badge strong {
+  color: #0284c7;
+}
+
+body[data-theme="oscuro"] .footer-credit-badge {
+  background: #151d30;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  box-shadow: none;
+}
+
+body[data-theme="oscuro"] .footer-credit-badge strong {
+  color: #38bdf8;
+}
+
+body[data-theme="pcfutbol"] .footer-credit-badge {
+  background: #c0c0c0;
+  color: #000000;
+  border-radius: 0 !important;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.65);
+}
+
+body[data-theme="pcfutbol"] .footer-credit-badge strong {
+  color: #000080;
+}
+
+body[data-theme="sensible"] .footer-credit-badge {
+  background: #001144;
+  color: #ffffff;
+  border: 3px solid #ffcc00;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #000000;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.62rem;
+}
+
+body[data-theme="sensible"] .footer-credit-badge strong {
+  color: #ffcc00;
+}
+
+
 

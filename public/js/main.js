@@ -138,10 +138,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const directJoinBtn = document.getElementById('direct-join-btn');
   const lobbyFormatGroup = document.getElementById('lobby-format-group');
 
-  // Guardar/recuperar el apodo del jugador en este navegador
+  // Guardar/recuperar el apodo del jugador en este navegador (ignorando nombres por defecto antiguos)
+  const FORBIDDEN_DEFAULT_NAMES = ['jugador', 'jugador 1', 'jugador 2', 'organizador'];
+
+  function isDefaultOrEmptyName(name) {
+    if (!name) return true;
+    return FORBIDDEN_DEFAULT_NAMES.includes(name.trim().toLowerCase());
+  }
+
+  function requireValidPlayerName() {
+    const raw = playerNameInput.value.trim();
+    if (isDefaultOrEmptyName(raw)) {
+      playerNameInput.classList.remove('input-error');
+      void playerNameInput.offsetWidth; // Reiniciar animación
+      playerNameInput.classList.add('input-error');
+      playerNameInput.focus();
+      playerNameInput.select();
+      showToast('⚠️ ¡Escribe tu nombre o apodo antes de entrar!');
+      return null;
+    }
+    playerNameInput.classList.remove('input-error');
+    localStorage.setItem('penaltazo_player_name', raw);
+    return raw;
+  }
+
+  playerNameInput.addEventListener('input', () => {
+    if (!isDefaultOrEmptyName(playerNameInput.value)) {
+      playerNameInput.classList.remove('input-error');
+    }
+  });
+
   const savedPlayerName = localStorage.getItem('penaltazo_player_name');
-  if (savedPlayerName) {
+  if (savedPlayerName && !isDefaultOrEmptyName(savedPlayerName)) {
     playerNameInput.value = savedPlayerName;
+  } else {
+    localStorage.removeItem('penaltazo_player_name');
+    playerNameInput.value = '';
   }
 
   if (tournamentParam) {
@@ -154,15 +186,15 @@ document.addEventListener('DOMContentLoaded', () => {
       inviteBadgeDesc.textContent = 'Pon tu nombre arriba y pulsa para entrar al torneo:';
       directJoinBtn.textContent = `⚡ ¡ENTRAR AL TORNEO ${cleanCode}!`;
       directJoinBtn.onclick = () => {
-        const name = playerNameInput.value.trim() || 'Jugador';
-        localStorage.setItem('penaltazo_player_name', name);
+        const name = requireValidPlayerName();
+        if (!name) return;
         isInTournament = true;
         network.joinTournament(cleanCode, name);
       };
     }
-    // Si ya había entrado antes a este mismo torneo y ha recargado la página, reconectar automáticamente
+    // Si ya había entrado antes a este mismo torneo con un nombre válido y ha recargado la página, reconectar automáticamente
     const lastTourney = sessionStorage.getItem('penaltazo_active_tournament');
-    if (lastTourney === cleanCode && savedPlayerName) {
+    if (lastTourney === cleanCode && savedPlayerName && !isDefaultOrEmptyName(savedPlayerName)) {
       isInTournament = true;
       network.joinTournament(cleanCode, savedPlayerName);
     }
@@ -176,8 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
       inviteBadgeDesc.textContent = 'Pon tu nombre arriba y pulsa para entrar a la partida:';
       directJoinBtn.textContent = `⚡ ¡ENTRAR A LA SALA ${cleanCode}!`;
       directJoinBtn.onclick = () => {
-        const name = playerNameInput.value.trim() || 'Jugador 2';
-        localStorage.setItem('penaltazo_player_name', name);
+        const name = requireValidPlayerName();
+        if (!name) return;
         isInTournament = false;
         network.initMultiplayer();
         network.joinRoom(cleanCode, name, getSelectedLobbyPenalties());
@@ -215,8 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   createRoomBtn.addEventListener('click', () => {
+    const name = requireValidPlayerName();
+    if (!name) return;
     isInTournament = false;
-    const name = playerNameInput.value.trim() || 'Jugador 1';
     const penaltiesPerPlayer = getSelectedLobbyPenalties();
     network.initMultiplayer();
     network.joinRoom(null, name, penaltiesPerPlayer);
@@ -224,6 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Abrir modal de creación de torneo
   openTourneyModalBtn.addEventListener('click', () => {
+    const name = requireValidPlayerName();
+    if (!name) return;
     tourneyCreateModal.classList.remove('hidden');
   });
 
@@ -232,12 +267,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   confirmCreateTourneyBtn.addEventListener('click', () => {
+    const playerName = requireValidPlayerName();
+    if (!playerName) {
+      tourneyCreateModal.classList.add('hidden');
+      return;
+    }
     const tourneyName = tourneyNameInput.value.trim() || 'Copa Penaltazo';
     const selectedSizeEl = document.querySelector('input[name="tourney-size"]:checked');
     const size = selectedSizeEl ? parseInt(selectedSizeEl.value, 10) : 8;
     const selectedPenaltiesEl = document.querySelector('input[name="tourney-penalties"]:checked');
     const penaltiesPerPlayer = selectedPenaltiesEl ? parseInt(selectedPenaltiesEl.value, 10) : 5;
-    const playerName = playerNameInput.value.trim() || 'Organizador';
 
     tourneyCreateModal.classList.add('hidden');
     isInTournament = true;
@@ -246,13 +285,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   joinRoomBtn.addEventListener('click', () => {
+    const name = requireValidPlayerName();
+    if (!name) return;
+
     const code = joinRoomInput.value.trim().toUpperCase();
     if (!code) {
-      alert('Por favor introduce un código de sala o torneo.');
+      showToast('⚠️ Introduce un código de sala o torneo.');
+      joinRoomInput.focus();
       return;
     }
-    const name = playerNameInput.value.trim() || 'Jugador';
-    localStorage.setItem('penaltazo_player_name', name);
 
     if (code.startsWith('COPA-')) {
       // Unirse a un torneo
@@ -269,7 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   playAiBtn.addEventListener('click', () => {
     isInTournament = false;
-    const name = playerNameInput.value.trim() || 'Jugador';
+    const raw = playerNameInput.value.trim();
+    const name = !isDefaultOrEmptyName(raw) ? raw : 'Jugador 1';
     const penaltiesPerPlayer = getSelectedLobbyPenalties();
     network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer);
   });

@@ -229,7 +229,90 @@ document.addEventListener('DOMContentLoaded', () => {
     screen.classList.remove('hidden');
   }
 
-  // --- SELECTOR DE TEMA VISUAL Y AUDIO TOGGLE ---
+  // --- REGISTRO DE SERVICE WORKER (PWA) ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+
+  // --- PERSONALIZACIÓN DE EQUIPOS Y TEMAS VISUALES ---
+  const TEAM_KITS = {
+    default: null,
+    carbayon: {
+      name: 'Azul Carbayón',
+      primary: '#003399',
+      secondary: '#ffffff',
+      accent: '#facc15',
+      shorts: '#ffffff'
+    },
+    rojiblanco: {
+      name: 'Rojiblanco',
+      primary: '#dc2626',
+      secondary: '#ffffff',
+      accent: '#1e3a8a',
+      shorts: '#1e3a8a'
+    },
+    blaugrana: {
+      name: 'Blaugrana',
+      primary: '#991b1b',
+      secondary: '#1e3a8a',
+      accent: '#facc15',
+      shorts: '#1e3a8a'
+    },
+    merengue: {
+      name: 'Blanco Real',
+      primary: '#f8fafc',
+      secondary: '#cbd5e1',
+      accent: '#d97706',
+      shorts: '#ffffff'
+    },
+    verdiblanco: {
+      name: 'Verdiblanco',
+      primary: '#16a34a',
+      secondary: '#ffffff',
+      accent: '#facc15',
+      shorts: '#ffffff'
+    },
+    aurinegro: {
+      name: 'Aurinegro',
+      primary: '#facc15',
+      secondary: '#0f172a',
+      accent: '#f97316',
+      shorts: '#0f172a'
+    }
+  };
+
+  function applyTeamKit(kitKey) {
+    const root = document.documentElement;
+    const kit = TEAM_KITS[kitKey];
+    if (!kit) {
+      document.body.removeAttribute('data-kit');
+      root.style.removeProperty('--team-primary');
+      root.style.removeProperty('--team-secondary');
+      root.style.removeProperty('--team-accent');
+      root.style.removeProperty('--team-shorts');
+      return;
+    }
+    document.body.setAttribute('data-kit', kitKey);
+    root.style.setProperty('--team-primary', kit.primary);
+    root.style.setProperty('--team-secondary', kit.secondary);
+    root.style.setProperty('--team-accent', kit.accent);
+    root.style.setProperty('--team-shorts', kit.shorts);
+  }
+
+  const teamKitSelect = document.getElementById('team-kit-select');
+  const savedKit = localStorage.getItem('penaltazo_team_kit') || 'default';
+  applyTeamKit(savedKit);
+  if (teamKitSelect) {
+    teamKitSelect.value = savedKit;
+    teamKitSelect.addEventListener('change', () => {
+      const selectedKit = teamKitSelect.value || 'default';
+      applyTeamKit(selectedKit);
+      localStorage.setItem('penaltazo_team_kit', selectedKit);
+    });
+  }
+
   const themeSelect = document.getElementById('theme-select');
   const savedTheme = localStorage.getItem('penaltazo_theme') || 'festivo';
   document.body.setAttribute('data-theme', savedTheme);
@@ -605,7 +688,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // --- ESTADÍSTICAS Y MAPA DE CALOR 3x2 ---
+  const ZONE_LABELS = [
+    ['Escuadra Izq.', 'Arriba Centro', 'Escuadra Der.'],
+    ['Raso Izq.', 'Raso Centro', 'Raso Der.']
+  ];
+
+  let matchZoneStats = createEmptyZoneStats();
+
+  function createEmptyZoneStats() {
+    const zones = [];
+    for (let r = 0; r < 2; r++) {
+      zones[r] = [];
+      for (let c = 0; c < 3; c++) {
+        zones[r][c] = { shots: 0, goals: 0, saves: 0, outs: 0, diveCount: 0 };
+      }
+    }
+    return { totalShots: 0, zones };
+  }
+
+  function recordTurnStats({ shooterChoice, keeperChoice, isGoal, isOut }) {
+    if (!shooterChoice || !keeperChoice) return;
+    matchZoneStats.totalShots++;
+    const sZone = matchZoneStats.zones[shooterChoice.row]?.[shooterChoice.col];
+    const kZone = matchZoneStats.zones[keeperChoice.row]?.[keeperChoice.col];
+    if (sZone) {
+      sZone.shots++;
+      if (isGoal) sZone.goals++;
+      else if (isOut) sZone.outs++;
+      else sZone.saves++;
+    }
+    if (kZone) {
+      kZone.diveCount++;
+    }
+  }
+
+  function renderHeatmapReportHTML() {
+    const total = matchZoneStats.totalShots || 1;
+    let cellsHtml = '';
+
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 3; c++) {
+        const z = matchZoneStats.zones[r][c];
+        const shotSharePct = Math.round((z.shots / total) * 100);
+        const goalAccuracyPct = z.shots > 0 ? Math.round((z.goals / z.shots) * 100) : 0;
+        const heatAlpha = z.shots > 0 ? (0.18 + (z.shots / total) * 0.65).toFixed(2) : '0.06';
+        const heatColor = z.goals > 0
+          ? `rgba(34, 197, 94, ${heatAlpha})`
+          : (z.shots > 0 ? `rgba(249, 115, 22, ${heatAlpha})` : `rgba(148, 163, 184, 0.12)`);
+
+        cellsHtml += `
+          <div class="heatmap-cell" style="background: ${heatColor};">
+            <span class="heatmap-zone-name">${ZONE_LABELS[r][c]}</span>
+            <strong class="heatmap-pct">${goalAccuracyPct}% Gol</strong>
+            <span class="heatmap-sub">⚽ ${z.goals}/${z.shots} tiros (${shotSharePct}%) &bull; 🧤 ${z.diveCount} estiradas</span>
+          </div>
+        `;
+      }
+    }
+
+    return `
+      <div class="stats-heatmap-section">
+        <h4 class="heatmap-title">🔥 Mapa de Calor y Eficacia por Zona (3x2)</h4>
+        <div class="heatmap-grid-3x2">
+          ${cellsHtml}
+        </div>
+      </div>
+    `;
+  }
+
   network.on('game_started', (data) => {
+    matchZoneStats = createEmptyZoneStats();
     showScreen(gameScreen);
     if (window.soundEngine) {
       window.soundEngine.playPenaltazoTheme();
@@ -626,6 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
   network.on('turn_resolved', (data) => {
     isResolvingTurn = true;
     goalGrid.disable();
+    recordTurnStats(data);
 
     myStatusBadge.className = 'status-badge resolving';
     myStatusBadge.innerHTML = '⚡ ¡Resolviendo penalti!';
@@ -711,15 +865,16 @@ document.addEventListener('DOMContentLoaded', () => {
       gameOverScores.innerHTML = `
         <div class="final-score-box">
           <div class="score-team">
-            <span class="team-label">${myRole === 'P1' ? 'Tú (P1)' : 'Jugador 1'}</span>
+            <span class="team-label">${myRole === 'P1' ? `${playerNames.P1} (Tú)` : playerNames.P1}</span>
             <span class="team-score">${data.scores.P1}</span>
           </div>
           <div class="score-vs">-</div>
           <div class="score-team">
             <span class="team-score">${data.scores.P2}</span>
-            <span class="team-label">${myRole === 'P2' ? 'Tú (P2)' : 'Jugador 2'}</span>
+            <span class="team-label">${myRole === 'P2' ? `${playerNames.P2} (Tú)` : playerNames.P2}</span>
           </div>
         </div>
+        ${renderHeatmapReportHTML()}
       `;
 
       // Si estamos en un torneo, mostrar botón para regresar al cuadro del torneo

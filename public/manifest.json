@@ -1,0 +1,21 @@
+{
+  "name": "¡PENALTAZO! - Juego de Penaltis Online Multijugador",
+  "short_name": "Penaltazo",
+  "description": "Simulador y juego de fútbol de tandas de penaltis 3x2 a ciegas. Juega online en multijugador 1v1, crea torneos eliminatorios o entrena contra la IA.",
+  "lang": "es-ES",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0284c7",
+  "theme_color": "#0284c7",
+  "categories": ["games", "sports", "entertainment"],
+  "icons": [
+    {
+      "src": "/assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

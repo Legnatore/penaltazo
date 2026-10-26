@@ -3,7 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>¡PENALTAZO! | Tanda de Penaltis a Ciegas Multijugador</title>
+
+  <!-- 1. SEO On-Page Principal -->
+  <title>¡PENALTAZO! | Juego de Penaltis Online y Tanda de Penaltis Multijugador Gratis</title>
+  <meta name="description" content="Juega gratis a ¡PENALTAZO!, el simulador de penaltis y juego de fútbol online en cuadrícula 3x2 a ciegas. Reta a tus amigos en una tanda de penaltis multijugador 1v1, crea torneos eliminatorios o entrena contra la IA desde el navegador.">
+  <meta name="keywords" content="juego de fútbol, penaltis, juego de penaltis online, tanda de penaltis multijugador, simulador de penaltis, juego de penaltis gratis, fútbol navegador, torneos de penaltis">
+  <meta name="author" content="Legnatore">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://penaltazo.com/">
+
+  <!-- 2. PWA & Mobile Web App Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0284c7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="¡PENALTAZO!">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/assets/icons/icon.svg">
+
+  <!-- 3. Open Graph (WhatsApp, Telegram, Facebook, Discord) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="¡PENALTAZO!">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:url" content="https://penaltazo.com/">
+  <meta property="og:title" content="⚽ ¡PENALTAZO! — ¿Te atreves a echar una tanda de penaltis online?">
+  <meta property="og:description" content="Elige tu escuadra en secreto o lánzate bajo palos. Duelos 1v1 en tiempo real, torneos de hasta 16 jugadores y modo práctica gratis sin instalar nada.">
+  <meta property="og:image" content="https://penaltazo.com/assets/icons/icon.svg">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="Portería 3x2 y balón del juego de fútbol ¡PENALTAZO!">
+
+  <!-- 4. Twitter / X Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="⚽ ¡PENALTAZO! | Simulador y Juego de Penaltis Online Multijugador">
+  <meta name="twitter:description" content="Duelo táctico de penaltis 3x2 a ciegas en tiempo real. ¡Entra y demuestra quién manda desde los once metros!">
+  <meta name="twitter:image" content="https://penaltazo.com/assets/icons/icon.svg">
+
+  <!-- 5. Datos Estructurados Schema.org (JSON-LD VideoGame) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "¡PENALTAZO!",
+    "alternateName": "Penaltazo - Juego de Penaltis Online",
+    "description": "¡PENALTAZO! es un juego de fútbol y simulador de penaltis gratuito para navegador web. Permite disputar una tanda de penaltis multijugador en tiempo real sobre una portería táctica 3x2 a ciegas, organizar campeonatos eliminatorios online o entrenar contra la inteligencia artificial.",
+    "genre": ["Sports game", "Soccer simulator", "Arcade", "Multiplayer browser game"],
+    "playMode": ["MultiPlayer", "SinglePlayer", "CoOp"],
+    "applicationCategory": "Game",
+    "gamePlatform": ["Web Browser", "Mobile Web", "PWA"],
+    "operatingSystem": "Any (Web Browser)",
+    "inLanguage": "es",
+    "author": {
+      "@type": "Person",
+      "name": "Legnatore"
+    },
+    "datePublished": "2026",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/InStock"
+    }
+  }
+  </script>
+
+  <!-- 6. Tipografías y Hojas de Estilo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Montserrat:ital,wght@0,500;0,700;0,800;0,900;1,800&family=Press+Start+2P&family=Teko:wght@600;700&family=VT323&display=swap" rel="stylesheet">
@@ -19,6 +85,17 @@
     </div>
     <div class="header-actions">
       <div id="header-room-badge" class="header-room-badge hidden"></div>
+      <div class="theme-selector-wrapper">
+        <select id="team-kit-select" class="theme-select kit-select" title="Personalizar colores de tu equipación" aria-label="Personalizar colores de tu equipación">
+          <option value="default">👕 Equipación</option>
+          <option value="carbayon">🔵⚪ Azul Carbayón</option>
+          <option value="rojiblanco">🔴⚪ Rojiblanco</option>
+          <option value="blaugrana">🔵🔴 Blaugrana</option>
+          <option value="merengue">⚪👑 Blanco Real</option>
+          <option value="verdiblanco">🟢⚪ Verdiblanco</option>
+          <option value="aurinegro">🟡⚫ Aurinegro</option>
+        </select>
+      </div>
       <div class="theme-selector-wrapper">
         <select id="theme-select" class="theme-select" title="Cambiar tema visual" aria-label="Cambiar tema visual">
           <option value="festivo">🎉 Festivo</option>

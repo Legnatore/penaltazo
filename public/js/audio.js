@@ -6,6 +6,7 @@ class SoundEngine {
   constructor() {
     this.ctx = null;
     this.muted = false;
+    this.activeNodes = new Set();
     this.themeAudio = new Audio('assets/audio/penaltazo.mp3');
     this.themeAudio.preload = 'auto';
   }
@@ -22,11 +23,38 @@ class SoundEngine {
     }
   }
 
+  /**
+   * Registra un nodo de audio activo y lo elimina automáticamente al terminar
+   */
+  registerNode(node) {
+    if (!node) return;
+    this.activeNodes.add(node);
+    node.onended = () => {
+      this.activeNodes.delete(node);
+    };
+  }
+
+  /**
+   * Detiene inmediatamente todas las pistas/efectos en curso para evitar solapamientos
+   */
+  stopActiveEffects() {
+    this.activeNodes.forEach((node) => {
+      try {
+        node.stop();
+        node.disconnect();
+      } catch (e) {}
+    });
+    this.activeNodes.clear();
+  }
+
   toggleMute() {
     this.muted = !this.muted;
-    if (this.muted && this.themeAudio) {
-      this.themeAudio.pause();
-      this.themeAudio.currentTime = 0;
+    if (this.muted) {
+      this.stopActiveEffects();
+      if (this.themeAudio) {
+        this.themeAudio.pause();
+        this.themeAudio.currentTime = 0;
+      }
     }
     return this.muted;
   }
@@ -34,6 +62,8 @@ class SoundEngine {
   playPenaltazoTheme() {
     if (this.muted) return;
     try {
+      this.stopActiveEffects();
+      this.themeAudio.pause();
       this.themeAudio.currentTime = 0;
       this.themeAudio.play().catch(() => {});
     } catch (e) {}
@@ -44,6 +74,7 @@ class SoundEngine {
     this.init();
     if (!this.ctx) return;
 
+    this.stopActiveEffects();
     const now = this.ctx.currentTime;
     const osc1 = this.ctx.createOscillator();
     const osc2 = this.ctx.createOscillator();
@@ -74,6 +105,10 @@ class SoundEngine {
     osc2.connect(gain);
     gain.connect(this.ctx.destination);
 
+    this.registerNode(osc1);
+    this.registerNode(osc2);
+    this.registerNode(lfo);
+
     osc1.start(now);
     osc2.start(now);
     osc1.stop(now + 0.35);
@@ -85,6 +120,7 @@ class SoundEngine {
     this.init();
     if (!this.ctx) return;
 
+    this.stopActiveEffects();
     const now = this.ctx.currentTime;
     // Golpe seco y grave (impacto de la bota contra el cuero)
     const osc = this.ctx.createOscillator();
@@ -115,6 +151,9 @@ class SoundEngine {
     gain.connect(this.ctx.destination);
     noiseGain.connect(this.ctx.destination);
 
+    this.registerNode(osc);
+    this.registerNode(noise);
+
     osc.start(now);
     noise.start(now);
     osc.stop(now + 0.16);
@@ -126,6 +165,7 @@ class SoundEngine {
     this.init();
     if (!this.ctx) return;
 
+    this.stopActiveEffects();
     const now = this.ctx.currentTime;
     // Golpe de guantes (manotazo contundente)
     const osc = this.ctx.createOscillator();
@@ -140,6 +180,7 @@ class SoundEngine {
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
+    this.registerNode(osc);
     osc.start(now);
     osc.stop(now + 0.2);
 
@@ -156,6 +197,7 @@ class SoundEngine {
     this.init();
     if (!this.ctx) return;
 
+    this.stopActiveEffects();
     // Sonido de red estremeciéndose
     const now = this.ctx.currentTime;
     const bufferSize = this.ctx.sampleRate * 0.25;
@@ -180,6 +222,7 @@ class SoundEngine {
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(this.ctx.destination);
+    this.registerNode(noise);
     noise.start(now);
     noise.stop(now + 0.26);
 
@@ -193,6 +236,7 @@ class SoundEngine {
 
   playMiss(isGoodForMe = true) {
     if (this.muted) return;
+    this.stopActiveEffects();
     if (isGoodForMe) {
       this.playVictoryFanfare();
     } else {

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="55%" stop-color="#0369a1" />
+      <stop offset="55%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)" stroke="#0f172a" stroke-width="16"/>
+  <rect x="76" y="96" width="360" height="190" fill="none" stroke="#ffffff" stroke-width="18" stroke-linejoin="round"/>
+  <line x1="196" y1="96" x2="196" y2="286" stroke="#ffffff" stroke-width="6" stroke-dasharray="12,10" opacity="0.75"/>
+  <line x1="316" y1="96" x2="316" y2="286" stroke="#ffffff" stroke-width="6" stroke-dasharray="12,10" opacity="0.75"/>
+  <line x1="76" y1="191" x2="436" y2="191" stroke="#ffffff" stroke-width="6" stroke-dasharray="12,10" opacity="0.75"/>
+  <circle cx="256" cy="360" r="82" fill="#ffffff" stroke="#0f172a" stroke-width="14"/>
+  <polygon points="256,310 296,338 280,386 232,386 216,338" fill="#0f172a"/>
+  <text x="256" y="70" font-family="Arial Black, sans-serif" font-size="44" font-weight="900" fill="#facc15" text-anchor="middle" stroke="#0f172a" stroke-width="6">¡PENALTAZO!</text>
+</svg>

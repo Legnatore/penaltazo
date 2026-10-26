@@ -1,0 +1,26 @@
+{
+  "name": "penaltazo",
+  "version": "1.0.0",
+  "description": "¡PENALTAZO! - Juego de mesa multijugador de tanda de penaltis a ciegas en tiempo real",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "tunnel": "npx localtunnel --port 3000"
+  },
+  "keywords": [
+    "penaltis",
+    "multijugador",
+    "socket.io",
+    "football",
+    "game"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}

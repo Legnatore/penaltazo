@@ -1,0 +1,200 @@
+/* =========================================================
+   ANIMACIONES VISUALES Y EFECTOS DE IMPACTO
+   ========================================================= */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Vibración de la red tras gol */
+.net-ripple {
+  animation: netShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes netShake {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.08) translate(3px, -2px); }
+  30% { transform: scale(0.95) translate(-3px, 2px); }
+  45% { transform: scale(1.04) translate(2px, -1px); }
+  60% { transform: scale(0.98) translate(-1px, 1px); }
+  75% { transform: scale(1.02) translate(1px, 0); }
+  100% { transform: scale(1); }
+}
+
+/* Efectos del balón */
+.animated-ball.in-net {
+  animation: ballNetRest 0.8s ease-out forwards;
+}
+
+@keyframes ballNetRest {
+  0% { transform: translate(-50%, -50%) scale(0.72); }
+  25% { transform: translate(-50%, -46%) scale(0.70); }
+  50% { transform: translate(-50%, -40%) scale(0.68); }
+  100% { transform: translate(-50%, -36%) scale(0.66); }
+}
+
+/* Portero realizando la parada */
+.animated-keeper.saving .keeper-torso {
+  animation: keeperPunch 0.4s ease-out;
+}
+
+@keyframes keeperPunch {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2) translateY(-4px); }
+  100% { transform: scale(1); }
+}
+
+/* Capa de partículas de impacto */
+.impact-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 45;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particleFly 0.8s cubic-bezier(0.12, 0, 0.39, 0) forwards;
+}
+
+@keyframes particleFly {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* Destello de parada */
+.save-burst {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.burst-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.8) 0%, transparent 70%);
+  animation: burstExpand 0.5s ease-out forwards;
+}
+
+.burst-icon {
+  position: absolute;
+  font-size: 2.4rem;
+  animation: burstPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes burstExpand {
+  0% { transform: scale(0.2); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes burstPop {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.9; }
+}
+
+/* =========================================================
+   PANCARTA DE CELEBRACIÓN (BANNER OVERLAY)
+   ========================================================= */
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 15, 29, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.banner-overlay.active {
+  opacity: 1;
+}
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  animation: bannerEntrance 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  padding: 1.5rem 2.5rem;
+  border-radius: 20px;
+}
+
+@keyframes bannerEntrance {
+  0% {
+    transform: scale(0.4) translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.banner-overlay.goal .banner-content {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, rgba(15, 23, 42, 0.95) 75%);
+  border: 2px solid var(--accent-goal);
+  box-shadow: 0 0 40px rgba(34, 197, 94, 0.6);
+}
+
+.banner-overlay.save .banner-content {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, rgba(15, 23, 42, 0.95) 75%);
+  border: 2px solid var(--accent-save);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+}
+
+.banner-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+  animation: bounceIcon 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes bounceIcon {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+.banner-title {
+  font-family: 'Teko', sans-serif;
+  font-size: clamp(3.2rem, 8vw, 5.2rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: 2px;
+}
+
+.banner-overlay.goal .banner-title {
+  color: #4ade80;
+  text-shadow: 0 0 25px rgba(34, 197, 94, 0.8);
+}
+
+.banner-overlay.save .banner-title {
+  color: #f87171;
+  text-shadow: 0 0 25px rgba(239, 68, 68, 0.8);
+}
+
+.banner-sub {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-top: 0.6rem;
+  letter-spacing: 0.5px;
+}

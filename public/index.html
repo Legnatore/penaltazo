@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>¡PENALTAZO! | Tanda de Penaltis a Ciegas Multijugador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <!-- Encabezado de la aplicación -->
+  <header class="app-header">
+    <div class="header-logo">
+      <span class="logo-ball">⚽</span>
+      <span class="logo-text">¡PENAL<span>TAZO!</span></span>
+    </div>
+    <div class="header-actions">
+      <div id="header-room-badge" class="header-room-badge hidden"></div>
+      <button id="sound-toggle-btn" class="icon-btn" title="Activar/Desactivar Sonido">🔊</button>
+    </div>
+  </header>
+
+  <!-- Contenedor principal -->
+  <main class="app-container">
+
+    <!-- 1. PANTALLA DE LOBBY / MENÚ -->
+    <section id="lobby-screen" class="screen lobby-screen">
+      <div class="lobby-card">
+        <div class="lobby-hero">
+          <div class="hero-icons">⚽ 🆚 🧤</div>
+          <h1>¡PENALTAZO!</h1>
+          <p class="hero-subtitle">Duelo táctico de disparos y estiradas a ciegas en tiempo real</p>
+        </div>
+
+        <div class="lobby-form">
+          <div class="input-group">
+            <label for="player-name-input">Tu Nombre o Apodo:</label>
+            <input type="text" id="player-name-input" placeholder="Ej. CR7, Dibu, Pichichi..." maxlength="15" value="Jugador 1">
+          </div>
+
+          <div class="actions-grid">
+            <button id="create-room-btn" class="btn btn-primary btn-large">
+              <span class="btn-icon">➕</span>
+              <span class="btn-text">Crear Sala Privada</span>
+            </button>
+
+            <div class="divider"><span>o únete con código</span></div>
+
+            <div class="join-box">
+              <input type="text" id="join-room-input" placeholder="Código (ej. ABC-123)" maxlength="10">
+              <button id="join-room-btn" class="btn btn-secondary">Unirse</button>
+            </div>
+
+            <div class="divider"><span>o entrena en solitario</span></div>
+
+            <button id="play-ai-btn" class="btn btn-outline">
+              <span class="btn-icon">🤖</span>
+              <span class="btn-text">Jugar contra la IA (Modo Práctica)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Reglas rápidas del juego -->
+        <div class="rules-card">
+          <h3>📖 Cómo se juega:</h3>
+          <ul>
+            <li><strong>Portería 3x2:</strong> Exactamente 6 casillas (3 columnas x 2 filas).</li>
+            <li><strong>5 Penaltis:</strong> Cada jugador tira 5 veces, alternando roles de Tirador y Portero.</li>
+            <li><strong>A Ciegas:</strong> Ambos eligen su casilla simultáneamente y en secreto.</li>
+            <li><strong>Resolución:</strong> Si coinciden las coordenadas, ¡el Portero para el penalti! Si son distintas, ¡es Gol!</li>
+            <li><strong>Muerte Súbita:</strong> Si hay empate tras los 5 tiros, se decide ronda a ronda.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PANTALLA DE SALA DE ESPERA -->
+    <section id="waiting-screen" class="screen waiting-screen hidden">
+      <div class="waiting-card">
+        <div class="waiting-header">
+          <h2>¡SALA CREADA!</h2>
+          <p>Invita a tu oponente para comenzar la tanda de penaltis</p>
+        </div>
+
+        <div class="room-code-display">
+          <span class="code-label">Código de la sala:</span>
+          <span id="waiting-room-code" class="code-value">ABC-123</span>
+        </div>
+
+        <div class="share-box">
+          <label for="share-link-input">Enlace directo de invitación:</label>
+          <div class="link-copy-row">
+            <input type="text" id="share-link-input" readonly>
+            <button id="copy-link-btn" class="btn btn-primary">Copiar 📋</button>
+          </div>
+        </div>
+
+        <!-- Código QR para escanear con móvil -->
+        <div class="qr-container">
+          <p class="qr-title">📱 Escanea con la cámara de tu móvil:</p>
+          <div class="qr-box">
+            <canvas id="qr-canvas"></canvas>
+          </div>
+          <div id="local-ips-container" class="local-ips-container"></div>
+        </div>
+
+        <!-- Opciones adicionales -->
+        <div class="waiting-footer">
+          <button id="open-second-tab-btn" class="btn btn-outline btn-small">
+            🔗 Abrir otra pestaña en este PC para probar
+          </button>
+
+          <div class="waiting-status">
+            <div class="pulse-loader"></div>
+            <span>Esperando a que se conecte el oponente...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PANTALLA PRINCIPAL DE JUEGO -->
+    <section id="game-screen" class="screen game-screen hidden">
+
+      <!-- Marcador superior -->
+      <div class="scoreboard-bar">
+        <!-- Jugador 1 -->
+        <div class="team-panel team-p1">
+          <div class="team-header">
+            <span id="p1-name" class="team-name">Jugador 1</span>
+            <span id="p1-role-badge" class="role-badge role-shooter">⚽ Tirador</span>
+          </div>
+          <div class="team-score-wrapper">
+            <span id="p1-score" class="team-score">0</span>
+          </div>
+          <div id="p1-dots" class="penalty-dots-row">
+            <!-- Puntos de penalti renderizados por JS -->
+          </div>
+        </div>
+
+        <!-- Info central de ronda -->
+        <div class="round-center-panel">
+          <div id="round-info-text" class="round-info-text">Ronda 1 de 5</div>
+          <div class="vs-badge">VS</div>
+          <div id="sudden-death-banner" class="sudden-death-banner hidden">
+            🔥 ¡MUERTE SÚBITA!
+          </div>
+        </div>
+
+        <!-- Jugador 2 -->
+        <div class="team-panel team-p2">
+          <div class="team-header">
+            <span id="p2-name" class="team-name">Jugador 2</span>
+            <span id="p2-role-badge" class="role-badge role-keeper">🧤 Portero</span>
+          </div>
+          <div class="team-score-wrapper">
+            <span id="p2-score" class="team-score">0</span>
+          </div>
+          <div id="p2-dots" class="penalty-dots-row">
+            <!-- Puntos de penalti renderizados por JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de instrucciones y estado -->
+      <div class="instruction-banner">
+        <div id="role-instructions" class="role-instructions">
+          <!-- Renderizado dinámico según rol -->
+        </div>
+        <div class="status-indicators">
+          <div id="my-status-badge" class="status-badge waiting">⏳ Esperando tu elección...</div>
+          <div id="rival-status-badge" class="status-badge waiting">⏳ Rival pensando...</div>
+        </div>
+      </div>
+
+      <!-- ESCENARIO DEL ESTADIO Y PORTERÍA -->
+      <div id="stadium-arena" class="stadium-arena">
+        <!-- Fondos de gradas y focos -->
+        <div class="stadium-lights"></div>
+        <div class="stadium-crowd"></div>
+
+        <!-- Campo de césped en perspectiva -->
+        <div class="pitch-turf">
+          <div class="penalty-box-line"></div>
+          <div class="penalty-arc"></div>
+          <div class="penalty-spot" id="penalty-spot"></div>
+        </div>
+
+        <!-- Estructura de la portería de fútbol -->
+        <div class="goal-structure">
+          <!-- Postes físicos y larguero -->
+          <div class="goal-post post-left"></div>
+          <div class="goal-crossbar"></div>
+          <div class="goal-post post-right"></div>
+          <div class="goal-net-background"></div>
+
+          <!-- CUADRÍCULA INTERACTIVA 3x2 (6 CASILLAS) -->
+          <div id="goal-grid" class="goal-grid interactive">
+            <!-- 6 casillas renderizadas dinámicamente por GoalGrid.js -->
+          </div>
+
+          <!-- Portero con guantes animados -->
+          <div id="animated-keeper" class="animated-keeper">
+            <div class="keeper-body">
+              <div class="keeper-head"></div>
+              <div class="keeper-torso">
+                <div class="keeper-jersey-number">1</div>
+              </div>
+              <div class="keeper-arm arm-left">
+                <div class="keeper-glove glove-left">🧤</div>
+              </div>
+              <div class="keeper-arm arm-right">
+                <div class="keeper-glove glove-right">🧤</div>
+              </div>
+              <div class="keeper-legs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Balón animado y su sombra -->
+        <div id="ball-shadow" class="ball-shadow"></div>
+        <div id="animated-ball" class="animated-ball">
+          <div class="ball-graphic">⚽</div>
+        </div>
+
+        <!-- Capas de efectos de impacto y pancarta de celebración -->
+        <div id="impact-overlay" class="impact-overlay hidden"></div>
+        <div id="banner-overlay" class="banner-overlay hidden"></div>
+      </div>
+
+      <!-- Barra de controles y confirmación -->
+      <div class="controls-bar">
+        <div id="selected-zone-label" class="selected-zone-label">
+          Haz clic en una de las 6 zonas de la portería
+        </div>
+        <button id="confirm-choice-btn" class="btn btn-confirm" disabled>
+          <span class="btn-icon">🔒</span>
+          <span class="btn-text">Confirmar Elección Secreta</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- 4. MODAL / PANTALLA DE FIN DE PARTIDA -->
+    <div id="game-over-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div id="game-over-title" class="game-over-title victory">
+          🏆 ¡¡HAS GANADO LA TANDA!!
+        </div>
+        <p id="game-over-subtitle" class="game-over-subtitle">
+          Resultado final del partido
+        </p>
+
+        <div id="game-over-scores" class="game-over-scores">
+          <!-- Rellenado por JS -->
+        </div>
+
+        <div id="rematch-status" class="rematch-status"></div>
+
+        <div class="modal-actions">
+          <button id="rematch-btn" class="btn btn-primary btn-large">
+            Pedir Revancha 🔄
+          </button>
+          <button id="back-to-lobby-btn" class="btn btn-outline">
+            Volver al Menú Principal 🏠
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Notificación Toast -->
+  <div id="copy-toast" class="toast"></div>
+
+  <!-- Scripts: Socket.io primero, luego módulos -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/ai-opponent.js"></script>
+  <script src="js/goal-grid.js"></script>
+  <script src="js/animation.js"></script>
+  <script src="js/scoreboard.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

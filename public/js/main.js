@@ -229,7 +229,19 @@ document.addEventListener('DOMContentLoaded', () => {
     screen.classList.remove('hidden');
   }
 
-  // --- AUDIO TOGGLE ---
+  // --- SELECTOR DE TEMA VISUAL Y AUDIO TOGGLE ---
+  const themeSelect = document.getElementById('theme-select');
+  const savedTheme = localStorage.getItem('penaltazo_theme') || 'festivo';
+  document.body.setAttribute('data-theme', savedTheme);
+  if (themeSelect) {
+    themeSelect.value = savedTheme;
+    themeSelect.addEventListener('change', () => {
+      const selectedTheme = themeSelect.value || 'festivo';
+      document.body.setAttribute('data-theme', selectedTheme);
+      localStorage.setItem('penaltazo_theme', selectedTheme);
+    });
+  }
+
   soundToggleBtn.addEventListener('click', () => {
     const isMuted = window.soundEngine.toggleMute();
     soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';

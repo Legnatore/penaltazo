@@ -5990,6 +5990,482 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
   }
 }
 
+/* =========================================================
+   12. REVISIÓN INTEGRAL DE CONTRASTE Y ESTILO EN LOS 5 TEMAS
+       (FESTIVO, CLARO, OSCURO, PC FÚTBOL 4.0, SENSIBLE SOCCER)
+   ========================================================= */
+
+/* Variables base por tema para que ningún componente herede texto negro sobre fondo oscuro */
+body[data-theme="claro"] {
+  --bg-card: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-surface-alt: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-color: #cbd5e1;
+}
+
+body[data-theme="oscuro"] {
+  --bg-card: #151d30;
+  --bg-surface: #1e293b;
+  --bg-surface-alt: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --border-color: #334155;
+}
+
+body[data-theme="pcfutbol"] {
+  --bg-card: #c0c0c0;
+  --bg-surface: #d4d0c8;
+  --bg-surface-alt: #b0b0b0;
+  --text-main: #000000;
+  --text-muted: #1e293b;
+  --border-color: #404040;
+}
+
+body[data-theme="sensible"] {
+  --bg-card: #001144;
+  --bg-surface: #002266;
+  --bg-surface-alt: #000b2e;
+  --text-main: #ffffff;
+  --text-muted: #ffff88;
+  --border-color: #ffcc00;
+}
+
+/* --- TEMA OSCURO: Contraste nítido en Lobby, IA, Modales y Partido --- */
+body[data-theme="oscuro"] .lobby-hero {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #334155;
+  border-radius: 14px;
+}
+
+body[data-theme="oscuro"] .ai-practice-box {
+  background: rgba(30, 41, 59, 0.78);
+  border: 1.5px dashed #475569;
+}
+
+body[data-theme="oscuro"] .ai-personality-label {
+  color: #f8fafc !important;
+}
+
+body[data-theme="oscuro"] .ai-personality-select {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 2px solid #38bdf8 !important;
+  box-shadow: 0 2px 0 #0284c7 !important;
+}
+
+body[data-theme="oscuro"] .ai-personality-select option {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+body[data-theme="oscuro"] #play-ai-btn {
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #c084fc !important;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4) !important;
+}
+
+body[data-theme="oscuro"] #play-ai-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="oscuro"] .btn-outline {
+  background: #1e293b;
+  border: 1.5px solid #475569;
+  color: #f8fafc;
+}
+
+body[data-theme="oscuro"] .btn-outline:hover:not(:disabled) {
+  background: #334155;
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+body[data-theme="oscuro"] .lobby-rules-btn {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: #facc15 !important;
+  border: 1.5px solid #facc15 !important;
+  box-shadow: 0 3px 10px rgba(250, 204, 21, 0.2) !important;
+}
+
+body[data-theme="oscuro"] .lobby-rules-btn:hover:not(:disabled) {
+  background: rgba(250, 204, 21, 0.16) !important;
+  color: #fef08a !important;
+}
+
+body[data-theme="oscuro"] .divider {
+  color: #94a3b8;
+}
+
+body[data-theme="oscuro"] .divider::before,
+body[data-theme="oscuro"] .divider::after {
+  border-bottom-color: #334155;
+}
+
+body[data-theme="oscuro"] .seo-guide-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+body[data-theme="oscuro"] .seo-guide-card h2,
+body[data-theme="oscuro"] .rules-faq-modal-card .modal-title,
+body[data-theme="oscuro"] #legal-modal .modal-title {
+  color: #facc15;
+}
+
+body[data-theme="oscuro"] .seo-guide-card > p,
+body[data-theme="oscuro"] .seo-faq-body,
+body[data-theme="oscuro"] .legal-modal-content {
+  color: #cbd5e1;
+}
+
+body[data-theme="oscuro"] .seo-faq-item {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid #334155;
+}
+
+body[data-theme="oscuro"] .seo-faq-item summary,
+body[data-theme="oscuro"] .legal-modal-content h3 {
+  color: #f8fafc;
+}
+
+body[data-theme="oscuro"] .meta-pill {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1.5px solid #334155;
+  box-shadow: none;
+}
+
+body[data-theme="oscuro"] .king-queue-pill {
+  background: rgba(250, 204, 21, 0.18);
+  color: #facc15;
+  border-color: #facc15;
+}
+
+body[data-theme="oscuro"] .timer-pill {
+  background: #0f172a;
+  color: #facc15;
+  border-color: #facc15;
+}
+
+body[data-theme="oscuro"] .round-info-text {
+  background: #0f172a;
+  color: #38bdf8;
+  border: 1px solid #0284c7;
+}
+
+body[data-theme="oscuro"] .status-badge.waiting {
+  background: #0f172a;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+
+body[data-theme="oscuro"] .emote-bar {
+  background: #151d30;
+  border: 1px solid #334155;
+  box-shadow: none;
+}
+
+body[data-theme="oscuro"] .emote-bar-label {
+  color: #cbd5e1;
+}
+
+body[data-theme="oscuro"] .emote-btn {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  box-shadow: none;
+}
+
+body[data-theme="oscuro"] .emote-btn:hover {
+  background: #334155;
+  color: #facc15;
+  border-color: #facc15;
+}
+
+body[data-theme="oscuro"] .heatmap-grid-3x2 {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: #334155;
+}
+
+body[data-theme="oscuro"] .heatmap-cell {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+}
+
+/* --- TEMA CLARO: Contraste limpio y botones bien diferenciados --- */
+body[data-theme="claro"] .ai-practice-box {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+}
+
+body[data-theme="claro"] .ai-personality-select {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1.5px solid #94a3b8;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.06);
+}
+
+body[data-theme="claro"] #play-ai-btn {
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #6b21a8 !important;
+}
+
+body[data-theme="claro"] .lobby-rules-btn {
+  background: #fef9c3 !important;
+  color: #854d0e !important;
+  border: 1.5px solid #facc15 !important;
+  box-shadow: 0 2px 6px rgba(202, 138, 4, 0.15) !important;
+}
+
+body[data-theme="claro"] .meta-pill {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.06);
+}
+
+body[data-theme="claro"] .timer-pill {
+  background: #0f172a;
+  color: #facc15;
+}
+
+body[data-theme="claro"] .emote-bar {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+body[data-theme="claro"] .emote-btn {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  box-shadow: none;
+}
+
+/* --- TEMA PC FÚTBOL 4.0: Estética Windows 95 / Dinamic Multimedia coherente --- */
+body[data-theme="pcfutbol"] .ai-practice-box {
+  background: #d4d0c8;
+  border-radius: 0 !important;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+}
+
+body[data-theme="pcfutbol"] .ai-personality-label {
+  color: #000080 !important;
+}
+
+body[data-theme="pcfutbol"] .ai-personality-select {
+  background: #001a09 !important;
+  color: #00ff41 !important;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  border-radius: 0 !important;
+  border-top: 2px solid #404040 !important;
+  border-left: 2px solid #404040 !important;
+  border-right: 2px solid #ffffff !important;
+  border-bottom: 2px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="pcfutbol"] .ai-personality-select option {
+  background: #001a09;
+  color: #00ff41;
+}
+
+body[data-theme="pcfutbol"] #play-ai-btn {
+  background: #4b0082 !important;
+  color: #ffcc00 !important;
+}
+
+body[data-theme="pcfutbol"] .lobby-rules-btn {
+  background: #000080 !important;
+  color: #ffcc00 !important;
+}
+
+body[data-theme="pcfutbol"] .divider {
+  color: #000080;
+}
+
+body[data-theme="pcfutbol"] .divider::before,
+body[data-theme="pcfutbol"] .divider::after {
+  border-bottom: 2px solid #808080;
+}
+
+body[data-theme="pcfutbol"] .seo-guide-card {
+  background: #d4d0c8;
+  color: #000000;
+  border-radius: 0 !important;
+  border: 2px inset #808080;
+  box-shadow: none;
+}
+
+body[data-theme="pcfutbol"] .seo-guide-card h2,
+body[data-theme="pcfutbol"] .rules-faq-modal-card .modal-title,
+body[data-theme="pcfutbol"] #legal-modal .modal-title {
+  color: #000080;
+}
+
+body[data-theme="pcfutbol"] .seo-faq-item {
+  background: #c0c0c0;
+  border-radius: 0 !important;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+}
+
+body[data-theme="pcfutbol"] .meta-pill,
+body[data-theme="pcfutbol"] .emote-bar {
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+  border-radius: 0 !important;
+  border-top: 2px solid #ffffff !important;
+  border-left: 2px solid #ffffff !important;
+  border-right: 2px solid #404040 !important;
+  border-bottom: 2px solid #404040 !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="pcfutbol"] .timer-pill {
+  background: #001a09 !important;
+  color: #00ff41 !important;
+  font-family: 'VT323', monospace;
+}
+
+body[data-theme="pcfutbol"] .emote-bar-label {
+  color: #000080 !important;
+}
+
+body[data-theme="pcfutbol"] .emote-btn {
+  background: #d4d0c8;
+  color: #000000;
+  border-radius: 0 !important;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  box-shadow: none;
+}
+
+/* --- TEMA SENSIBLE SOCCER: Estética Amiga 16-bit de alto contraste --- */
+body[data-theme="sensible"] .ai-practice-box {
+  background: #002266;
+  border-radius: 0 !important;
+  border: 2px solid #ffffff;
+}
+
+body[data-theme="sensible"] .ai-personality-label {
+  color: #ffff88 !important;
+}
+
+body[data-theme="sensible"] .ai-personality-select {
+  background: #000000 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  border-radius: 0 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 2px 2px 0 #000000 !important;
+}
+
+body[data-theme="sensible"] .ai-personality-select option {
+  background: #000000;
+  color: #00ff00;
+}
+
+body[data-theme="sensible"] #play-ai-btn {
+  background: #660099 !important;
+  color: #ffcc00 !important;
+}
+
+body[data-theme="sensible"] .lobby-rules-btn {
+  background: #aa0000 !important;
+  color: #ffcc00 !important;
+}
+
+body[data-theme="sensible"] .divider {
+  color: #ffcc00;
+}
+
+body[data-theme="sensible"] .divider::before,
+body[data-theme="sensible"] .divider::after {
+  border-bottom: 2px dashed #ffcc00;
+}
+
+body[data-theme="sensible"] .seo-guide-card {
+  background: #002266;
+  color: #ffffff;
+  border-radius: 0 !important;
+  border: 3px solid #ffffff;
+  box-shadow: none;
+}
+
+body[data-theme="sensible"] .seo-guide-card h2,
+body[data-theme="sensible"] .rules-faq-modal-card .modal-title,
+body[data-theme="sensible"] #legal-modal .modal-title {
+  color: #ffcc00;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1rem;
+}
+
+body[data-theme="sensible"] .seo-guide-card > p,
+body[data-theme="sensible"] .seo-faq-body,
+body[data-theme="sensible"] .legal-modal-content {
+  color: #ffff88;
+}
+
+body[data-theme="sensible"] .seo-faq-item {
+  background: #001144;
+  border-radius: 0 !important;
+  border: 2px solid #ffcc00;
+}
+
+body[data-theme="sensible"] .seo-faq-item summary,
+body[data-theme="sensible"] .legal-modal-content h3 {
+  color: #ffffff;
+}
+
+body[data-theme="sensible"] .meta-pill,
+body[data-theme="sensible"] .emote-bar {
+  background: #001144 !important;
+  color: #ffcc00 !important;
+  border-radius: 0 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 3px 3px 0 #000000 !important;
+}
+
+body[data-theme="sensible"] .emote-bar-label {
+  color: #ffcc00 !important;
+}
+
+body[data-theme="sensible"] .emote-btn {
+  background: #002266;
+  color: #ffffff;
+  border-radius: 0 !important;
+  border: 2px solid #ffffff;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+body[data-theme="sensible"] .heatmap-grid-3x2 {
+  background: #000b2e;
+  border-color: #ffcc00;
+}
+
+body[data-theme="sensible"] .heatmap-cell {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+
 
 
 

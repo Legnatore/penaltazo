@@ -33,7 +33,8 @@ class Scoreboard {
     suddenDeathRound = 0,
     penaltiesPerPlayer = 5,
     myRole = 'P1',
-    showActiveDot = true
+    showActiveDot = true,
+    isAsyncChallenge = false
   }) {
     // 1. Actualizar números del marcador
     if (this.p1ScoreEl) this.p1ScoreEl.textContent = scores.P1;
@@ -80,7 +81,11 @@ class Scoreboard {
 
     // 6. Texto de información del turno
     if (this.roundInfoEl) {
-      if (isSuddenDeath) {
+      if (isAsyncChallenge) {
+        const currentShot = Math.min(penaltiesPerPlayer, currentTurnIndex + 1);
+        this.roundInfoEl.innerHTML = `⚔️ Desafío Asíncrono &bull; Penalti #${currentShot} de ${penaltiesPerPlayer}`;
+      } else if (isSuddenDeath) {
+        this.roundInfoEl.HTML = `Muerte Súbita (Ronda #${suddenDeathRound || 1}) &bull; Tiro #${currentTurnIndex + 1}`;
         this.roundInfoEl.innerHTML = `Muerte Súbita (Ronda #${suddenDeathRound || 1}) &bull; Tiro #${currentTurnIndex + 1}`;
       } else {
         const roundNum = Math.floor(currentTurnIndex / 2) + 1;

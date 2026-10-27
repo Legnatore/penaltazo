@@ -6465,6 +6465,142 @@ body[data-theme="sensible"] .heatmap-cell {
   color: #ffffff;
 }
 
+/* =========================================================
+   GENERADOR DE RESULTADOS VIRALES («WORDLE») Y MODO ASÍNCRONO
+   ========================================================= */
+.btn-async-challenge {
+  background: linear-gradient(180deg, #9333ea 0%, #6b21a8 100%);
+  color: #ffffff;
+  border: 3px solid #0f172a;
+  box-shadow: 0 5px 0 #0f172a;
+  margin-top: 0.45rem;
+}
+
+.btn-async-challenge:hover:not(:disabled) {
+  background: linear-gradient(180deg, #a855f7 0%, #7e22ce 100%);
+  transform: translateY(-2px);
+}
+
+.wordle-result-preview {
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: 'Montserrat', monospace, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0.75rem 0.95rem;
+  margin: 0.65rem 0;
+  border-radius: 12px;
+  border: 2.5px solid #38bdf8;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.result-share-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0.65rem 0 0.9rem;
+}
+
+.result-share-primary {
+  width: 100%;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  padding: 0.8rem 1rem !important;
+  background: linear-gradient(180deg, #22c55e 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  border: 3px solid #0f172a !important;
+  box-shadow: 0 5px 0 #0f172a !important;
+}
+
+#revenge-async-btn {
+  background: linear-gradient(180deg, #f97316 0%, #c2410c 100%);
+  color: #ffffff;
+  border: 3px solid #0f172a;
+  box-shadow: 0 5px 0 #0f172a;
+}
+
+.async-share-modal-card {
+  max-width: 540px;
+}
+
+.async-recorded-summary {
+  background: var(--bg-surface);
+  border: 2.5px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin: 0.75rem 0;
+  text-align: center;
+}
+
+.async-summary-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.async-dive-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.async-dive-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 2px solid #0284c7;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.async-url-box {
+  margin: 0.75rem 0;
+}
+
+body[data-theme="claro"] .btn-async-challenge {
+  background: #7c3aed;
+  border: 1px solid #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+body[data-theme="oscuro"] .btn-async-challenge {
+  background: linear-gradient(180deg, #9333ea 0%, #6b21a8 100%);
+  border-color: #c084fc;
+  box-shadow: 0 4px 0 #020617;
+}
+
+body[data-theme="oscuro"] .wordle-result-preview {
+  background: #020617;
+  border-color: #38bdf8;
+  color: #f8fafc;
+}
+
+body[data-theme="pcfutbol"] .btn-async-challenge,
+body[data-theme="pcfutbol"] .wordle-result-preview,
+body[data-theme="pcfutbol"] .async-recorded-summary,
+body[data-theme="pcfutbol"] .async-dive-pill {
+  border-radius: 0 !important;
+}
+
+body[data-theme="sensible"] .btn-async-challenge,
+body[data-theme="sensible"] .wordle-result-preview,
+body[data-theme="sensible"] .async-recorded-summary,
+body[data-theme="sensible"] .async-dive-pill {
+  border-radius: 0 !important;
+  border-color: #ffcc00 !important;
+}
+
+
 
 
 

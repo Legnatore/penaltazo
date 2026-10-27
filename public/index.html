@@ -194,6 +194,12 @@
               </button>
             </div>
 
+            <!-- Modo Asíncrono: Desafío por Enlace (sin coincidir en vivo) -->
+            <button id="start-async-challenge-btn" type="button" class="btn btn-async-challenge btn-large">
+              <span class="btn-icon">⚔️</span>
+              <span class="btn-text">Desafiar a un colega (Modo Asíncrono)</span>
+            </button>
+
             <div class="divider"><span>o únete con código</span></div>
 
             <div class="join-box">
@@ -724,6 +730,10 @@
           <button id="return-bracket-btn" class="btn btn-confirm btn-large hidden">
             🏆 Volver al Cuadro del Torneo
           </button>
+          <!-- Botón exclusivo de venganza en Modo Desafío Asíncrono -->
+          <button id="revenge-async-btn" type="button" class="btn btn-confirm btn-large hidden">
+            💥 Devolver el desafío / Venganza
+          </button>
           <!-- Botones normales 1v1 -->
           <button id="rematch-btn" class="btn btn-primary btn-large">
             Pedir Revancha 🔄
@@ -733,10 +743,12 @@
           </button>
         </div>
 
-        <!-- Compartir Tarjeta / Crónica del Resultado por WhatsApp -->
+        <!-- Resumen visual estilo Wordle + Botón destacado de compartir -->
+        <div id="wordle-result-preview" class="wordle-result-preview"></div>
+
         <div class="result-share-actions">
-          <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp result-share-btn">
-            <span>📲</span> Compartir Crónica en WhatsApp
+          <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp result-share-btn result-share-primary">
+            <span>📲</span> Compartir resultado con amigos
           </button>
           <button type="button" id="download-result-card-btn" class="btn btn-secondary result-share-btn">
             <span>📸</span> Tarjeta de Resultado (Imagen)
@@ -871,6 +883,35 @@
         <div class="modal-actions">
           <button type="button" id="close-rules-faq-modal-btn" class="btn btn-primary">
             ¡Entendido, a jugar! ⚽
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. MODAL DE ENLACE GENERADO PARA DESAFÍO ASÍNCRONO (?desafio=...) -->
+    <div id="async-share-modal" class="modal-overlay hidden">
+      <div class="modal-card async-share-modal-card">
+        <div class="game-over-title victory">⚔️ ¡DESAFÍO GRABADO!</div>
+        <p class="game-over-subtitle">
+          Tus 5 estiradas como portero han quedado codificadas en este enlace secreto. ¡Envíaselo a tu amigo para ver cuántos goles es capaz de meterte!
+        </p>
+
+        <div id="async-recorded-summary" class="async-recorded-summary"></div>
+
+        <div class="share-box">
+          <label for="async-challenge-url-input">Enlace directo del desafío asíncrono:</label>
+          <div class="link-copy-row">
+            <input type="text" id="async-challenge-url-input" readonly>
+            <button type="button" id="async-copy-url-btn" class="btn btn-primary">Copiar 📋</button>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="async-send-whatsapp-btn" class="btn social-btn btn-whatsapp btn-large">
+            📲 Manda este reto a tu amigo por WhatsApp
+          </button>
+          <button type="button" id="async-back-lobby-btn" class="btn btn-outline">
+            Volver al Menú Principal 🏠
           </button>
         </div>
       </div>

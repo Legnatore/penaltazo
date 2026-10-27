@@ -207,6 +207,10 @@ class NetworkManager {
       this.socket.emit('submit_choice', { row, col });
     } else if (this.mode === 'ai') {
       this.handleAIChoice(row, col);
+    } else if (this.mode === 'async_record') {
+      this.handleAsyncRecordChoice(row, col);
+    } else if (this.mode === 'async_play') {
+      this.handleAsyncPlayChoice(row, col);
     }
   }
 
@@ -215,6 +219,8 @@ class NetworkManager {
       this.socket.emit('request_rematch');
     } else if (this.mode === 'ai') {
       this.startAIGame();
+    } else if (this.mode === 'async_play' && this.asyncChallenger) {
+      this.initAsyncChallengePlay(this.asyncChallenger, this.playerName);
     }
   }
 
@@ -525,6 +531,213 @@ class NetworkManager {
         }, 4200);
       }
     }, 600);
+  }
+
+  // --- MODO ASÍNCRONO «DESAFÍO POR ENLACE» (?desafio=...) ---
+  initAsyncRecordMode(playerName = 'Portero') {
+    this.mode = 'async_record';
+    this.roomId = 'RETO-ASYNC';
+    this.playerRole = 'P1';
+    this.playerName = playerName;
+    this.recordedDives = [];
+    this.trigger('async_record_started', {
+      playerName: this.playerName,
+      totalDives: 5
+    });
+  }
+
+  handleAsyncRecordChoice(row, col) {
+    if (!Array.isArray(this.recordedDives) || this.recordedDives.length >= 5) return;
+    const safeRow = row === 0 ? 0 : 1;
+    const safeCol = Math.max(0, Math.min(2, Number(col) || 0));
+    const cellIndex = safeRow * 3 + safeCol;
+    this.recordedDives.push(cellIndex);
+
+    this.trigger('async_dive_recorded', {
+      diveNumber: this.recordedDives.length,
+      totalDives: 5,
+      row: safeRow,
+      col: safeCol,
+      cellIndex,
+      recordedDives: [...this.recordedDives],
+      isComplete: this.recordedDives.length >= 5
+    });
+  }
+
+  initAsyncChallengePlay(challengeData, shooterName = 'Retador') {
+    this.mode = 'async_play';
+    this.roomId = 'DESAFIO-URL';
+    this.playerRole = 'P1';
+    this.playerName = shooterName;
+    this.asyncChallenger = challengeData;
+    this.penaltiesPerPlayer = 5;
+
+    this.localState = {
+      penaltiesPerPlayer: 5,
+      turnIndex: 0,
+      scores: { P1: 0, P2: 0 },
+      history: { P1: [], P2: [] },
+      isSuddenDeath: false,
+      suddenDeathRound: 0,
+      state: 'playing'
+    };
+
+    const challengerName = (challengeData && challengeData.p) ? challengeData.p : 'Colega';
+
+    this.trigger('game_started', {
+      turnIndex: 0,
+      shooterRole: 'P1',
+      keeperRole: 'P2',
+      isSuddenDeath: false,
+      suddenDeathRound: 0,
+      penaltiesPerPlayer: 5,
+      turnTimeLimit: 12,
+      isAsyncChallenge: true,
+      asyncChallenger: challengeData,
+      roomState: {
+        id: this.roomId,
+        penaltiesPerPlayer: 5,
+        seriesWins: { P1: 0, P2: 0 },
+        kingRole: null,
+        kingStreak: 0,
+        challengerQueue: [],
+        players: [
+          { role: 'P1', name: this.playerName, connected: true },
+          { role: 'P2', name: `${challengerName} (🧤 Grabado)`, connected: true }
+        ],
+        scores: { P1: 0, P2: 0 },
+        history: { P1: [], P2: [] }
+      }
+    });
+  }
+
+  handleAsyncPlayChoice(shooterRow, shooterCol) {
+    const turnIdx = this.localState.turnIndex;
+    const dives = (this.asyncChallenger && Array.isArray(this.asyncChallenger.d))
+      ? this.asyncChallenger.d
+      : [1, 1, 1, 1, 1];
+    const diveCell = Number.isInteger(dives[turnIdx]) ? dives[turnIdx] : 1;
+    const keeperChoice = {
+      row: Math.floor(diveCell / 3),
+      col: diveCell % 3
+    };
+    const shooterChoice = { row: shooterRow, col: shooterCol };
+
+    this.trigger('choice_confirmed', { role: 'P1' });
+
+    setTimeout(() => {
+      this.trigger('choice_confirmed', { role: 'P2' });
+
+      // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene 14% de fallo (7% palo, 7% fuera)
+      const isLowCenter = (shooterChoice.row === 1 && shooterChoice.col === 1);
+      const missRoll = !isLowCenter ? Math.random() : 1;
+      const isPost = missRoll < 0.07;
+      const isOut = !isPost && missRoll < 0.14;
+
+      const isGoal = !isOut && !isPost && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
+
+      if (isGoal) {
+        this.localState.scores.P1 += 1;
+      } else {
+        this.localState.scores.P2 += 1;
+      }
+
+      const shotRecord = {
+        turnIndex: turnIdx,
+        attempt: turnIdx + 1,
+        isGoal,
+        isOut: isOut || isPost,
+        isPost,
+        shooterChoice,
+        keeperChoice,
+        isSuddenDeath: false
+      };
+      this.localState.history.P1.push(shotRecord);
+
+      const nextTurnIndex = turnIdx + 1;
+      const gameOver = nextTurnIndex >= 5;
+      const winner = gameOver
+        ? (this.localState.scores.P1 >= 3 ? 'P1' : 'P2')
+        : null;
+
+      const challengerName = (this.asyncChallenger && this.asyncChallenger.p) ? this.asyncChallenger.p : 'Colega';
+
+      this.trigger('turn_resolved', {
+        turnIndex: turnIdx,
+        shooterRole: 'P1',
+        keeperRole: 'P2',
+        shooterChoice,
+        keeperChoice,
+        isGoal,
+        isOut: isOut || isPost,
+        isPost,
+        isSuddenDeath: false,
+        suddenDeathRound: 0,
+        isAsyncChallenge: true,
+        scores: { ...this.localState.scores },
+        history: {
+          P1: [...this.localState.history.P1],
+          P2: [...this.localState.history.P2]
+        },
+        gameOver,
+        winner,
+        nextIsSuddenDeath: false,
+        nextSuddenDeathRound: 0,
+        nextTurnIndex,
+        penaltiesPerPlayer: 5,
+        roomState: {
+          id: this.roomId,
+          penaltiesPerPlayer: 5,
+          seriesWins: { P1: 0, P2: 0 },
+          kingRole: null,
+          kingStreak: 0,
+          challengerQueue: [],
+          players: [
+            { role: 'P1', name: this.playerName, connected: true },
+            { role: 'P2', name: `${challengerName} (🧤 Grabado)`, connected: true }
+          ],
+          scores: { ...this.localState.scores },
+          history: {
+            P1: [...this.localState.history.P1],
+            P2: [...this.localState.history.P2]
+          }
+        }
+      });
+
+      this.localState.turnIndex = nextTurnIndex;
+
+      if (!gameOver) {
+        setTimeout(() => {
+          this.trigger('next_turn_ready', {
+            turnIndex: this.localState.turnIndex,
+            shooterRole: 'P1',
+            keeperRole: 'P2',
+            isSuddenDeath: false,
+            suddenDeathRound: 0,
+            penaltiesPerPlayer: 5,
+            turnTimeLimit: 12,
+            isAsyncChallenge: true,
+            roomState: {
+              id: this.roomId,
+              penaltiesPerPlayer: 5,
+              seriesWins: { P1: 0, P2: 0 },
+              kingRole: null,
+              kingStreak: 0,
+              challengerQueue: [],
+              players: [
+                { role: 'P1', name: this.playerName, connected: true },
+                { role: 'P2', name: `${challengerName} (🧤 Grabado)`, connected: true }
+              ],
+              scores: { ...this.localState.scores },
+              history: {
+                P1: [...this.localState.history.P1],
+                P2: [...this.localState.history.P2]
+              }
+            }
+          });
+        }, 4200);
+      }
+    }, 550);
   }
 }
 

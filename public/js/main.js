@@ -64,6 +64,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
   const shareResultWaBtn = document.getElementById('share-result-wa-btn');
   const downloadResultCardBtn = document.getElementById('download-result-card-btn');
+  const wordleResultPreview = document.getElementById('wordle-result-preview');
+  const revengeAsyncBtn = document.getElementById('revenge-async-btn');
+
+  // Elementos del Modo Asíncrono («Desafío por Enlace»)
+  const startAsyncChallengeBtn = document.getElementById('start-async-challenge-btn');
+  const asyncShareModal = document.getElementById('async-share-modal');
+  const asyncRecordedSummary = document.getElementById('async-recorded-summary');
+  const asyncChallengeUrlInput = document.getElementById('async-challenge-url-input');
+  const asyncCopyUrlBtn = document.getElementById('async-copy-url-btn');
+  const asyncSendWhatsappBtn = document.getElementById('async-send-whatsapp-btn');
+  const asyncBackLobbyBtn = document.getElementById('async-back-lobby-btn');
 
   // Nuevos elementos de partido: H2H, Rey de la Pista, Reloj 12s, Carrusel y Emotes
   const h2hCounterBadge = document.getElementById('h2h-counter-badge');
@@ -148,10 +159,92 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(() => {});
 
-  // Comprobar parámetros en la URL (?room=XYZ o ?tournament=COPA-XYZ)
+  // --- CODIFICACIÓN Y SANITIZACIÓN SEGURA PARA EL MODO ASÍNCRONO (?desafio=...) ---
+  function sanitizePlayerNickname(raw, fallback = 'Colega') {
+    if (typeof raw !== 'string') return fallback;
+    const cleaned = raw.replace(/[<>"'&\x00-\x1F\x7F]/g, '').trim().slice(0, 15);
+    return cleaned || fallback;
+  }
+
+  function encodeAsyncChallengePayload({ p, d, k, n }) {
+    const safeName = sanitizePlayerNickname(p, 'Colega');
+    const safeDives = Array.isArray(d)
+      ? d.slice(0, 5).map(val => {
+          const num = Number(val);
+          return Number.isInteger(num) && num >= 0 && num <= 5 ? num : 1;
+        })
+      : [1, 1, 1, 1, 1];
+    while (safeDives.length < 5) safeDives.push(1);
+
+    const payload = {
+      p: safeName,
+      d: safeDives
+    };
+    if (typeof k === 'string' && k.length <= 20) payload.k = k;
+    if (Number.isInteger(n) && n >= 1 && n <= 99) payload.n = n;
+
+    const jsonStr = JSON.stringify(payload);
+    const bytes = new TextEncoder().encode(jsonStr);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  function decodeAndSanitizeAsyncChallenge(rawParam) {
+    if (!rawParam || typeof rawParam !== 'string' || rawParam.length > 512) {
+      return null;
+    }
+    try {
+      // Soportar tanto Base64 estándar como Base64 URL-safe y espacios por +
+      let normalized = rawParam.trim().replace(/ /g, '+').replace(/-/g, '+').replace(/_/g, '/');
+      while (normalized.length % 4 !== 0) {
+        normalized += '=';
+      }
+      const binary = atob(normalized);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const jsonStr = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+      const parsed = JSON.parse(jsonStr);
+
+      if (!parsed || typeof parsed !== 'object') return null;
+      if (!Array.isArray(parsed.d) || parsed.d.length !== 5) return null;
+
+      const sanitizedDives = [];
+      for (let i = 0; i < 5; i++) {
+        const val = Number(parsed.d[i]);
+        if (!Number.isInteger(val) || val < 0 || val > 5) {
+          return null;
+        }
+        sanitizedDives.push(val);
+      }
+
+      const safePlayerName = sanitizePlayerNickname(parsed.p, 'Colega');
+      const safeKit = typeof parsed.k === 'string' ? parsed.k.replace(/[^a-z0-9_-]/gi, '').slice(0, 20) : null;
+      const safeNumber = (Number.isInteger(Number(parsed.n)) && Number(parsed.n) >= 1 && Number(parsed.n) <= 99)
+        ? Number(parsed.n)
+        : null;
+
+      return {
+        p: safePlayerName,
+        d: sanitizedDives,
+        k: safeKit,
+        n: safeNumber
+      };
+    } catch (err) {
+      console.warn('Enlace de desafío asíncrono inválido o corrupto:', err);
+      return null;
+    }
+  }
+
+  // Comprobar parámetros en la URL (?room=XYZ, ?tournament=COPA-XYZ o ?desafio=BASE64)
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
   const tournamentParam = urlParams.get('tournament');
+  const desafioParam = urlParams.get('desafio');
   const directInviteBanner = document.getElementById('direct-invite-banner');
   const inviteBadgeTitle = document.getElementById('invite-badge-title');
   const inviteBadgeDesc = document.getElementById('invite-badge-desc');
@@ -243,6 +336,41 @@ document.addEventListener('DOMContentLoaded', () => {
       network.initMultiplayer();
       network.joinRoom(cleanCode, savedPlayerName, getSelectedLobbyPenalties());
     }
+  } else if (desafioParam) {
+    const decodedChallenge = decodeAndSanitizeAsyncChallenge(desafioParam);
+    if (!decodedChallenge) {
+      setTimeout(() => {
+        showToast('⚠️ El enlace de desafío está incompleto o corrupto.');
+      }, 300);
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {}
+    } else {
+      if (directInviteBanner) {
+        directInviteBanner.classList.remove('hidden');
+        if (lobbyFormatGroup) lobbyFormatGroup.classList.add('hidden');
+        inviteBadgeTitle.textContent = `⚔️ ¡DESAFÍO ASÍNCRONO DE ${decodedChallenge.p.toUpperCase()}!`;
+        inviteBadgeDesc.textContent = `${decodedChallenge.p} ha dejado programadas sus 5 estiradas como portero. Pon tu nombre y chuta los 5 penaltis para batirle:`;
+        directJoinBtn.textContent = `⚡ ¡ACEPTAR EL RETO Y LANZAR 5 PENALTIS!`;
+        directJoinBtn.onclick = () => {
+          const name = requireValidPlayerName();
+          if (!name) return;
+          isInTournament = false;
+          activeTournament = null;
+          myRole = 'P1';
+          network.initAsyncChallengePlay(decodedChallenge, name);
+        };
+      }
+      // Si el Jugador B ya tenía su apodo guardado, lanzar directamente el desafío asíncrono
+      if (savedPlayerName && !isDefaultOrEmptyName(savedPlayerName)) {
+        setTimeout(() => {
+          isInTournament = false;
+          activeTournament = null;
+          myRole = 'P1';
+          network.initAsyncChallengePlay(decodedChallenge, savedPlayerName);
+        }, 180);
+      }
+    }
   }
 
   // --- GESTIÓN DE PANTALLAS ---
@@ -253,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tournamentBracketScreen.classList.add('hidden');
     gameScreen.classList.add('hidden');
     gameOverModal.classList.add('hidden');
+    if (asyncShareModal) asyncShareModal.classList.add('hidden');
 
     screen.classList.remove('hidden');
   }
@@ -418,10 +547,21 @@ document.addEventListener('DOMContentLoaded', () => {
       rivalCurrentMatchNumber = rivalVisual.jerseyNumber;
       rivalCurrentMatchKitKey = rivalVisual.kitKey === myKey ? pickRandomDistinctKitKey(myKey) : rivalVisual.kitKey;
     } else {
-      // En partida 1v1 o contra la IA: dorsal y equipación aleatorios elegidos antes de empezar la partida y mantenidos toda la tanda
+      // En partida 1v1, desafío asíncrono o contra la IA: dorsal y equipación mantenidos toda la tanda
       myCurrentMatchNumber = generateRandomJerseyNumber();
-      rivalCurrentMatchNumber = generateRandomJerseyNumber(myCurrentMatchNumber);
-      rivalCurrentMatchKitKey = pickRandomDistinctKitKey(myKey);
+      if (network.mode === 'async_play' && network.asyncChallenger) {
+        const chalKit = network.asyncChallenger.k;
+        const chalNum = network.asyncChallenger.n;
+        rivalCurrentMatchNumber = (Number.isInteger(chalNum) && chalNum >= 1 && chalNum <= 99)
+          ? chalNum
+          : generateRandomJerseyNumber(myCurrentMatchNumber);
+        rivalCurrentMatchKitKey = (chalKit && TEAM_KITS[chalKit] && chalKit !== myKey)
+          ? chalKit
+          : pickRandomDistinctKitKey(myKey);
+      } else {
+        rivalCurrentMatchNumber = generateRandomJerseyNumber(myCurrentMatchNumber);
+        rivalCurrentMatchKitKey = pickRandomDistinctKitKey(myKey);
+      }
     }
   }
 
@@ -596,6 +736,220 @@ document.addEventListener('DOMContentLoaded', () => {
     const personality = aiPersonalitySelect ? aiPersonalitySelect.value : 'psicologo';
     network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer, personality);
   });
+
+  // --- FLUJO DE GRABACIÓN DEL MODO ASÍNCRONO («DESAFÍO POR ENLACE») ---
+  const ASYNC_ZONE_SHORT_NAMES = [
+    '↖️ Escuadra Izq.',
+    '⬆️ Arriba Centro',
+    '↗️ Escuadra Der.',
+    '↙️ Raso Izq.',
+    '⬇️ Raso Centro',
+    '↘️ Raso Der.'
+  ];
+
+  function prepareAsyncRecordStep(stepNumber) {
+    isResolvingTurn = false;
+    hasConfirmedChoice = false;
+    mySelectedCell = null;
+    currentShooterRole = 'P2';
+    currentKeeperRole = 'P1';
+    animator.resetPositions();
+    goalGrid.clearSelection();
+    goalGrid.enable('keeper');
+
+    roleInstructions.innerHTML = `
+      <div class="role-title keeper">🧤 GRABANDO PARADA ${stepNumber} DE 5 (MODO ASÍNCRONO)</div>
+      <p class="role-desc">Elige hacia qué zona de la portería te lanzarás en el penalti #${stepNumber} de tu colega.</p>
+    `;
+    myStatusBadge.className = 'status-badge waiting';
+    myStatusBadge.innerHTML = `🧤 Elige tu estirada #${stepNumber}/5...`;
+    rivalStatusBadge.className = 'status-badge ready';
+    rivalStatusBadge.innerHTML = `🔗 Se codificará en el enlace`;
+    selectedZoneLabel.textContent = `Parada ${stepNumber} de 5: haz clic en una de las 6 zonas de la portería`;
+    setCommentatorText(`🧤 Grabando tu desafío asíncrono (Parada ${stepNumber} de 5). ¡Elige dónde te vas a estirar para dejar seco a tu colega!`, 'save');
+  }
+
+  function startAsyncRecordingFlow(explicitName = null) {
+    const name = explicitName || requireValidPlayerName();
+    if (!name) return;
+
+    isInTournament = false;
+    activeTournament = null;
+    myRole = 'P1';
+    myCurrentMatchNumber = generateRandomJerseyNumber();
+    rivalCurrentMatchNumber = generateRandomJerseyNumber(myCurrentMatchNumber);
+    rivalCurrentMatchKitKey = pickRandomDistinctKitKey(getMySelectedKitKey());
+
+    gameOverModal.classList.add('hidden');
+    if (asyncShareModal) asyncShareModal.classList.add('hidden');
+
+    network.initAsyncRecordMode(name);
+  }
+
+  if (startAsyncChallengeBtn) {
+    startAsyncChallengeBtn.addEventListener('click', () => {
+      startAsyncRecordingFlow();
+    });
+  }
+
+  if (revengeAsyncBtn) {
+    revengeAsyncBtn.addEventListener('click', () => {
+      const currentName = (!isDefaultOrEmptyName(playerNameInput.value) ? playerNameInput.value.trim() : playerNames.P1) || 'Retador';
+      startAsyncRecordingFlow(currentName);
+    });
+  }
+
+  network.on('async_record_started', ({ playerName }) => {
+    stopClientTurnTimer();
+    if (turnTimerBadge) turnTimerBadge.classList.add('hidden');
+    if (turnTimerBarTrack) turnTimerBarTrack.classList.add('hidden');
+    if (emoteBar) emoteBar.classList.add('hidden');
+
+    showScreen(gameScreen);
+    headerRoomBadge.textContent = 'Modo Asíncrono: Grabando 5 Paradas';
+    headerRoomBadge.classList.remove('hidden');
+
+    playerNames.P1 = playerName;
+    playerNames.P2 = 'Tu Colega';
+    scoreboard.updatePlayerNames(`#${myCurrentMatchNumber} ${playerName} (🧤 Tú)`, '⚽ Tu Colega (Retado)');
+    updateActiveKeeperAppearance('P1');
+
+    if (h2hCounterBadge) {
+      h2hCounterBadge.innerHTML = '⚔️ <strong>Modo Desafío Asíncrono</strong> • Graba tus 5 estiradas como portero';
+    }
+    if (kingQueueBadge) kingQueueBadge.classList.add('hidden');
+
+    scoreboard.render({
+      scores: { P1: 0, P2: 0 },
+      history: { P1: [], P2: [] },
+      currentTurnIndex: 0,
+      shooterRole: 'P2',
+      keeperRole: 'P1',
+      isSuddenDeath: false,
+      suddenDeathRound: 0,
+      penaltiesPerPlayer: 5,
+      myRole: 'P1',
+      showActiveDot: true,
+      isAsyncChallenge: true
+    });
+
+    prepareAsyncRecordStep(1);
+  });
+
+  network.on('async_dive_recorded', ({ diveNumber, totalDives, row, col, cellIndex, recordedDives, isComplete }) => {
+    isResolvingTurn = true;
+    goalGrid.disable();
+
+    if (animator && animator.keeperEl) {
+      animator.keeperEl.className = `goalkeeper-sprite dive-r${row}-c${col}`;
+    }
+    if (window.soundEngine) {
+      window.soundEngine.playSave();
+    }
+
+    const recordedHistoryP1 = recordedDives.map((idx, i) => ({
+      turnIndex: i,
+      attempt: i + 1,
+      isGoal: true,
+      isOut: false,
+      isPost: false
+    }));
+
+    scoreboard.render({
+      scores: { P1: diveNumber, P2: 0 },
+      history: { P1: recordedHistoryP1, P2: [] },
+      currentTurnIndex: diveNumber,
+      shooterRole: 'P2',
+      keeperRole: 'P1',
+      isSuddenDeath: false,
+      suddenDeathRound: 0,
+      penaltiesPerPlayer: 5,
+      myRole: 'P1',
+      showActiveDot: !isComplete,
+      isAsyncChallenge: true
+    });
+
+    myStatusBadge.className = 'status-badge ready';
+    myStatusBadge.innerHTML = `✅ Parada #${diveNumber}/5 guardada (${ASYNC_ZONE_SHORT_NAMES[cellIndex]})`;
+
+    if (!isComplete) {
+      setTimeout(() => {
+        prepareAsyncRecordStep(diveNumber + 1);
+      }, 460);
+    } else {
+      setCommentatorText('🔒 ¡Las 5 estiradas han quedado grabadas y selladas en tu enlace de desafío!', 'goal');
+      setTimeout(() => {
+        openAsyncChallengeShareModal(network.playerName, recordedDives);
+      }, 550);
+    }
+  });
+
+  function openAsyncChallengeShareModal(challengerName, recordedDives) {
+    const token = encodeAsyncChallengePayload({
+      p: challengerName,
+      d: recordedDives,
+      k: getMySelectedKitKey(),
+      n: myCurrentMatchNumber
+    });
+
+    let baseUrl = window.location.origin;
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && serverLocalIps.length > 0) {
+      baseUrl = `http://${serverLocalIps[0]}:3000`;
+    }
+    const challengeUrl = `${baseUrl}/?desafio=${encodeURIComponent(token)}`;
+
+    if (asyncRecordedSummary) {
+      const pillsHtml = recordedDives
+        .map((idx, i) => `<span class="async-dive-pill"><strong>#${i + 1}:</strong> ${ASYNC_ZONE_SHORT_NAMES[idx] || 'Centro'}</span>`)
+        .join('');
+      asyncRecordedSummary.innerHTML = `
+        <div class="async-summary-label">🧤 Tus 5 estiradas programadas en secreto:</div>
+        <div class="async-dive-pills-row">${pillsHtml}</div>
+      `;
+    }
+
+    if (asyncChallengeUrlInput) {
+      asyncChallengeUrlInput.value = challengeUrl;
+    }
+
+    const waChallengeText =
+      `⚔️ *¡TE RETO EN MODO ASÍNCRONO A ¡PENALTAZO!* ⚽🧤\n` +
+      `Ya he dejado grabadas mis 5 estiradas como portero (${challengerName}).\n` +
+      `🔥 A ver si tienes huevos a meterme al menos 3 de 5 penaltis 👉 ${challengeUrl}`;
+
+    if (asyncSendWhatsappBtn) {
+      asyncSendWhatsappBtn.onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: '¡PENALTAZO! - Desafío Asíncrono ⚽🧤',
+              text: waChallengeText
+            });
+            return;
+          } catch (err) {
+            // Si el usuario cancela o falla, abrir WhatsApp o copiar enlace
+          }
+        }
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(waChallengeText)}`, '_blank', 'noopener,noreferrer');
+      };
+    }
+
+    if (asyncCopyUrlBtn) {
+      asyncCopyUrlBtn.onclick = () => {
+        copyTextWithFallback(challengeUrl, '📋 ¡Enlace del desafío copiado! Pégalo en WhatsApp');
+      };
+    }
+
+    if (asyncShareModal) {
+      asyncShareModal.classList.remove('hidden');
+    }
+  }
+
+  if (asyncBackLobbyBtn) {
+    asyncBackLobbyBtn.addEventListener('click', () => {
+      window.location.href = window.location.pathname;
+    });
+  }
 
   // Salir de torneo al menú
   if (tourneyLeaveBtn) {
@@ -982,8 +1336,13 @@ document.addEventListener('DOMContentLoaded', () => {
     myStatusBadge.className = 'status-badge waiting';
     myStatusBadge.innerHTML = '⏳ Esperando tu elección...';
 
-    rivalStatusBadge.className = 'status-badge waiting';
-    rivalStatusBadge.innerHTML = '⏳ Rival pensando...';
+    if (network.mode === 'async_play') {
+      rivalStatusBadge.className = 'status-badge ready';
+      rivalStatusBadge.innerHTML = '🔒 Parada ya programada';
+    } else {
+      rivalStatusBadge.className = 'status-badge waiting';
+      rivalStatusBadge.innerHTML = '⏳ Rival pensando...';
+    }
 
     selectedZoneLabel.textContent = 'Haz clic en una de las 6 zonas de la portería para elegir al instante';
 
@@ -1060,12 +1419,15 @@ document.addEventListener('DOMContentLoaded', () => {
       isSuddenDeath,
       suddenDeathRound,
       penaltiesPerPlayer: currentPenaltiesPerPlayer,
-      myRole
+      myRole,
+      isAsyncChallenge: network.mode === 'async_play'
     });
 
     const shooterDisplayName = playerNames[shooterRole] || 'El delantero';
     const keeperDisplayName = playerNames[keeperRole] || 'el guardameta';
-    if (isSuddenDeath) {
+    if (network.mode === 'async_play') {
+      setCommentatorText(`⚔️ Desafío Asíncrono (Penalti #${(turnIndex || 0) + 1} de 5): ¡Chuta ${shooterDisplayName} contra la estirada programada de ${keeperDisplayName}!`, 'normal');
+    } else if (isSuddenDeath) {
       setCommentatorText(`🔥 ¡MUERTE SÚBITA (Ronda ${suddenDeathRound})! Chuta ${shooterDisplayName} ante ${keeperDisplayName}. ¡El que falle se queda sin red!`, 'urgent');
     } else {
       const introLine = CARRUSEL_INTRO_LINES[(turnIndex || 0) % CARRUSEL_INTRO_LINES.length];
@@ -1177,6 +1539,23 @@ document.addEventListener('DOMContentLoaded', () => {
     matchZoneStats = createEmptyZoneStats();
     pendingRematchVotes = [];
     gameOverModal.classList.add('hidden');
+    if (asyncShareModal) asyncShareModal.classList.add('hidden');
+
+    if (turnTimerBadge) turnTimerBadge.classList.remove('hidden');
+    if (turnTimerBarTrack) turnTimerBarTrack.classList.remove('hidden');
+    if (emoteBar) {
+      if (data && data.isAsyncChallenge) {
+        emoteBar.classList.add('hidden');
+      } else {
+        emoteBar.classList.remove('hidden');
+      }
+    }
+
+    if (data && data.isAsyncChallenge) {
+      headerRoomBadge.textContent = '⚔️ Desafío Asíncrono';
+      headerRoomBadge.classList.remove('hidden');
+    }
+
     if (data && data.roomState && data.roomState.players) {
       const p1 = data.roomState.players.find(p => p.role === 'P1');
       const p2 = data.roomState.players.find(p => p.role === 'P2');
@@ -1265,7 +1644,8 @@ document.addEventListener('DOMContentLoaded', () => {
           suddenDeathRound: data.suddenDeathRound || 0,
           penaltiesPerPlayer: currentPenaltiesPerPlayer,
           myRole,
-          showActiveDot: false
+          showActiveDot: false,
+          isAsyncChallenge: Boolean(data.isAsyncChallenge || network.mode === 'async_play')
         });
       },
       onComplete: () => {
@@ -1288,6 +1668,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- FIN DE PARTIDO & REVANCHA / RETORNO A TORNEO ---
   function updateRematchUI(votes = pendingRematchVotes) {
+    if (revengeAsyncBtn) {
+      if (network.mode === 'async_play') {
+        revengeAsyncBtn.classList.remove('hidden');
+        revengeAsyncBtn.innerHTML = '💥 Devolver el desafío / Venganza';
+      } else {
+        revengeAsyncBtn.classList.add('hidden');
+      }
+    }
+
     if (isInTournament && activeTournament) {
       returnBracketBtn.classList.remove('hidden');
       rematchBtn.classList.add('hidden');
@@ -1298,6 +1687,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     returnBracketBtn.classList.add('hidden');
     rematchBtn.classList.remove('hidden');
+
+    if (network.mode === 'async_play') {
+      rematchStatus.textContent = '';
+      rematchStatus.classList.remove('rematch-requested-alert');
+      rematchBtn.removeAttribute('disabled');
+      rematchBtn.classList.remove('btn-confirm', 'pulse-btn');
+      rematchBtn.classList.add('btn-primary');
+      rematchBtn.textContent = 'Reintentar este desafío 🔄';
+      return;
+    }
 
     const queue = (lastRoomState && Array.isArray(lastRoomState.challengerQueue)) ? lastRoomState.challengerQueue : [];
     if (queue.length > 0 && !isInTournament) {
@@ -1363,8 +1762,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const iWon = (data.winner === myRole);
       const isSpectator = (myRole === 'spectator');
+      const isAsync = Boolean(data.isAsyncChallenge || network.mode === 'async_play');
+      const asyncRivalName = (network.asyncChallenger && network.asyncChallenger.p) ? network.asyncChallenger.p : playerNames.P2;
 
-      if (isSpectator) {
+      if (isAsync) {
+        if (iWon) {
+          gameOverTitle.innerHTML = `🏆 ¡¡HAS BATIDO A ${asyncRivalName.toUpperCase()}!!`;
+          gameOverTitle.className = 'game-over-title victory';
+          gameOverSubtitle.textContent = `Has anotado ${data.scores.P1} de 5 penaltis ante sus paradas grabadas. ¡Devuélvele el desafío ahora!`;
+          if (window.soundEngine) window.soundEngine.playCrowdCheer(true);
+        } else {
+          gameOverTitle.innerHTML = `🧤 ¡${asyncRivalName.toUpperCase()} TE HA GANADO EL RETO!`;
+          gameOverTitle.className = 'game-over-title defeat';
+          gameOverSubtitle.textContent = `Sus estiradas programadas frustraron ${data.scores.P2} de tus 5 tiros. ¡Graba tus paradas y tómate la venganza!`;
+        }
+      } else if (isSpectator) {
         gameOverTitle.textContent = `🏆 ¡${data.winner === 'P1' ? 'Jugador 1' : 'Jugador 2'} se lleva el partido!`;
         gameOverSubtitle.textContent = 'Partidazo resuelto en la tanda.';
       } else if (iWon) {
@@ -1391,6 +1803,10 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       `;
+
+      if (wordleResultPreview) {
+        wordleResultPreview.textContent = buildWordleShareText();
+      }
 
       if (gameOverHeatmap) {
         gameOverHeatmap.innerHTML = renderHeatmapReportHTML();
@@ -1434,35 +1850,108 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = window.location.pathname;
   });
 
-  // --- COMPARTIR CRÓNICA Y TARJETA DE RESULTADO (IMAGEN CANVAS) PARA WHATSAPP ---
-  function buildMatchChronicleText() {
-    const scores = (lastGameOverData && lastGameOverData.scores) ? lastGameOverData.scores : lastScores;
-    const winnerRole = (lastGameOverData && lastGameOverData.winner) ? lastGameOverData.winner : (scores.P1 >= scores.P2 ? 'P1' : 'P2');
-    const loserRole = winnerRole === 'P1' ? 'P2' : 'P1';
-    const winnerName = playerNames[winnerRole] || 'Campeón';
-    const loserName = playerNames[loserRole] || 'Rival';
-    const wScore = scores[winnerRole] ?? 0;
-    const lScore = scores[loserRole] ?? 0;
-    const sWins = (lastRoomState && lastRoomState.seriesWins) ? lastRoomState.seriesWins : { P1: 0, P2: 0 };
+  // --- GENERADOR DE RESULTADOS VIRALES («EFECTO WORDLE») Y TARJETA DE RESULTADO ---
+  function formatShotEmojiStrip(shotList) {
+    if (!Array.isArray(shotList) || shotList.length === 0) return '—';
+    return shotList
+      .map(shot => {
+        if (shot.isGoal) return '⚽';
+        if (shot.isOut || shot.isPost) return '❌';
+        return '🧤';
+      })
+      .join('');
+  }
 
-    let shareUrl = window.location.origin;
-    if (network.mode === 'multiplayer' && network.roomId && !String(network.roomId).includes('_r')) {
-      shareUrl = `${window.location.origin}/?room=${encodeURIComponent(network.roomId)}`;
+  function buildWordleShareText() {
+    const scores = (lastGameOverData && lastGameOverData.scores) ? lastGameOverData.scores : lastScores;
+    const history = (lastGameOverData && lastGameOverData.history) ? lastGameOverData.history : lastHistory;
+    const hadSuddenDeath = Boolean(lastGameOverData && lastGameOverData.isSuddenDeath);
+    const isAsync = Boolean((lastGameOverData && lastGameOverData.isAsyncChallenge) || network.mode === 'async_play');
+
+    const p1CleanName = (playerNames.P1 || 'Jugador 1').replace(/\s*\(🧤 Grabado\)/i, '');
+    const p2CleanName = (network.mode === 'async_play' && network.asyncChallenger && network.asyncChallenger.p)
+      ? network.asyncChallenger.p
+      : (playerNames.P2 || 'Jugador 2').replace(/\s*\(🧤 Grabado\)/i, '');
+
+    let suddenDeathTag = hadSuddenDeath
+      ? '(¡En Muerte Súbita! 🔥)'
+      : (isAsync ? '(Desafío Asíncrono ⚔️ - Sin Muerte Súbita)' : '(Sin Muerte Súbita)');
+
+    const p1Strip = formatShotEmojiStrip(history?.P1 || []);
+    const p2Strip = formatShotEmojiStrip(history?.P2 || []);
+
+    let stripsBlock = '';
+    if (isAsync) {
+      stripsBlock = `${p1CleanName}: ${p1Strip}`;
+    } else {
+      stripsBlock = `${p1CleanName}: ${p1Strip}\n${p2CleanName}: ${p2Strip}`;
+    }
+
+    let shareTargetUrl = 'https://penaltazo.com';
+    if (isAsync && window.location.search.includes('desafio=')) {
+      shareTargetUrl = `https://penaltazo.com/${window.location.search}`;
+    } else if (network.mode === 'multiplayer' && network.roomId && !String(network.roomId).includes('_r')) {
+      shareTargetUrl = `https://penaltazo.com/?room=${encodeURIComponent(network.roomId)}`;
     }
 
     return (
-      `📰 *CRÓNICA OFICIAL ¡PENALTAZO!* ⚽\n` +
-      `🏆 *¡${winnerName.toUpperCase()} TOMA LA PORTERÍA (${wScore} - ${lScore}) ANTE ${loserName.toUpperCase()}!*\n` +
-      `⚔️ Balance H2H Serie: ${playerNames.P1} ${sWins.P1 || 0} - ${sWins.P2 || 0} ${playerNames.P2}\n` +
-      `🔥 ¿Alguien se atreve a quitarle la corona desde los 11 metros?\n` +
-      `👉 Entra aquí: ${shareUrl}`
+      `¡Acabo de disputar una tanda de infarto en PENALTAZO! ⚽🧤\n` +
+      `Marcador: ${p1CleanName} ${scores.P1 ?? 0} - ${scores.P2 ?? 0} ${p2CleanName} ${suddenDeathTag}\n` +
+      `${stripsBlock}\n` +
+      `A ver si tienes huevos a superarme 👉 ${shareTargetUrl}`
     );
   }
 
+  function copyTextWithFallback(text, toastMessage = '📋 ¡Copiado al portapapeles! Pégalo en WhatsApp') {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          showToast(toastMessage);
+        })
+        .catch(() => {
+          fallbackExecCopy(text, toastMessage);
+        });
+    } else {
+      fallbackExecCopy(text, toastMessage);
+    }
+  }
+
+  function fallbackExecCopy(text, toastMessage) {
+    try {
+      const tempArea = document.createElement('textarea');
+      tempArea.value = text;
+      tempArea.setAttribute('readonly', '');
+      tempArea.style.position = 'fixed';
+      tempArea.style.opacity = '0';
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      document.execCommand('copy');
+      tempArea.remove();
+      showToast(toastMessage);
+    } catch (e) {
+      showToast('⚠️ No se pudo copiar automáticamente.');
+    }
+  }
+
   if (shareResultWaBtn) {
-    shareResultWaBtn.addEventListener('click', () => {
-      const text = buildMatchChronicleText();
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    shareResultWaBtn.addEventListener('click', async () => {
+      const text = buildWordleShareText();
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share({
+            title: '¡PENALTAZO! ⚽🧤',
+            text
+          });
+          return;
+        } catch (err) {
+          // Si el usuario cancela o si navigator.share falla en escritorio, copiar al portapapeles con toast
+          if (err && err.name === 'AbortError') {
+            copyTextWithFallback(text, '📋 ¡Copiado al portapapeles! Pégalo en WhatsApp');
+            return;
+          }
+        }
+      }
+      copyTextWithFallback(text, '📋 ¡Copiado al portapapeles! Pégalo en WhatsApp');
     });
   }
 
@@ -1542,7 +2031,7 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             await navigator.share({
               title: '¡PENALTAZO! - Resultado del Partido',
-              text: buildMatchChronicleText(),
+              text: buildWordleShareText(),
               files: [file]
             });
             return;

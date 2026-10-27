@@ -739,9 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
   network.on('tournament_match_finished', ({ tournament, matchId, winner, scores, tournamentCompleted }) => {
     activeTournament = tournament;
     tournamentView.renderBracket(tournament, myUserId);
-    if (tournamentCompleted && winner && winner.id === myUserId) {
-      recordTournamentVictoryInCareer();
-    }
   });
 
   network.on('tournament_error', ({ message }) => {
@@ -896,156 +893,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-
-  // --- SISTEMA DE HISTORIAL Y TROFEOS LOCALES (localStorage) ---
-  const CAREER_STORAGE_KEY = 'penaltazo_career_stats_v1';
-  const TROPHY_DEFINITIONS = [
-    { id: 'debut', icon: '🏆', title: 'Debut Oficial', desc: 'Juega tu primera tanda de penaltis' },
-    { id: 'muro', icon: '🧱', title: 'El Muro', desc: 'Para 3 o más penaltis en un partido' },
-    { id: 'francotirador', icon: '🎯', title: 'Francotirador', desc: 'Anota 4 o más goles en una tanda' },
-    { id: 'racha3', icon: '🔥', title: 'Imparable', desc: 'Logra una racha de 3 victorias seguidas' },
-    { id: 'sangre_fria', icon: '⚡', title: 'Sangre Fría', desc: 'Gana un duelo en la Muerte Súbita' },
-    { id: 'rey_copas', icon: '👑', title: 'Rey de Copas', desc: 'Proclámate campeón de un Torneo' }
-  ];
-
-  function loadCareerStats() {
-    try {
-      const raw = localStorage.getItem(CAREER_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return {
-          matchesPlayed: Number(parsed.matchesPlayed) || 0,
-          wins: Number(parsed.wins) || 0,
-          currentStreak: Number(parsed.currentStreak) || 0,
-          bestStreak: Number(parsed.bestStreak) || 0,
-          goalsScored: Number(parsed.goalsScored) || 0,
-          savesMade: Number(parsed.savesMade) || 0,
-          tournamentsWon: Number(parsed.tournamentsWon) || 0,
-          unlockedTrophies: Array.isArray(parsed.unlockedTrophies) ? parsed.unlockedTrophies : []
-        };
-      }
-    } catch (e) {}
-    return {
-      matchesPlayed: 0,
-      wins: 0,
-      currentStreak: 0,
-      bestStreak: 0,
-      goalsScored: 0,
-      savesMade: 0,
-      tournamentsWon: 0,
-      unlockedTrophies: []
-    };
-  }
-
-  function saveCareerStats(stats) {
-    try {
-      localStorage.setItem(CAREER_STORAGE_KEY, JSON.stringify(stats));
-    } catch (e) {}
-  }
-
-  function renderCareerCabinet() {
-    const stats = loadCareerStats();
-    if (careerStreakPill) {
-      careerStreakPill.textContent = `🔥 Racha: ${stats.currentStreak} (Récord: ${stats.bestStreak})`;
-    }
-    if (careerKpiGrid) {
-      const winRate = stats.matchesPlayed > 0 ? Math.round((stats.wins / stats.matchesPlayed) * 100) : 0;
-      careerKpiGrid.innerHTML = `
-        <div class="career-kpi-item">
-          <span class="kpi-val">${stats.wins}/${stats.matchesPlayed}</span>
-          <span class="kpi-lbl">Victorias (${winRate}%)</span>
-        </div>
-        <div class="career-kpi-item">
-          <span class="kpi-val">⚽ ${stats.goalsScored}</span>
-          <span class="kpi-lbl">Goles Totales</span>
-        </div>
-        <div class="career-kpi-item">
-          <span class="kpi-val">🧤 ${stats.savesMade}</span>
-          <span class="kpi-lbl">Paradas</span>
-        </div>
-        <div class="career-kpi-item">
-          <span class="kpi-val">🏆 ${stats.tournamentsWon}</span>
-          <span class="kpi-lbl">Copas</span>
-        </div>
-      `;
-    }
-    if (careerTrophiesGrid) {
-      careerTrophiesGrid.innerHTML = TROPHY_DEFINITIONS.map(t => {
-        const unlocked = stats.unlockedTrophies.includes(t.id);
-        return `
-          <div class="trophy-badge ${unlocked ? 'unlocked' : 'locked'}" title="${t.desc}">
-            <span class="trophy-icon">${unlocked ? t.icon : '🔒'}</span>
-            <div class="trophy-meta">
-              <strong class="trophy-name">${t.title}</strong>
-              <span class="trophy-desc">${t.desc}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-  }
-
-  function recordMatchInCareer(data) {
-    if (myRole === 'spectator') return;
-    const stats = loadCareerStats();
-    const iWon = (data.winner === myRole);
-    const rivalRole = (myRole === 'P1') ? 'P2' : 'P1';
-    const myHistory = (data.history && data.history[myRole]) ? data.history[myRole] : [];
-    const rivalHistory = (data.history && data.history[rivalRole]) ? data.history[rivalRole] : [];
-
-    const myGoalsInMatch = myHistory.filter(h => h.isGoal).length;
-    const mySavesInMatch = rivalHistory.filter(h => !h.isGoal && !h.isOut).length;
-    const hadSuddenDeath = myHistory.some(h => h.isSuddenDeath) || rivalHistory.some(h => h.isSuddenDeath);
-
-    stats.matchesPlayed += 1;
-    stats.goalsScored += myGoalsInMatch;
-    stats.savesMade += mySavesInMatch;
-
-    if (iWon) {
-      stats.wins += 1;
-      stats.currentStreak += 1;
-      if (stats.currentStreak > stats.bestStreak) {
-        stats.bestStreak = stats.currentStreak;
-      }
-    } else {
-      stats.currentStreak = 0;
-    }
-
-    const newlyUnlocked = [];
-    const unlock = (id) => {
-      if (!stats.unlockedTrophies.includes(id)) {
-        stats.unlockedTrophies.push(id);
-        const def = TROPHY_DEFINITIONS.find(t => t.id === id);
-        if (def) newlyUnlocked.push(def);
-      }
-    };
-
-    unlock('debut');
-    if (mySavesInMatch >= 3) unlock('muro');
-    if (myGoalsInMatch >= 4) unlock('francotirador');
-    if (stats.currentStreak >= 3) unlock('racha3');
-    if (iWon && hadSuddenDeath) unlock('sangre_fria');
-
-    saveCareerStats(stats);
-    renderCareerCabinet();
-
-    if (newlyUnlocked.length > 0) {
-      showToast(`🏅 ¡Trofeo desbloqueado: ${newlyUnlocked.map(t => `${t.icon} ${t.title}`).join(', ')}!`);
-    }
-  }
-
-  function recordTournamentVictoryInCareer() {
-    const stats = loadCareerStats();
-    stats.tournamentsWon += 1;
-    if (!stats.unlockedTrophies.includes('rey_copas')) {
-      stats.unlockedTrophies.push('rey_copas');
-      showToast('👑 ¡Trofeo desbloqueado: Rey de Copas!');
-    }
-    saveCareerStats(stats);
-    renderCareerCabinet();
-  }
-
-  renderCareerCabinet();
 
   // --- REACCIONES RÁPIDAS / EMOTES ("TRASH-TALK") ---
   let lastEmoteSentAt = 0;
@@ -1423,7 +1270,6 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       onComplete: () => {
         if (data.gameOver) {
-          recordMatchInCareer(data);
           showGameOverScreen(data);
         }
       }

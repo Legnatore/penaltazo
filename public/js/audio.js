@@ -244,6 +244,39 @@ class SoundEngine {
     }
   }
 
+  playPost(isGoodForMe = true) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    this.stopActiveEffects();
+    const now = this.ctx.currentTime;
+
+    // Golpe metálico / madera contra el poste ("¡CLONK!")
+    [320, 740].forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.55, now + 0.28);
+
+      gain.gain.setValueAtTime(idx === 0 ? 0.42 : 0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      this.registerNode(osc);
+      osc.start(now);
+      osc.stop(now + 0.32);
+    });
+
+    if (isGoodForMe) {
+      this.playVictoryFanfare();
+    } else {
+      this.playDefeatSound();
+    }
+  }
+
   playVictoryFanfare() {
     if (this.muted) return;
     this.init();

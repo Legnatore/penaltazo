@@ -366,11 +366,13 @@ class NetworkManager {
         this.ai.recordHumanKeeperChoice(humanRow, humanCol);
       }
 
-      // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una mínima probabilidad (12%) de irse fuera
+      // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una pequeña probabilidad (14%) de ir al palo (7%) o fuera (7%)
       const isLowCenter = (shooterChoice.row === 1 && shooterChoice.col === 1);
-      const isOut = !isLowCenter && (Math.random() < 0.12);
+      const missRoll = !isLowCenter ? Math.random() : 1;
+      const isPost = missRoll < 0.07;
+      const isOut = !isPost && missRoll < 0.14;
 
-      const isGoal = !isOut && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
+      const isGoal = !isOut && !isPost && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
 
       if (isGoal) {
         this.localState.scores[shooterRole] += 1;
@@ -380,7 +382,8 @@ class NetworkManager {
         turnIndex: this.localState.turnIndex,
         attempt: this.localState.history[shooterRole].length + 1,
         isGoal,
-        isOut,
+        isOut: isOut || isPost,
+        isPost,
         shooterChoice,
         keeperChoice,
         isSuddenDeath: this.localState.isSuddenDeath
@@ -441,7 +444,8 @@ class NetworkManager {
         shooterChoice,
         keeperChoice,
         isGoal,
-        isOut,
+        isOut: isOut || isPost,
+        isPost,
         scores: { ...this.localState.scores },
         history: {
           P1: [...this.localState.history.P1],

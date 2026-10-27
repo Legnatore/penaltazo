@@ -1382,6 +1382,7 @@ document.addEventListener('DOMContentLoaded', () => {
       keeperChoice: data.keeperChoice,
       isGoal: data.isGoal,
       isOut: data.isOut,
+      isPost: Boolean(data.isPost),
       shooterName,
       keeperName,
       isMyShot: data.shooterRole === myRole,
@@ -1393,6 +1394,9 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             setCommentatorText(`⚽ ¡¡GOOOOOL DE ${shooterName.toUpperCase()}!! Engañó por completo a ${keeperName} (${data.scores.P1}-${data.scores.P2}).`, 'goal');
           }
+        } else if (data.isPost) {
+          const isCrossbar = data.shooterChoice?.row === 0 && data.shooterChoice?.col === 1;
+          setCommentatorText(`💥 ¡¡AL ${isCrossbar ? 'LARGUEROOOO' : 'PALOOOO'}!! ¡El derechazo de ${shooterName} hacia ${zoneLabel} revienta la madera y no entra!`, 'urgent');
         } else if (data.isOut) {
           setCommentatorText(`💨 ¡¡FUERAAAA!! ¡${shooterName} buscó ajustar demasiado a ${zoneLabel} y el balón se marcha desviado! ¡Se lleva las manos a la cabeza!`, 'urgent');
         } else {
@@ -1708,6 +1712,29 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
         showToast('📸 ¡Tarjeta de resultado descargada!');
       }, 'image/png');
+    });
+  }
+
+  // --- MODAL POP-UP DE REGLAS Y PREGUNTAS FRECUENTES (FAQ) ---
+  const rulesFaqModal = document.getElementById('rules-faq-modal');
+  const openRulesFaqBtn = document.getElementById('open-rules-faq-btn');
+  const closeRulesFaqModalBtn = document.getElementById('close-rules-faq-modal-btn');
+
+  if (openRulesFaqBtn && rulesFaqModal) {
+    openRulesFaqBtn.addEventListener('click', () => {
+      rulesFaqModal.classList.remove('hidden');
+    });
+  }
+  if (closeRulesFaqModalBtn && rulesFaqModal) {
+    closeRulesFaqModalBtn.addEventListener('click', () => {
+      rulesFaqModal.classList.add('hidden');
+    });
+  }
+  if (rulesFaqModal) {
+    rulesFaqModal.addEventListener('click', (e) => {
+      if (e.target === rulesFaqModal) {
+        rulesFaqModal.classList.add('hidden');
+      }
     });
   }
 

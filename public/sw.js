@@ -1,7 +1,7 @@
 /**
  * Service Worker de ¡PENALTAZO! (PWA Offline-First para modo práctica vs IA)
  */
-const CACHE_NAME = 'penaltazo-pwa-v1.9';
+const CACHE_NAME = 'penaltazo-pwa-v2.0';
 const CORE_ASSETS = [
   '/',
   '/index.html',

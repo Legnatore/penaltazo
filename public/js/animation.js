@@ -56,7 +56,7 @@ class PenaltyAnimator {
   /**
    * Ejecuta la secuencia completa de animación
    */
-  async playResolution({ shooterChoice, keeperChoice, isGoal, isOut, shooterName, keeperName, isMyShot, isMySave, onImpact, onComplete }) {
+  async playResolution({ shooterChoice, keeperChoice, isGoal, isOut, isPost, shooterName, keeperName, isMyShot, isMySave, onImpact, onComplete }) {
     this.resetPositions();
 
     // 1. Silbato inicial de preparación
@@ -79,8 +79,28 @@ class PenaltyAnimator {
     let targetBallX = ((shooterCellRect.left + shooterCellRect.width / 2 - arenaRect.left) / arenaRect.width) * 100;
     let targetBallY = ((shooterCellRect.top + shooterCellRect.height / 2 - arenaRect.top) / arenaRect.height) * 100;
 
-    // Si el disparo se marcha fuera, desviar las coordenadas fuera de los tres palos
-    if (isOut) {
+    const goalStructEl = this.goalkeeper ? this.goalkeeper.parentElement : this.arena;
+    const goalStructRect = goalStructEl.getBoundingClientRect();
+
+    // Si el disparo va al palo/larguero o se marcha fuera
+    if (isPost) {
+      const crossbarY = ((goalStructRect.top - arenaRect.top) / arenaRect.height) * 100;
+      const leftPostX = ((goalStructRect.left - arenaRect.left) / arenaRect.width) * 100;
+      const rightPostX = ((goalStructRect.right - arenaRect.left) / arenaRect.width) * 100;
+
+      if (shooterChoice.row === 0 && shooterChoice.col === 1) {
+        // Arriba centro -> impacta directamente en el larguero
+        targetBallY = crossbarY;
+      } else if (shooterChoice.col === 0) {
+        // Izquierda -> impacta en el poste izquierdo (o cruceta si iba arriba)
+        targetBallX = leftPostX;
+        if (shooterChoice.row === 0) targetBallY = crossbarY + 2;
+      } else if (shooterChoice.col === 2) {
+        // Derecha -> impacta en el poste derecho (o cruceta si iba arriba)
+        targetBallX = rightPostX;
+        if (shooterChoice.row === 0) targetBallY = crossbarY + 2;
+      }
+    } else if (isOut) {
       if (shooterChoice.row === 0 && shooterChoice.col === 1) {
         // Arriba centro -> por encima del larguero
         targetBallY -= 16;
@@ -94,9 +114,6 @@ class PenaltyAnimator {
         if (shooterChoice.row === 0) targetBallY -= 10;
       }
     }
-
-    const goalStructEl = this.goalkeeper ? this.goalkeeper.parentElement : this.arena;
-    const goalStructRect = goalStructEl.getBoundingClientRect();
 
     // Coordenadas exactas del centro de la casilla del portero relativas a su contenedor (.goal-structure)
     const targetKeeperX = ((keeperCellRect.left + keeperCellRect.width / 2 - goalStructRect.left) / goalStructRect.width) * 100;
@@ -169,6 +186,36 @@ class PenaltyAnimator {
         : `¡Gran disparo de ${shooterName || 'el rival'}!`;
       this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg);
       this.triggerGoalParticles(targetBallX, targetBallY);
+    } else if (isPost) {
+      // ¡¡AL PALO / AL LARGUERO!! -> Victorioso si estaba yo de portero, derrota si tiré yo al palo
+      if (window.soundEngine) {
+        if (typeof window.soundEngine.playPost === 'function') {
+          window.soundEngine.playPost(Boolean(isMySave));
+        } else {
+          window.soundEngine.playMiss(Boolean(isMySave));
+        }
+      }
+
+      if (goalStructEl) {
+        goalStructEl.classList.add('post-shake');
+        setTimeout(() => goalStructEl.classList.remove('post-shake'), 550);
+      }
+
+      this.ball.classList.add('deflected');
+      const reboundX = targetBallX + (shooterChoice.col === 0 ? -16 : (shooterChoice.col === 2 ? 16 : (Math.random() < 0.5 ? -12 : 12)));
+      const reboundY = shooterChoice.row === 0 && shooterChoice.col === 1 ? targetBallY - 12 : targetBallY + 14;
+      this.ball.style.transition = 'left 380ms ease-out, top 380ms ease-out, transform 380ms ease-out';
+      this.ball.style.left = `${reboundX}%`;
+      this.ball.style.top = `${reboundY}%`;
+      this.ball.style.transform = 'translate(-50%, -50%) scale(0.58) rotate(540deg)';
+
+      const isCrossbar = shooterChoice.row === 0 && shooterChoice.col === 1;
+      const postTitle = isCrossbar ? '¡¡AL LARGUERO!!' : '¡¡AL PALOOO!!';
+      const postMsg = isMyShot
+        ? `¡Tu disparo se estrelló contra ${isCrossbar ? 'el larguero' : 'el poste'} y salió repelido!`
+        : `¡El disparo de ${shooterName || 'el rival'} reventó ${isCrossbar ? 'el larguero' : 'el palo'}!`;
+      this.showCelebrationBanner(postTitle, 'save', postMsg);
+      this.triggerSaveFlash(targetBallX, targetBallY);
     } else if (isOut) {
       // ¡¡FUERA!! -> Victorioso si estaba yo de portero, derrota si tiré yo fuera
       if (window.soundEngine) {

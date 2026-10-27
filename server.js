@@ -657,11 +657,13 @@ function resolveTurn(room) {
   const shooterChoice = room.choices[shooterRole];
   const keeperChoice = room.choices[keeperRole];
 
-  // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una mínima probabilidad (12%) de irse fuera
+  // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una pequeña probabilidad (14%) de ir al palo (7%) o fuera (7%)
   const isLowCenter = (shooterChoice.row === 1 && shooterChoice.col === 1);
-  const isOut = !isLowCenter && (Math.random() < 0.12);
+  const missRoll = !isLowCenter ? Math.random() : 1;
+  const isPost = missRoll < 0.07;
+  const isOut = !isPost && missRoll < 0.14;
 
-  const isGoal = !isOut && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
+  const isGoal = !isOut && !isPost && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
 
   if (isGoal) {
     room.scores[shooterRole] += 1;
@@ -672,7 +674,8 @@ function resolveTurn(room) {
     turnIndex: room.turnIndex,
     attempt: attemptNumber,
     isGoal,
-    isOut,
+    isOut: isOut || isPost,
+    isPost,
     shooterChoice,
     keeperChoice,
     isSuddenDeath: room.isSuddenDeath
@@ -741,7 +744,8 @@ function resolveTurn(room) {
     shooterChoice,
     keeperChoice,
     isGoal,
-    isOut,
+    isOut: isOut || isPost,
+    isPost,
     scores: { ...room.scores },
     history: {
       P1: [...room.history.P1],

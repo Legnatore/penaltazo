@@ -91,6 +91,8 @@ class Scoreboard {
   renderDots(container, historyArray, totalSlots, isCurrentShooter, penaltiesPerPlayer = 5) {
     if (!container) return;
     container.innerHTML = '';
+    container.classList.toggle('dots-compact', totalSlots > 5 && totalSlots <= 8);
+    container.classList.toggle('dots-ultra-compact', totalSlots > 8);
 
     for (let i = 0; i < totalSlots; i++) {
       const dot = document.createElement('div');
@@ -105,7 +107,8 @@ class Scoreboard {
         } else {
           dot.classList.add('dot-saved');
           dot.innerHTML = '✕';
-          dot.setAttribute('title', `Tiro ${i + 1}: ¡Parada/Fallo!`);
+          const missReason = result.isPost ? '¡Al palo!' : (result.isOut ? '¡Fuera!' : '¡Parada!');
+          dot.setAttribute('title', `Tiro ${i + 1}: ${missReason}`);
         }
       } else if (i === historyArray.length && isCurrentShooter) {
         dot.classList.add('dot-active');

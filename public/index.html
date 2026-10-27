@@ -238,17 +238,11 @@
           </div>
         </div>
 
-        <!-- Reglas rápidas del juego -->
-        <div class="rules-card">
-          <h3>📖 Cómo se juega:</h3>
-          <ul>
-            <li><strong>Portería 3x2:</strong> Exactamente 6 casillas (3 columnas x 2 filas).</li>
-            <li><strong>5 Penaltis:</strong> Cada jugador tira 5 veces, alternando roles de Tirador y Portero.</li>
-            <li><strong>A Ciegas:</strong> Ambos eligen su casilla simultáneamente y en secreto.</li>
-            <li><strong>Resolución:</strong> Si coinciden las coordenadas, ¡el Portero para el penalti! Si son distintas, ¡es Gol!</li>
-            <li><strong>Muerte Súbita:</strong> Si hay empate tras los 5 tiros, se decide ronda a ronda.</li>
-          </ul>
-        </div>
+        <!-- Botón para abrir Reglas, Guía Táctica y FAQ en ventana emergente (Pop-up) -->
+        <button type="button" id="open-rules-faq-btn" class="btn btn-outline lobby-rules-btn">
+          <span class="btn-icon">📖</span>
+          <span class="btn-text">Cómo se juega, Reglas y Preguntas Frecuentes (FAQ)</span>
+        </button>
 
         <!-- Espacio publicitario seguro para Google AdSense (Lobby) -->
         <aside class="ad-slot-container" aria-label="Publicidad">
@@ -266,49 +260,6 @@
             </div>
           </div>
         </aside>
-
-        <!-- Guía táctica y Preguntas Frecuentes (Contenido rico para SEO y aprobación de Google AdSense) -->
-        <article class="seo-guide-card">
-          <h2>⚽ Guía Táctica de ¡PENALTAZO!: El Simulador de Tandas de Penaltis Online</h2>
-          <p>
-            <strong>¡PENALTAZO!</strong> es un videojuego de fútbol gratuito para navegador web diseñado para recrear toda la tensión psicológica de una tanda de penaltis desde los once metros. A diferencia de los juegos de habilidad física tradicionales, aquí prima la lectura mental del rival, la estadística y la toma de decisiones bajo presión sobre una cuadrícula táctica de <strong>3 columnas por 2 alturas (portería 3x2)</strong>.
-          </p>
-
-          <div class="seo-faq-list">
-            <details class="seo-faq-item">
-              <summary>🎯 Estrategia y probabilidad: ¿Escuadra o tiro raso al centro?</summary>
-              <div class="seo-faq-body">
-                <p>
-                  En cada lanzamiento, tanto el delantero (tirador) como el guardameta (portero) eligen en secreto una de las 6 zonas de la portería: <em>Escuadra Izquierda, Arriba Centro, Escuadra Derecha, Raso Izquierda, Raso Centro o Raso Derecha</em>.
-                </p>
-                <p>
-                  Si ambos jugadores seleccionan la misma casilla, el portero adivina la trayectoria y detiene el lanzamiento con una estirada espectacular. Sin embargo, buscar los ángulos exteriores o las escuadras conlleva un factor de riesgo realista: cualquier disparo que no vaya dirigido <strong>raso al centro</strong> tiene una pequeña probabilidad de marcharse desviado fuera de los tres palos. Así, el tirador debe decidir entre asegurar el balón entre los tres palos por el centro o arriesgar buscando las esquinas donde los porteros suelen sufrir más.
-                </p>
-              </div>
-            </details>
-
-            <details class="seo-faq-item">
-              <summary>🏆 ¿Cómo funcionan los Torneos Eliminatorios de 4, 8 y 16 jugadores?</summary>
-              <div class="seo-faq-body">
-                <p>
-                  Además del modo duelo rápido 1 contra 1 y del entrenamiento en solitario frente a la Inteligencia Artificial, ¡PENALTAZO! permite organizar campeonatos completos con cuadro de eliminatorias en tiempo real (Cuartos de Final, Semifinales y Gran Final).
-                </p>
-                <p>
-                  El organizador crea el torneo, elige el formato de tanda (5 penaltis clásicos, 3 penaltis exprés o muerte súbita directa) y comparte el enlace de invitación por <strong>WhatsApp, Telegram o redes sociales</strong>. Si faltan amigos para completar las 4, 8 o 16 plazas, el sistema rellena automáticamente los huecos libres con porteros y artilleros controlados por la IA para que el campeonato pueda arrancar al instante.
-                </p>
-              </div>
-            </details>
-
-            <details class="seo-faq-item">
-              <summary>📊 Mapa de calor 3x2, temas retro y juego sin descargas (PWA)</summary>
-              <div class="seo-faq-body">
-                <p>
-                  Al finalizar cada encuentro, el motor estadístico de ¡PENALTAZO! genera un <strong>Mapa de Calor 3x2</strong> detallado con el porcentaje de eficacia de gol, el volumen de disparos ejecutados a cada rincón de la red y las estiradas realizadas por el portero. Puedes personalizar los colores de tu equipación y cambiar el aspecto del estadio entre cinco estilos visuales únicos, incluyendo homenajes retro a clásicos como <em>PC Fútbol 4.0</em> y <em>Sensible Soccer</em>.
-                </p>
-              </div>
-            </details>
-          </div>
-        </article>
         </div>
       </div>
     </section>
@@ -510,12 +461,14 @@
       <div class="scoreboard-bar">
         <!-- Jugador 1 -->
         <div class="team-panel team-p1">
-          <div class="team-header">
-            <span id="p1-name" class="team-name">Jugador 1</span>
-            <span id="p1-role-badge" class="role-badge role-shooter">⚽ Tirador</span>
-          </div>
-          <div class="team-score-wrapper">
-            <span id="p1-score" class="team-score">0</span>
+          <div class="team-top-row">
+            <div class="team-header">
+              <span id="p1-name" class="team-name">Jugador 1</span>
+              <span id="p1-role-badge" class="role-badge role-shooter">⚽ Tirador</span>
+            </div>
+            <div class="team-score-wrapper">
+              <span id="p1-score" class="team-score">0</span>
+            </div>
           </div>
           <div id="p1-dots" class="penalty-dots-row"></div>
         </div>
@@ -531,12 +484,14 @@
 
         <!-- Jugador 2 -->
         <div class="team-panel team-p2">
-          <div class="team-header">
-            <span id="p2-name" class="team-name">Jugador 2</span>
-            <span id="p2-role-badge" class="role-badge role-keeper">🧤 Portero</span>
-          </div>
-          <div class="team-score-wrapper">
-            <span id="p2-score" class="team-score">0</span>
+          <div class="team-top-row">
+            <div class="team-header">
+              <span id="p2-name" class="team-name">Jugador 2</span>
+              <span id="p2-role-badge" class="role-badge role-keeper">🧤 Portero</span>
+            </div>
+            <div class="team-score-wrapper">
+              <span id="p2-score" class="team-score">0</span>
+            </div>
           </div>
           <div id="p2-dots" class="penalty-dots-row"></div>
         </div>
@@ -863,6 +818,74 @@
         <div class="modal-actions">
           <button id="close-legal-modal-btn" class="btn btn-primary">
             Entendido y Cerrar ✅
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. MODAL POP-UP DE REGLAS, GUÍA TÁCTICA Y PREGUNTAS FRECUENTES (FAQ) -->
+    <div id="rules-faq-modal" class="modal-overlay hidden">
+      <div class="modal-card rules-faq-modal-card">
+        <h2 class="modal-title">📖 Cómo se juega, Reglas y Preguntas Frecuentes (FAQ)</h2>
+        <div class="rules-faq-modal-body">
+          <!-- Reglas rápidas del juego -->
+          <div class="rules-card">
+            <h3>📖 Reglas Rápidas de ¡PENALTAZO!:</h3>
+            <ul>
+              <li><strong>Portería 3x2:</strong> Exactamente 6 casillas (3 columnas x 2 filas).</li>
+              <li><strong>5 Penaltis (o 3 / Muerte Súbita):</strong> Cada jugador alterna turnos de Tirador y Portero con 12 segundos de límite por decisión.</li>
+              <li><strong>A Ciegas:</strong> Ambos eligen su casilla simultáneamente y en secreto.</li>
+              <li><strong>Resolución y Riesgo de Palo/Fuera:</strong> Si coinciden las coordenadas, ¡el Portero para el penalti! Si son distintas, es Gol, salvo que tires fuera del centro raso, donde existe una pequeña probabilidad aleatoria de que el balón dé en el <strong>palo/larguero</strong> o se marche <strong>fuera</strong>.</li>
+              <li><strong>Muerte Súbita:</strong> Si hay empate tras la tanda inicial, se decide ronda a ronda al fallo.</li>
+            </ul>
+          </div>
+
+          <!-- Guía táctica y Preguntas Frecuentes (Contenido rico para SEO y aprobación de Google AdSense) -->
+          <article class="seo-guide-card">
+            <h2>⚽ Guía Táctica de ¡PENALTAZO!: El Simulador de Tandas de Penaltis Online</h2>
+            <p>
+              <strong>¡PENALTAZO!</strong> es un videojuego de fútbol gratuito para navegador web diseñado para recrear toda la tensión psicológica de una tanda de penaltis desde los once metros. A diferencia de los juegos de habilidad física tradicionales, aquí prima la lectura mental del rival, la estadística y la toma de decisiones bajo presión sobre una cuadrícula táctica de <strong>3 columnas por 2 alturas (portería 3x2)</strong>.
+            </p>
+
+            <div class="seo-faq-list">
+              <details class="seo-faq-item" open>
+                <summary>🎯 Estrategia y probabilidad: ¿Escuadra o tiro raso al centro?</summary>
+                <div class="seo-faq-body">
+                  <p>
+                    En cada lanzamiento, tanto el delantero (tirador) como el guardameta (portero) eligen en secreto una de las 6 zonas de la portería: <em>Escuadra Izquierda, Arriba Centro, Escuadra Derecha, Raso Izquierda, Raso Centro o Raso Derecha</em>.
+                  </p>
+                  <p>
+                    Si ambos jugadores seleccionan la misma casilla, el portero adivina la trayectoria y detiene el lanzamiento con una estirada espectacular. Sin embargo, buscar los ángulos exteriores o las zonas altas conlleva un factor de riesgo realista: cualquier disparo que no vaya dirigido <strong>raso al centro</strong> tiene una pequeña probabilidad aleatoria de estrellarse en el <strong>palo o larguero</strong> o marcharse <strong>fuera</strong>. Así, el tirador debe decidir entre asegurar el tiro raso al centro o arriesgar buscando las esquinas.
+                  </p>
+                </div>
+              </details>
+
+              <details class="seo-faq-item">
+                <summary>🏆 ¿Cómo funcionan los Torneos Eliminatorios de 4, 8 y 16 jugadores?</summary>
+                <div class="seo-faq-body">
+                  <p>
+                    Además del modo duelo rápido 1 contra 1 y del entrenamiento en solitario frente a la Inteligencia Artificial, ¡PENALTAZO! permite organizar campeonatos completos con cuadro de eliminatorias en tiempo real (Octavos, Cuartos de Final, Semifinales y Gran Final).
+                  </p>
+                  <p>
+                    El organizador crea el torneo, elige el formato de tanda (5 penaltis clásicos, 3 penaltis exprés o muerte súbita directa) y comparte el enlace de invitación por <strong>WhatsApp, Telegram o redes sociales</strong>. Si faltan amigos para completar las 4, 8 o 16 plazas, el sistema rellena automáticamente los huecos libres con porteros y artilleros controlados por la IA para que el campeonato pueda arrancar al instante.
+                  </p>
+                </div>
+              </details>
+
+              <details class="seo-faq-item">
+                <summary>📊 Mapa de calor 3x2, temas retro y juego sin descargas (PWA)</summary>
+                <div class="seo-faq-body">
+                  <p>
+                    Al finalizar cada encuentro, el motor estadístico de ¡PENALTAZO! genera un <strong>Mapa de Calor 3x2</strong> detallado con el porcentaje de eficacia de gol, el volumen de disparos ejecutados a cada rincón de la red y las estiradas realizadas por el portero. Puedes personalizar los colores de tu equipación y cambiar el aspecto del estadio entre cinco estilos visuales únicos, incluyendo homenajes retro a clásicos como <em>PC Fútbol 4.0</em> y <em>Sensible Soccer</em>.
+                  </p>
+                </div>
+              </details>
+            </div>
+          </article>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="close-rules-faq-modal-btn" class="btn btn-primary">
+            ¡Entendido, a jugar! ⚽
           </button>
         </div>
       </div>

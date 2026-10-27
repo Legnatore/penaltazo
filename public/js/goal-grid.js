@@ -35,7 +35,6 @@ class GoalGrid {
 
         cell.innerHTML = `
           <div class="cell-inner">
-            <span class="cell-label">${this.cellLabels[r][c]}</span>
             <div class="cell-marker"></div>
           </div>
         `;

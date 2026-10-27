@@ -171,18 +171,25 @@ document.addEventListener('DOMContentLoaded', () => {
     return cleaned || fallback;
   }
 
-  function encodeAsyncChallengePayload({ p, d, k, n }) {
+  function encodeAsyncChallengePayload({ p, s, d, k, n }) {
     const safeName = sanitizePlayerNickname(p, 'Colega');
-    const safeDives = Array.isArray(d)
-      ? d.slice(0, 5).map(val => {
-          const num = Number(val);
-          return Number.isInteger(num) && num >= 0 && num <= 5 ? num : 1;
-        })
-      : [1, 1, 1, 1, 1];
-    while (safeDives.length < 5) safeDives.push(1);
+    const sanitizeArr = (arr, fallback = [1, 1, 1, 1, 1]) => {
+      const res = Array.isArray(arr)
+        ? arr.slice(0, 5).map(val => {
+            const num = Number(val);
+            return Number.isInteger(num) && num >= 0 && num <= 5 ? num : 1;
+          })
+        : [...fallback];
+      while (res.length < 5) res.push(1);
+      return res;
+    };
+
+    const safeShots = sanitizeArr(s, [0, 2, 1, 3, 5]);
+    const safeDives = sanitizeArr(d, [1, 1, 1, 1, 1]);
 
     const payload = {
       p: safeName,
+      s: safeShots,
       d: safeDives
     };
     if (typeof k === 'string' && k.length <= 20) payload.k = k;
@@ -218,14 +225,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!parsed || typeof parsed !== 'object') return null;
       if (!Array.isArray(parsed.d) || parsed.d.length !== 5) return null;
 
-      const sanitizedDives = [];
-      for (let i = 0; i < 5; i++) {
-        const val = Number(parsed.d[i]);
-        if (!Number.isInteger(val) || val < 0 || val > 5) {
-          return null;
+      const sanitizeArr = (arr, fallback = [1, 1, 1, 1, 1]) => {
+        if (!Array.isArray(arr)) return fallback;
+        const res = [];
+        for (let i = 0; i < 5; i++) {
+          const val = Number(arr[i]);
+          if (!Number.isInteger(val) || val < 0 || val > 5) return fallback;
+          res.push(val);
         }
-        sanitizedDives.push(val);
-      }
+        return res;
+      };
+
+      const sanitizedDives = sanitizeArr(parsed.d, [1, 1, 1, 1, 1]);
+      const sanitizedShots = sanitizeArr(parsed.s, [0, 2, 1, 3, 5]);
 
       const safePlayerName = sanitizePlayerNickname(parsed.p, 'Colega');
       const safeKit = typeof parsed.k === 'string' ? parsed.k.replace(/[^a-z0-9_-]/gi, '').slice(0, 20) : null;
@@ -235,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return {
         p: safePlayerName,
+        s: sanitizedShots,
         d: sanitizedDives,
         k: safeKit,
         n: safeNumber
@@ -354,15 +367,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (directInviteBanner) {
         directInviteBanner.classList.remove('hidden');
         if (lobbyFormatGroup) lobbyFormatGroup.classList.add('hidden');
-        inviteBadgeTitle.textContent = `⚔️ ¡DESAFÍO ASÍNCRONO DE ${decodedChallenge.p.toUpperCase()}!`;
-        inviteBadgeDesc.textContent = `${decodedChallenge.p} ha dejado programadas sus 5 estiradas como portero. Pon tu nombre y chuta los 5 penaltis para batirle:`;
-        directJoinBtn.textContent = `⚡ ¡ACEPTAR EL RETO Y LANZAR 5 PENALTIS!`;
+        inviteBadgeTitle.textContent = `⚔️ ¡DESAFÍO DE PENALTIS DE ${decodedChallenge.p.toUpperCase()}!`;
+        inviteBadgeDesc.textContent = `${decodedChallenge.p} ha dejado grabada su tanda completa (5 tiros y 5 paradas). Pon tu nombre para disputar la tanda frente a frente:`;
+        directJoinBtn.textContent = `⚡ ¡DISPUTAR LA TANDA DE PENALTIS!`;
         directJoinBtn.onclick = () => {
           const name = requireValidPlayerName();
           if (!name) return;
           isInTournament = false;
           activeTournament = null;
-          myRole = 'P1';
+          myRole = 'P2';
           network.initAsyncChallengePlay(decodedChallenge, name);
         };
       }
@@ -371,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           isInTournament = false;
           activeTournament = null;
-          myRole = 'P1';
+          myRole = 'P2';
           network.initAsyncChallengePlay(decodedChallenge, savedPlayerName);
         }, 180);
       }
@@ -756,22 +769,40 @@ document.addEventListener('DOMContentLoaded', () => {
     isResolvingTurn = false;
     hasConfirmedChoice = false;
     mySelectedCell = null;
-    currentShooterRole = 'P2';
-    currentKeeperRole = 'P1';
+    const isShooterStep = (stepNumber % 2 === 1);
+    const roundNumber = Math.floor((stepNumber - 1) / 2) + 1;
+
+    currentShooterRole = isShooterStep ? 'P1' : 'P2';
+    currentKeeperRole = isShooterStep ? 'P2' : 'P1';
     animator.resetPositions();
     goalGrid.clearSelection();
-    goalGrid.enable('keeper');
 
-    roleInstructions.innerHTML = `
-      <div class="role-title keeper">🧤 GRABANDO PARADA ${stepNumber} DE 5 (MODO ASÍNCRONO)</div>
-      <p class="role-desc">Elige hacia qué zona de la portería te lanzarás en el penalti #${stepNumber} de tu colega.</p>
-    `;
-    myStatusBadge.className = 'status-badge waiting';
-    myStatusBadge.innerHTML = `🧤 Elige tu estirada #${stepNumber}/5...`;
+    if (isShooterStep) {
+      goalGrid.enable('shooter');
+      updateActiveKeeperAppearance('P2');
+      roleInstructions.innerHTML = `
+        <div class="role-title shooter">⚽ RONDA ${roundNumber} DE 5 — TU TIRO (${stepNumber}/10)</div>
+        <p class="role-desc">Haz clic en la portería para elegir hacia dónde dispararás tu penalti #${roundNumber}.</p>
+      `;
+      myStatusBadge.className = 'status-badge waiting';
+      myStatusBadge.innerHTML = `⚽ Elige disparo #${roundNumber}/5...`;
+      selectedZoneLabel.textContent = `Ronda ${roundNumber} (Tiro ${roundNumber}/5): haz clic donde quieras disparar`;
+      setCommentatorText(`🎯 Grabando tanda: Ronda ${roundNumber} de 5 (Tu Tiro). ¡Elige dónde vas a clavar el balón!`);
+    } else {
+      goalGrid.enable('keeper');
+      updateActiveKeeperAppearance('P1');
+      roleInstructions.innerHTML = `
+        <div class="role-title keeper">🧤 RONDA ${roundNumber} DE 5 — TU PARADA (${stepNumber}/10)</div>
+        <p class="role-desc">Haz clic en la portería para elegir hacia dónde te estirarás cuando chute tu rival en la ronda #${roundNumber}.</p>
+      `;
+      myStatusBadge.className = 'status-badge waiting';
+      myStatusBadge.innerHTML = `🧤 Elige estirada #${roundNumber}/5...`;
+      selectedZoneLabel.textContent = `Ronda ${roundNumber} (Parada ${roundNumber}/5): haz clic hacia dónde lanzarte a parar`;
+      setCommentatorText(`🧤 Grabando tanda: Ronda ${roundNumber} de 5 (Tu Parada). ¡Elige dónde vas a volar para pararlo!`, 'save');
+    }
+
     rivalStatusBadge.className = 'status-badge ready';
-    rivalStatusBadge.innerHTML = `🔗 Se codificará en el enlace`;
-    selectedZoneLabel.textContent = `Parada ${stepNumber} de 5: haz clic en una de las 6 zonas de la portería`;
-    setCommentatorText(`🧤 Grabando tu desafío asíncrono (Parada ${stepNumber} de 5). ¡Elige dónde te vas a estirar para dejar seco a tu colega!`, 'save');
+    rivalStatusBadge.innerHTML = `🔗 Se guardará en el enlace`;
   }
 
   function startAsyncRecordingFlow(explicitName = null) {
@@ -799,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (revengeAsyncBtn) {
     revengeAsyncBtn.addEventListener('click', () => {
-      const currentName = (!isDefaultOrEmptyName(playerNameInput.value) ? playerNameInput.value.trim() : playerNames.P1) || 'Retador';
+      const currentName = (!isDefaultOrEmptyName(playerNameInput.value) ? playerNameInput.value.trim() : playerNames.P2 || playerNames.P1) || 'Retador';
       startAsyncRecordingFlow(currentName);
     });
   }
@@ -810,16 +841,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (turnTimerBarTrack) turnTimerBarTrack.classList.add('hidden');
 
     showScreen(gameScreen);
-    headerRoomBadge.textContent = 'Modo Asíncrono: Grabando 5 Paradas';
+    headerRoomBadge.textContent = 'Modo Asíncrono: Grabando Tanda (5 Tiros y 5 Paradas)';
     headerRoomBadge.classList.remove('hidden');
 
     playerNames.P1 = playerName;
     playerNames.P2 = 'Tu Colega';
-    scoreboard.updatePlayerNames(`#${myCurrentMatchNumber} ${playerName} (🧤 Tú)`, '⚽ Tu Colega (Retado)');
-    updateActiveKeeperAppearance('P1');
+    scoreboard.updatePlayerNames(`#${myCurrentMatchNumber} ${playerName} (Tus Tiros)`, '🧤 Tus Paradas');
+    updateActiveKeeperAppearance('P2');
 
     if (h2hCounterBadge) {
-      h2hCounterBadge.innerHTML = '⚔️ <strong>Modo Desafío Asíncrono</strong> • Graba tus 5 estiradas como portero';
+      h2hCounterBadge.innerHTML = '⚔️ <strong>Modo Desafío Asíncrono</strong> • Graba tus 5 tiros y tus 5 paradas';
     }
     if (kingQueueBadge) kingQueueBadge.classList.add('hidden');
 
@@ -827,8 +858,8 @@ document.addEventListener('DOMContentLoaded', () => {
       scores: { P1: 0, P2: 0 },
       history: { P1: [], P2: [] },
       currentTurnIndex: 0,
-      shooterRole: 'P2',
-      keeperRole: 'P1',
+      shooterRole: 'P1',
+      keeperRole: 'P2',
       isSuddenDeath: false,
       suddenDeathRound: 0,
       penaltiesPerPlayer: 5,
@@ -840,19 +871,33 @@ document.addEventListener('DOMContentLoaded', () => {
     prepareAsyncRecordStep(1);
   });
 
-  network.on('async_dive_recorded', ({ diveNumber, totalDives, row, col, cellIndex, recordedDives, isComplete }) => {
+  network.on('async_step_recorded', ({ stepNumber, totalSteps, role, round, row, col, cellIndex, recordedShots, recordedDives, isComplete }) => {
     isResolvingTurn = true;
     goalGrid.disable();
 
-    if (animator && animator.keeperEl) {
-      animator.keeperEl.className = `goalkeeper-sprite dive-r${row}-c${col}`;
-    }
-    if (window.soundEngine) {
-      window.soundEngine.playSave();
+    if (role === 'shooter') {
+      if (window.soundEngine) window.soundEngine.playKick();
+      myStatusBadge.className = 'status-badge ready';
+      myStatusBadge.innerHTML = `✅ Tiro #${round}/5 guardado`;
+    } else {
+      if (animator && animator.keeperEl) {
+        animator.keeperEl.className = `goalkeeper-sprite dive-r${row}-c${col}`;
+      }
+      if (window.soundEngine) window.soundEngine.playSave();
+      myStatusBadge.className = 'status-badge ready';
+      myStatusBadge.innerHTML = `✅ Parada #${round}/5 guardada`;
     }
 
-    const recordedHistoryP1 = recordedDives.map((idx, i) => ({
-      turnIndex: i,
+    const recordedHistoryP1 = recordedShots.map((idx, i) => ({
+      turnIndex: i * 2,
+      attempt: i + 1,
+      isGoal: true,
+      isOut: false,
+      isPost: false
+    }));
+
+    const recordedHistoryP2 = recordedDives.map((idx, i) => ({
+      turnIndex: i * 2 + 1,
       attempt: i + 1,
       isGoal: true,
       isOut: false,
@@ -860,11 +905,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
 
     scoreboard.render({
-      scores: { P1: diveNumber, P2: 0 },
-      history: { P1: recordedHistoryP1, P2: [] },
-      currentTurnIndex: diveNumber,
-      shooterRole: 'P2',
-      keeperRole: 'P1',
+      scores: { P1: recordedShots.length, P2: recordedDives.length },
+      history: { P1: recordedHistoryP1, P2: recordedHistoryP2 },
+      currentTurnIndex: stepNumber,
+      shooterRole: role === 'shooter' ? 'P2' : 'P1',
+      keeperRole: role === 'shooter' ? 'P1' : 'P2',
       isSuddenDeath: false,
       suddenDeathRound: 0,
       penaltiesPerPlayer: 5,
@@ -873,24 +918,22 @@ document.addEventListener('DOMContentLoaded', () => {
       isAsyncChallenge: true
     });
 
-    myStatusBadge.className = 'status-badge ready';
-    myStatusBadge.innerHTML = `✅ Parada #${diveNumber}/5 guardada (${ASYNC_ZONE_SHORT_NAMES[cellIndex]})`;
-
     if (!isComplete) {
       setTimeout(() => {
-        prepareAsyncRecordStep(diveNumber + 1);
+        prepareAsyncRecordStep(stepNumber + 1);
       }, 460);
     } else {
-      setCommentatorText('🔒 ¡Las 5 estiradas han quedado grabadas y selladas en tu enlace de desafío!', 'goal');
+      setCommentatorText('🔒 ¡Tanda completa (5 tiros y 5 paradas) grabada con éxito! Generando tu enlace...', 'goal');
       setTimeout(() => {
-        openAsyncChallengeShareModal(network.playerName, recordedDives);
+        openAsyncChallengeShareModal(network.playerName, recordedShots, recordedDives);
       }, 550);
     }
   });
 
-  function openAsyncChallengeShareModal(challengerName, recordedDives) {
+  function openAsyncChallengeShareModal(challengerName, recordedShots, recordedDives) {
     const token = encodeAsyncChallengePayload({
       p: challengerName,
+      s: recordedShots,
       d: recordedDives,
       k: getMySelectedKitKey(),
       n: myCurrentMatchNumber
@@ -903,12 +946,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const challengeUrl = `${baseUrl}/?desafio=${encodeURIComponent(token)}`;
 
     if (asyncRecordedSummary) {
-      const pillsHtml = recordedDives
-        .map((idx, i) => `<span class="async-dive-pill"><strong>#${i + 1}:</strong> ${ASYNC_ZONE_SHORT_NAMES[idx] || 'Centro'}</span>`)
+      const shotsHtml = recordedShots
+        .map((idx, i) => `<span class="async-dive-pill pill-shot"><strong>Tiro #${i + 1}:</strong> ${ASYNC_ZONE_SHORT_NAMES[idx] || 'Centro'}</span>`)
         .join('');
+      const divesHtml = recordedDives
+        .map((idx, i) => `<span class="async-dive-pill pill-dive"><strong>Parada #${i + 1}:</strong> ${ASYNC_ZONE_SHORT_NAMES[idx] || 'Centro'}</span>`)
+        .join('');
+
       asyncRecordedSummary.innerHTML = `
-        <div class="async-summary-label">🧤 Tus 5 estiradas programadas en secreto:</div>
-        <div class="async-dive-pills-row">${pillsHtml}</div>
+        <div class="async-summary-label">⚽ Tus 5 tiros como lanzador:</div>
+        <div class="async-dive-pills-row">${shotsHtml}</div>
+        <div class="async-summary-label" style="margin-top: 0.6rem;">🧤 Tus 5 paradas como portero:</div>
+        <div class="async-dive-pills-row">${divesHtml}</div>
       `;
     }
 
@@ -917,22 +966,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const waChallengeText =
-      `⚔️ *¡DESAFÍO EN ¡PENALTAZO!* ⚽🧤\n` +
-      `He dejado preparadas mis 5 estiradas como portero (${challengerName}).\n` +
-      `🎯 ¿Aceptas el reto de anotarme al menos 3 de los 5 penaltis? 👉 ${challengeUrl}`;
+      `⚔️ *¡DESAFÍO DE PENALTIS EN ¡PENALTAZO!* ⚽🧤\n` +
+      `He grabado mi tanda completa (5 tiros y 5 paradas).\n` +
+      `🎯 ¿Aceptas el reto de disputar la tanda de penaltis contra mí? 👉 ${challengeUrl}`;
 
     if (asyncSendWhatsappBtn) {
       asyncSendWhatsappBtn.onclick = async () => {
         if (navigator.share) {
           try {
             await navigator.share({
-              title: '¡PENALTAZO! - Desafío Asíncrono ⚽🧤',
+              title: '¡PENALTAZO! - Desafío de Penaltis ⚽🧤',
               text: waChallengeText
             });
             return;
-          } catch (err) {
-            // Si el usuario cancela o falla, abrir WhatsApp o copiar enlace
-          }
+          } catch (err) {}
         }
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(waChallengeText)}`, '_blank', 'noopener,noreferrer');
       };
@@ -1734,15 +1781,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const asyncRivalName = (network.asyncChallenger && network.asyncChallenger.p) ? network.asyncChallenger.p : playerNames.P2;
 
       if (isAsync) {
-        if (iWon) {
-          gameOverTitle.innerHTML = `🏆 ¡¡HAS BATIDO A ${asyncRivalName.toUpperCase()}!!`;
+        if (data.winner === 'tie') {
+          gameOverTitle.innerHTML = '🤝 ¡¡EMPATE TRAS LOS 10 PENALTIS!!';
           gameOverTitle.className = 'game-over-title victory';
-          gameOverSubtitle.textContent = `Has anotado ${data.scores.P1} de 5 penaltis ante sus paradas grabadas. ¡Devuélvele el desafío ahora!`;
+          gameOverSubtitle.textContent = `Gran igualdad (${data.scores.P1} - ${data.scores.P2}) en la tanda ante ${asyncRivalName}. ¡Pídele la revancha o devuélvele el reto!`;
+        } else if (iWon) {
+          gameOverTitle.innerHTML = `🏆 ¡¡HAS GANADO LA TANDA ANTE ${asyncRivalName.toUpperCase()}!!`;
+          gameOverTitle.className = 'game-over-title victory';
+          gameOverSubtitle.textContent = `Te has impuesto por ${data.scores.P2} a ${data.scores.P1} goles frente a sus tiros y paradas grabadas.`;
           if (window.soundEngine) window.soundEngine.playCrowdCheer(true);
         } else {
-          gameOverTitle.innerHTML = `🧤 ¡${asyncRivalName.toUpperCase()} TE HA GANADO EL RETO!`;
+          gameOverTitle.innerHTML = `💔 ${asyncRivalName.toUpperCase()} SE LLEVA LA TANDA`;
           gameOverTitle.className = 'game-over-title defeat';
-          gameOverSubtitle.textContent = `Sus estiradas programadas frustraron ${data.scores.P2} de tus 5 tiros. ¡Graba tus paradas y tómate la venganza!`;
+          gameOverSubtitle.textContent = `${asyncRivalName} se impuso por ${data.scores.P1} a ${data.scores.P2} goles. ¡Devuélvele el reto y tómate la revancha!`;
         }
       } else if (isSpectator) {
         gameOverTitle.textContent = `🏆 ¡${data.winner === 'P1' ? 'Jugador 1' : 'Jugador 2'} se lleva el partido!`;
@@ -1836,24 +1887,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const hadSuddenDeath = Boolean(lastGameOverData && lastGameOverData.isSuddenDeath);
     const isAsync = Boolean((lastGameOverData && lastGameOverData.isAsyncChallenge) || network.mode === 'async_play');
 
-    const p1CleanName = (playerNames.P1 || 'Jugador 1').replace(/\s*\(🧤 Grabado\)/i, '');
-    const p2CleanName = (network.mode === 'async_play' && network.asyncChallenger && network.asyncChallenger.p)
+    const p1CleanName = (network.mode === 'async_play' && network.asyncChallenger && network.asyncChallenger.p)
       ? network.asyncChallenger.p
-      : (playerNames.P2 || 'Jugador 2').replace(/\s*\(🧤 Grabado\)/i, '');
+      : (playerNames.P1 || 'Jugador 1').replace(/\s*\(🧤 Grabado\)/i, '');
+    const p2CleanName = (playerNames.P2 || 'Jugador 2').replace(/\s*\(🧤 Grabado\)/i, '');
 
     let suddenDeathTag = hadSuddenDeath
       ? '(¡En Muerte Súbita! 🔥)'
-      : (isAsync ? '(Desafío Asíncrono ⚔️ - Sin Muerte Súbita)' : '(Sin Muerte Súbita)');
+      : (isAsync ? '(Desafío Asíncrono ⚔️)' : '(Sin Muerte Súbita)');
 
     const p1Strip = formatShotEmojiStrip(history?.P1 || []);
     const p2Strip = formatShotEmojiStrip(history?.P2 || []);
 
-    let stripsBlock = '';
-    if (isAsync) {
-      stripsBlock = `${p1CleanName}: ${p1Strip}`;
-    } else {
-      stripsBlock = `${p1CleanName}: ${p1Strip}\n${p2CleanName}: ${p2Strip}`;
-    }
+    const stripsBlock = `${p1CleanName}: ${p1Strip}\n${p2CleanName}: ${p2Strip}`;
 
     let shareTargetUrl = 'https://penaltazo.com';
     if (isAsync && window.location.search.includes('desafio=')) {

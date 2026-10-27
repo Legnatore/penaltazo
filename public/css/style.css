@@ -1344,6 +1344,7 @@ body {
 }
 
 .cell-label {
+  display: none !important;
   font-size: clamp(0.7rem, 1.8vw, 0.88rem);
   font-weight: 800;
   color: #ffffff;
@@ -6617,6 +6618,16 @@ body[data-theme="sensible"] .heatmap-cell {
   padding: 0.25rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.async-dive-pill.pill-shot {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.async-dive-pill.pill-dive {
+  border-color: #38bdf8;
+  color: #38bdf8;
 }
 
 .async-url-box {

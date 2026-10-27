@@ -534,41 +534,58 @@ class NetworkManager {
   }
 
   // --- MODO ASÍNCRONO «DESAFÍO POR ENLACE» (?desafio=...) ---
-  initAsyncRecordMode(playerName = 'Portero') {
+  initAsyncRecordMode(playerName = 'Tirador') {
     this.mode = 'async_record';
     this.roomId = 'RETO-ASYNC';
     this.playerRole = 'P1';
     this.playerName = playerName;
-    this.recordedDives = [];
+    this.recordedShots = []; // 5 tiros como lanzador
+    this.recordedDives = []; // 5 paradas como portero
+    this.recordStep = 0; // 0..9 (10 turnos alternados)
     this.trigger('async_record_started', {
       playerName: this.playerName,
+      totalSteps: 10,
+      totalShots: 5,
       totalDives: 5
     });
   }
 
   handleAsyncRecordChoice(row, col) {
-    if (!Array.isArray(this.recordedDives) || this.recordedDives.length >= 5) return;
+    if (this.recordStep >= 10) return;
     const safeRow = row === 0 ? 0 : 1;
     const safeCol = Math.max(0, Math.min(2, Number(col) || 0));
     const cellIndex = safeRow * 3 + safeCol;
-    this.recordedDives.push(cellIndex);
 
-    this.trigger('async_dive_recorded', {
-      diveNumber: this.recordedDives.length,
-      totalDives: 5,
+    const isShooterStep = (this.recordStep % 2 === 0);
+    if (isShooterStep) {
+      this.recordedShots.push(cellIndex);
+    } else {
+      this.recordedDives.push(cellIndex);
+    }
+
+    const currentStep = this.recordStep + 1;
+    this.recordStep++;
+    const isComplete = this.recordStep >= 10;
+
+    this.trigger('async_step_recorded', {
+      stepNumber: currentStep,
+      totalSteps: 10,
+      role: isShooterStep ? 'shooter' : 'keeper',
+      round: Math.floor((currentStep - 1) / 2) + 1,
       row: safeRow,
       col: safeCol,
       cellIndex,
+      recordedShots: [...this.recordedShots],
       recordedDives: [...this.recordedDives],
-      isComplete: this.recordedDives.length >= 5
+      isComplete
     });
   }
 
-  initAsyncChallengePlay(challengeData, shooterName = 'Retador') {
+  initAsyncChallengePlay(challengeData, livePlayerName = 'Retador') {
     this.mode = 'async_play';
     this.roomId = 'DESAFIO-URL';
-    this.playerRole = 'P1';
-    this.playerName = shooterName;
+    this.playerRole = 'P2'; // El contrincante en vivo es P2
+    this.playerName = livePlayerName;
     this.asyncChallenger = challengeData;
     this.penaltiesPerPlayer = 5;
 
@@ -602,8 +619,8 @@ class NetworkManager {
         kingStreak: 0,
         challengerQueue: [],
         players: [
-          { role: 'P1', name: this.playerName, connected: true },
-          { role: 'P2', name: `${challengerName} (🧤 Grabado)`, connected: true }
+          { role: 'P1', name: challengerName, connected: true },
+          { role: 'P2', name: this.playerName, connected: true }
         ],
         scores: { P1: 0, P2: 0 },
         history: { P1: [], P2: [] }
@@ -611,22 +628,43 @@ class NetworkManager {
     });
   }
 
-  handleAsyncPlayChoice(shooterRow, shooterCol) {
+  handleAsyncPlayChoice(liveRow, liveCol) {
     const turnIdx = this.localState.turnIndex;
+    const roundIdx = Math.floor(turnIdx / 2);
+    const isP1Shooter = (turnIdx % 2 === 0);
+
+    const shots = (this.asyncChallenger && Array.isArray(this.asyncChallenger.s))
+      ? this.asyncChallenger.s
+      : [0, 2, 1, 3, 5];
     const dives = (this.asyncChallenger && Array.isArray(this.asyncChallenger.d))
       ? this.asyncChallenger.d
       : [1, 1, 1, 1, 1];
-    const diveCell = Number.isInteger(dives[turnIdx]) ? dives[turnIdx] : 1;
-    const keeperChoice = {
-      row: Math.floor(diveCell / 3),
-      col: diveCell % 3
-    };
-    const shooterChoice = { row: shooterRow, col: shooterCol };
 
-    this.trigger('choice_confirmed', { role: 'P1' });
+    let shooterRole = 'P1';
+    let keeperRole = 'P2';
+    let shooterChoice = null;
+    let keeperChoice = null;
+
+    if (isP1Shooter) {
+      // P1 (Challenger pre-grabado) tira, P2 (Jugador en vivo) para de portero
+      shooterRole = 'P1';
+      keeperRole = 'P2';
+      const sCell = Number.isInteger(shots[roundIdx]) ? shots[roundIdx] : 1;
+      shooterChoice = { row: Math.floor(sCell / 3), col: sCell % 3 };
+      keeperChoice = { row: liveRow, col: liveCol };
+    } else {
+      // P2 (Jugador en vivo) tira, P1 (Challenger pre-grabado) se tira de portero
+      shooterRole = 'P2';
+      keeperRole = 'P1';
+      shooterChoice = { row: liveRow, col: liveCol };
+      const dCell = Number.isInteger(dives[roundIdx]) ? dives[roundIdx] : 1;
+      keeperChoice = { row: Math.floor(dCell / 3), col: dCell % 3 };
+    }
+
+    this.trigger('choice_confirmed', { role: 'P2' });
 
     setTimeout(() => {
-      this.trigger('choice_confirmed', { role: 'P2' });
+      this.trigger('choice_confirmed', { role: 'P1' });
 
       // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene 14% de fallo (7% palo, 7% fuera)
       const isLowCenter = (shooterChoice.row === 1 && shooterChoice.col === 1);
@@ -637,14 +675,12 @@ class NetworkManager {
       const isGoal = !isOut && !isPost && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
 
       if (isGoal) {
-        this.localState.scores.P1 += 1;
-      } else {
-        this.localState.scores.P2 += 1;
+        this.localState.scores[shooterRole] += 1;
       }
 
       const shotRecord = {
         turnIndex: turnIdx,
-        attempt: turnIdx + 1,
+        attempt: this.localState.history[shooterRole].length + 1,
         isGoal,
         isOut: isOut || isPost,
         isPost,
@@ -652,20 +688,34 @@ class NetworkManager {
         keeperChoice,
         isSuddenDeath: false
       };
-      this.localState.history.P1.push(shotRecord);
+      this.localState.history[shooterRole].push(shotRecord);
 
       const nextTurnIndex = turnIdx + 1;
-      const gameOver = nextTurnIndex >= 5;
-      const winner = gameOver
-        ? (this.localState.scores.P1 >= 3 ? 'P1' : 'P2')
-        : null;
+      let gameOver = false;
+      let winner = null;
+
+      const p1Remaining = Math.max(0, 5 - this.localState.history.P1.length);
+      const p2Remaining = Math.max(0, 5 - this.localState.history.P2.length);
+
+      if (this.localState.scores.P1 > this.localState.scores.P2 + p2Remaining) {
+        gameOver = true;
+        winner = 'P1';
+      } else if (this.localState.scores.P2 > this.localState.scores.P1 + p1Remaining) {
+        gameOver = true;
+        winner = 'P2';
+      } else if (nextTurnIndex >= 10) {
+        gameOver = true;
+        if (this.localState.scores.P1 > this.localState.scores.P2) winner = 'P1';
+        else if (this.localState.scores.P2 > this.localState.scores.P1) winner = 'P2';
+        else winner = 'tie';
+      }
 
       const challengerName = (this.asyncChallenger && this.asyncChallenger.p) ? this.asyncChallenger.p : 'Colega';
 
       this.trigger('turn_resolved', {
         turnIndex: turnIdx,
-        shooterRole: 'P1',
-        keeperRole: 'P2',
+        shooterRole,
+        keeperRole,
         shooterChoice,
         keeperChoice,
         isGoal,
@@ -693,8 +743,8 @@ class NetworkManager {
           kingStreak: 0,
           challengerQueue: [],
           players: [
-            { role: 'P1', name: this.playerName, connected: true },
-            { role: 'P2', name: `${challengerName} (🧤 Grabado)`, connected: true }
+            { role: 'P1', name: challengerName, connected: true },
+            { role: 'P2', name: this.playerName, connected: true }
           ],
           scores: { ...this.localState.scores },
           history: {
@@ -708,10 +758,13 @@ class NetworkManager {
 
       if (!gameOver) {
         setTimeout(() => {
+          const nextShooterRole = (nextTurnIndex % 2 === 0) ? 'P1' : 'P2';
+          const nextKeeperRole = (nextTurnIndex % 2 === 0) ? 'P2' : 'P1';
+
           this.trigger('next_turn_ready', {
-            turnIndex: this.localState.turnIndex,
-            shooterRole: 'P1',
-            keeperRole: 'P2',
+            turnIndex: nextTurnIndex,
+            shooterRole: nextShooterRole,
+            keeperRole: nextKeeperRole,
             isSuddenDeath: false,
             suddenDeathRound: 0,
             penaltiesPerPlayer: 5,
@@ -725,8 +778,8 @@ class NetworkManager {
               kingStreak: 0,
               challengerQueue: [],
               players: [
-                { role: 'P1', name: this.playerName, connected: true },
-                { role: 'P2', name: `${challengerName} (🧤 Grabado)`, connected: true }
+                { role: 'P1', name: challengerName, connected: true },
+                { role: 'P2', name: this.playerName, connected: true }
               ],
               scores: { ...this.localState.scores },
               history: {

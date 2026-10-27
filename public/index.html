@@ -494,20 +494,6 @@
         <span id="commentator-text" class="commentator-text">¡Todo listo en el punto fatídico! El estadio contiene la respiración...</span>
       </div>
 
-      <!-- Barra de Reacciones Rápidas / Emotes ("Trash-talk" deportivo) -->
-      <div id="emote-bar" class="emote-bar">
-        <span class="emote-bar-label">💬 Pique:</span>
-        <button type="button" class="emote-btn" data-emoji="🤫" data-text="¡Silencio en la grada!">🤫 Silencio</button>
-        <button type="button" class="emote-btn" data-emoji="🧤🧱" data-text="¡Hoy no me metes ni uno!">🧤 ¡Muro!</button>
-        <button type="button" class="emote-btn" data-emoji="🎯" data-text="¡Va directo a la escuadra!">🎯 Escuadra</button>
-        <button type="button" class="emote-btn" data-emoji="😰" data-text="¡Huele a miedo desde aquí!">😰 Nervios</button>
-        <button type="button" class="emote-btn" data-emoji="😂" data-text="¡Vaya tirito me llevas!">😂 Jajaja</button>
-        <button type="button" class="emote-btn" data-emoji="🔥" data-text="¡Vamos que nos lo llevamos!">🔥 ¡Vamos!</button>
-      </div>
-
-      <!-- Bocadillo flotante de Emotes recibidos -->
-      <div id="emote-floating-banner" class="emote-floating-banner hidden"></div>
-
       <!-- Barra de instrucciones y estado -->
       <div class="instruction-banner">
         <div id="role-instructions" class="role-instructions"></div>
@@ -743,15 +729,33 @@
           </button>
         </div>
 
-        <!-- Resumen visual estilo Wordle + Botón destacado de compartir -->
+        <!-- Resumen visual estilo Wordle + Botones de compartir -->
         <div id="wordle-result-preview" class="wordle-result-preview"></div>
 
-        <div class="result-share-actions">
-          <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp result-share-btn result-share-primary">
-            <span>📲</span> Compartir resultado con amigos
-          </button>
+        <div class="result-share-box">
+          <div class="share-box-heading">📲 Compartir resultado con amigos:</div>
+          <div class="result-share-grid">
+            <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp" title="Compartir en WhatsApp">
+              <span>💬</span> WhatsApp
+            </button>
+            <button type="button" id="share-result-x-btn" class="btn social-btn btn-x" title="Compartir en X (Twitter)">
+              <span>𝕏</span> X (Twitter)
+            </button>
+            <button type="button" id="share-result-tg-btn" class="btn social-btn btn-telegram" title="Compartir en Telegram">
+              <span>✈️</span> Telegram
+            </button>
+            <button type="button" id="share-result-insta-btn" class="btn social-btn btn-instagram" title="Subir a Stories de Instagram">
+              <span>📸</span> Stories
+            </button>
+            <button type="button" id="share-result-fb-btn" class="btn social-btn btn-facebook" title="Compartir en Facebook">
+              <span>📘</span> Facebook
+            </button>
+            <button type="button" id="share-result-copy-btn" class="btn social-btn btn-copy" title="Copiar resultado al portapapeles">
+              <span>📋</span> Copiar
+            </button>
+          </div>
           <button type="button" id="download-result-card-btn" class="btn btn-secondary result-share-btn">
-            <span>📸</span> Tarjeta de Resultado (Imagen)
+            <span>🖼️</span> Descargar Tarjeta Oficial (Imagen)
           </button>
         </div>
 

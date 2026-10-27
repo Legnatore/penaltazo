@@ -172,7 +172,7 @@ class PenaltyAnimator {
 
     // 3. Momento del IMPACTO (sonido victorioso o de derrota según la perspectiva del jugador local)
     if (isGoal) {
-      // ¡¡GOL!! -> Victorioso si disparé yo, derrota si me lo metieron a mí
+      // ¡¡GOL!! -> Victorioso si disparé yo (verde), derrota si me lo metieron a mí (rojo)
       if (window.soundEngine) {
         window.soundEngine.playGoal(Boolean(isMyShot));
       }
@@ -184,10 +184,10 @@ class PenaltyAnimator {
       const goalMsg = isMyShot
         ? '¡Qué gran disparo acabas de marcar!'
         : `¡Gran disparo de ${shooterName || 'el rival'}!`;
-      this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg);
+      this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg, Boolean(isMyShot));
       this.triggerGoalParticles(targetBallX, targetBallY);
     } else if (isPost) {
-      // ¡¡AL PALO / AL LARGUERO!! -> Victorioso si estaba yo de portero, derrota si tiré yo al palo
+      // ¡¡AL PALO / AL LARGUERO!! -> Victorioso si defendí yo de portero (verde), derrota si tiré yo al palo (rojo)
       if (window.soundEngine) {
         if (typeof window.soundEngine.playPost === 'function') {
           window.soundEngine.playPost(Boolean(isMySave));
@@ -214,10 +214,10 @@ class PenaltyAnimator {
       const postMsg = isMyShot
         ? `¡Tu disparo se estrelló contra ${isCrossbar ? 'el larguero' : 'el poste'} y salió repelido!`
         : `¡El disparo de ${shooterName || 'el rival'} reventó ${isCrossbar ? 'el larguero' : 'el palo'}!`;
-      this.showCelebrationBanner(postTitle, 'save', postMsg);
+      this.showCelebrationBanner(postTitle, 'save', postMsg, Boolean(isMySave));
       this.triggerSaveFlash(targetBallX, targetBallY);
     } else if (isOut) {
-      // ¡¡FUERA!! -> Victorioso si estaba yo de portero, derrota si tiré yo fuera
+      // ¡¡FUERA!! -> Victorioso si defendí yo de portero (verde), derrota si tiré yo fuera (rojo)
       if (window.soundEngine) {
         window.soundEngine.playMiss(Boolean(isMySave));
       }
@@ -229,9 +229,9 @@ class PenaltyAnimator {
       const outMsg = isMyShot
         ? '¡Buscaste ajustar demasiado y el balón se marchó fuera!'
         : `¡El disparo de ${shooterName || 'el rival'} se ha ido directamente fuera!`;
-      this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg);
+      this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg, Boolean(isMySave));
     } else {
-      // ¡¡PARADA!! -> Victorioso si paré yo, derrota si me la paró el rival
+      // ¡¡PARADA!! -> Victorioso si paré yo (verde), derrota si me la paró el rival (rojo)
       if (window.soundEngine) {
         window.soundEngine.playSave(Boolean(isMySave));
       }
@@ -251,7 +251,7 @@ class PenaltyAnimator {
       const saveMsg = isMySave
         ? '¡Adivinaste la intención y detuviste el penalti!'
         : `¡${keeperName || 'El portero'} adivinó la dirección del tiro!`;
-      this.showCelebrationBanner('¡¡PARADÓN!!', 'save', saveMsg);
+      this.showCelebrationBanner('¡¡PARADÓN!!', 'save', saveMsg, Boolean(isMySave));
       this.triggerSaveFlash(targetBallX, targetBallY);
     }
 
@@ -269,9 +269,10 @@ class PenaltyAnimator {
     }
   }
 
-  showCelebrationBanner(title, type, subtitle) {
+  showCelebrationBanner(title, type, subtitle, isFavorable = true) {
     if (!this.bannerOverlay) return;
-    this.bannerOverlay.className = `banner-overlay active ${type}`;
+    const outcomeClass = isFavorable ? 'banner-favorable' : 'banner-unfavorable';
+    this.bannerOverlay.className = `banner-overlay active ${type} ${outcomeClass}`;
     this.bannerOverlay.innerHTML = `
       <div class="banner-content">
         <div class="banner-icon">${type === 'goal' ? '⚽' : '🧤'}</div>

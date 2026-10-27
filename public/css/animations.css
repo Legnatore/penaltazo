@@ -151,13 +151,45 @@
   }
 }
 
-.banner-overlay.goal .banner-content {
+/* Pancartas según perspectiva del jugador local */
+.banner-overlay.banner-favorable .banner-content,
+.banner-overlay.goal.banner-favorable .banner-content,
+.banner-overlay.save.banner-favorable .banner-content {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border: 4px solid #fef08a !important;
+  box-shadow: 0 10px 0 #14532d, 0 0 45px rgba(34, 197, 94, 0.75) !important;
+}
+
+.banner-overlay.banner-favorable .banner-title,
+.banner-overlay.goal.banner-favorable .banner-title,
+.banner-overlay.save.banner-favorable .banner-title {
+  color: #fef08a !important;
+  text-shadow: 0 4px 0 #14532d !important;
+}
+
+.banner-overlay.banner-unfavorable .banner-content,
+.banner-overlay.goal.banner-unfavorable .banner-content,
+.banner-overlay.save.banner-unfavorable .banner-content {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  border: 4px solid #ffffff !important;
+  box-shadow: 0 10px 0 #7f1d1d, 0 0 45px rgba(239, 68, 68, 0.75) !important;
+}
+
+.banner-overlay.banner-unfavorable .banner-title,
+.banner-overlay.goal.banner-unfavorable .banner-title,
+.banner-overlay.save.banner-unfavorable .banner-title {
+  color: #ffffff !important;
+  text-shadow: 0 4px 0 #7f1d1d !important;
+}
+
+/* Fallbacks genéricos si no se especifica perspectiva */
+.banner-overlay.goal:not(.banner-unfavorable) .banner-content {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border: 4px solid #fef08a;
   box-shadow: 0 10px 0 #14532d, 0 0 45px rgba(250, 204, 21, 0.75);
 }
 
-.banner-overlay.save .banner-content {
+.banner-overlay.save:not(.banner-favorable) .banner-content {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border: 4px solid #ffffff;
   box-shadow: 0 10px 0 #7f1d1d, 0 0 45px rgba(239, 68, 68, 0.75);

@@ -63,6 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const returnBracketBtn = document.getElementById('return-bracket-btn');
   const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
   const shareResultWaBtn = document.getElementById('share-result-wa-btn');
+  const shareResultXBtn = document.getElementById('share-result-x-btn');
+  const shareResultTgBtn = document.getElementById('share-result-tg-btn');
+  const shareResultInstaBtn = document.getElementById('share-result-insta-btn');
+  const shareResultFbBtn = document.getElementById('share-result-fb-btn');
+  const shareResultCopyBtn = document.getElementById('share-result-copy-btn');
   const downloadResultCardBtn = document.getElementById('download-result-card-btn');
   const wordleResultPreview = document.getElementById('wordle-result-preview');
   const revengeAsyncBtn = document.getElementById('revenge-async-btn');
@@ -803,7 +808,6 @@ document.addEventListener('DOMContentLoaded', () => {
     stopClientTurnTimer();
     if (turnTimerBadge) turnTimerBadge.classList.add('hidden');
     if (turnTimerBarTrack) turnTimerBarTrack.classList.add('hidden');
-    if (emoteBar) emoteBar.classList.add('hidden');
 
     showScreen(gameScreen);
     headerRoomBadge.textContent = 'Modo Asíncrono: Grabando 5 Paradas';
@@ -913,9 +917,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const waChallengeText =
-      `⚔️ *¡TE RETO EN MODO ASÍNCRONO A ¡PENALTAZO!* ⚽🧤\n` +
-      `Ya he dejado grabadas mis 5 estiradas como portero (${challengerName}).\n` +
-      `🔥 A ver si tienes huevos a meterme al menos 3 de 5 penaltis 👉 ${challengeUrl}`;
+      `⚔️ *¡DESAFÍO EN ¡PENALTAZO!* ⚽🧤\n` +
+      `He dejado preparadas mis 5 estiradas como portero (${challengerName}).\n` +
+      `🎯 ¿Aceptas el reto de anotarme al menos 3 de los 5 penaltis? 👉 ${challengeUrl}`;
 
     if (asyncSendWhatsappBtn) {
       asyncSendWhatsappBtn.onclick = async () => {
@@ -1248,35 +1252,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- REACCIONES RÁPIDAS / EMOTES ("TRASH-TALK") ---
-  let lastEmoteSentAt = 0;
-  let emoteHideTimeout = null;
-
-  if (emoteBar) {
-    emoteBar.querySelectorAll('.emote-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const now = Date.now();
-        if (now - lastEmoteSentAt < 1200) return;
-        lastEmoteSentAt = now;
-        const emoji = btn.getAttribute('data-emoji') || '⚽';
-        const text = btn.getAttribute('data-text') || '';
-        network.sendEmote(emoji, text);
-      });
-    });
-  }
-
-  network.on('emote_received', ({ role, playerName, emoji, text }) => {
-    if (!emoteFloatingBanner) return;
-    emoteFloatingBanner.classList.remove('hidden');
-    emoteFloatingBanner.innerHTML = `<span class="emote-pop-emoji">${emoji}</span> <strong>${playerName}:</strong> "${text}"`;
-    setCommentatorText(`💬 ¡Ojo al pique en el área! ${playerName} dice: "${text}" ${emoji}`, 'emote');
-
-    if (emoteHideTimeout) clearTimeout(emoteHideTimeout);
-    emoteHideTimeout = setTimeout(() => {
-      emoteFloatingBanner.classList.add('hidden');
-    }, 3200);
-  });
-
   network.on('turn_timeout_auto', ({ timedOutRoles }) => {
     setCommentatorText('⏱️ ¡El árbitro hace sonar el silbato! Tiempo de 12 segundos agotado y decisión obligada al azar.', 'urgent');
     showToast('⏱️ ¡12 segundos agotados! Elección automática al azar.');
@@ -1543,13 +1518,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (turnTimerBadge) turnTimerBadge.classList.remove('hidden');
     if (turnTimerBarTrack) turnTimerBarTrack.classList.remove('hidden');
-    if (emoteBar) {
-      if (data && data.isAsyncChallenge) {
-        emoteBar.classList.add('hidden');
-      } else {
-        emoteBar.classList.remove('hidden');
-      }
-    }
 
     if (data && data.isAsyncChallenge) {
       headerRoomBadge.textContent = '⚔️ Desafío Asíncrono';
@@ -1793,8 +1761,8 @@ document.addEventListener('DOMContentLoaded', () => {
       gameOverScores.innerHTML = `
         <div class="final-score-box">
           <div class="score-team">
-            <span class="team-label">${myRole === 'P1' ? `${playerNames.P1} (Tú)` : playerNames.P1}</span>
             <span class="team-score">${data.scores.P1}</span>
+            <span class="team-label">${myRole === 'P1' ? `${playerNames.P1} (Tú)` : playerNames.P1}</span>
           </div>
           <div class="score-vs">-</div>
           <div class="score-team">
@@ -1895,11 +1863,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     return (
-      `¡Acabo de disputar una tanda de infarto en PENALTAZO! ⚽🧤\n` +
+      `¡Acabo de disputar una tanda de penaltis en ¡PENALTAZO! ⚽🧤\n` +
       `Marcador: ${p1CleanName} ${scores.P1 ?? 0} - ${scores.P2 ?? 0} ${p2CleanName} ${suddenDeathTag}\n` +
       `${stripsBlock}\n` +
-      `A ver si tienes huevos a superarme 👉 ${shareTargetUrl}`
+      `¿Aceptas el reto de superar mi resultado? 🎯 👉 ${shareTargetUrl}`
     );
+  }
+
+  function getShareTargetUrl() {
+    const isAsync = Boolean((lastGameOverData && lastGameOverData.isAsyncChallenge) || network.mode === 'async_play');
+    if (isAsync && window.location.search.includes('desafio=')) {
+      return `https://penaltazo.com/${window.location.search}`;
+    }
+    if (network.mode === 'multiplayer' && network.roomId && !String(network.roomId).includes('_r')) {
+      return `https://penaltazo.com/?room=${encodeURIComponent(network.roomId)}`;
+    }
+    return 'https://penaltazo.com';
   }
 
   function copyTextWithFallback(text, toastMessage = '📋 ¡Copiado al portapapeles! Pégalo en WhatsApp') {
@@ -1933,98 +1912,157 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Helper para generar el Canvas Blob de la tarjeta oficial
+  function generateResultCardBlob(callback) {
+    const scores = (lastGameOverData && lastGameOverData.scores) ? lastGameOverData.scores : lastScores;
+    const winnerRole = (lastGameOverData && lastGameOverData.winner) ? lastGameOverData.winner : (scores.P1 >= scores.P2 ? 'P1' : 'P2');
+    const winnerName = playerNames[winnerRole] || 'Campeón';
+    const sWins = (lastRoomState && lastRoomState.seriesWins) ? lastRoomState.seriesWins : { P1: 0, P2: 0 };
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 460;
+    const ctx = canvas.getContext('2d');
+
+    const grad = ctx.createLinearGradient(0, 0, 800, 460);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(0.55, '#0369a1');
+    grad.addColorStop(1, '#15803d');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 800, 460);
+
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(16, 16, 768, 428);
+
+    ctx.fillStyle = '#facc15';
+    ctx.font = '900 32px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚽ DIARIO ¡PENALTAZO! — MARCADOR OFICIAL', 400, 68);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 26px Montserrat, sans-serif';
+    ctx.fillText(`🏆 ¡${winnerName.toUpperCase()} SE LLEVA LA TANDA DE PENALTIS!`, 400, 118);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+    ctx.fillRect(80, 148, 640, 165);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(80, 148, 640, 165);
+
+    ctx.fillStyle = '#e0f2fe';
+    ctx.font = '800 24px Montserrat, sans-serif';
+    ctx.fillText(String(playerNames.P1 || 'Jugador 1').slice(0, 18), 230, 195);
+    ctx.fillText(String(playerNames.P2 || 'Jugador 2').slice(0, 18), 570, 195);
+
+    ctx.fillStyle = '#facc15';
+    ctx.font = '900 74px Montserrat, sans-serif';
+    ctx.fillText(`${scores.P1 ?? 0}`, 230, 278);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 44px Montserrat, sans-serif';
+    ctx.fillText('VS', 400, 265);
+    ctx.fillStyle = '#facc15';
+    ctx.font = '900 74px Montserrat, sans-serif';
+    ctx.fillText(`${scores.P2 ?? 0}`, 570, 278);
+
+    ctx.fillStyle = '#fef08a';
+    ctx.font = '700 20px Montserrat, sans-serif';
+    ctx.fillText(`⚔️ Balance H2H Serie: ${playerNames.P1} ${sWins.P1 || 0} - ${sWins.P2 || 0} ${playerNames.P2}`, 400, 358);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 16px Montserrat, sans-serif';
+    ctx.fillText('⚽ Juego hecho por Legnatore en 2026 • ¡Juega gratis en tu navegador!', 400, 412);
+
+    canvas.toBlob((blob) => {
+      callback(blob);
+    }, 'image/png');
+  }
+
+  // 1. WhatsApp
   if (shareResultWaBtn) {
-    shareResultWaBtn.addEventListener('click', async () => {
+    shareResultWaBtn.addEventListener('click', () => {
       const text = buildWordleShareText();
-      if (typeof navigator.share === 'function') {
-        try {
-          await navigator.share({
-            title: '¡PENALTAZO! ⚽🧤',
-            text
-          });
-          return;
-        } catch (err) {
-          // Si el usuario cancela o si navigator.share falla en escritorio, copiar al portapapeles con toast
-          if (err && err.name === 'AbortError') {
-            copyTextWithFallback(text, '📋 ¡Copiado al portapapeles! Pégalo en WhatsApp');
-            return;
-          }
-        }
-      }
-      copyTextWithFallback(text, '📋 ¡Copiado al portapapeles! Pégalo en WhatsApp');
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
     });
   }
 
+  // 2. X (Twitter)
+  if (shareResultXBtn) {
+    shareResultXBtn.addEventListener('click', () => {
+      const text = buildWordleShareText();
+      const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(xUrl, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  // 3. Telegram
+  if (shareResultTgBtn) {
+    shareResultTgBtn.addEventListener('click', () => {
+      const text = buildWordleShareText();
+      const url = getShareTargetUrl();
+      const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+      window.open(tgUrl, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  // 4. Stories de Instagram
+  if (shareResultInstaBtn) {
+    shareResultInstaBtn.addEventListener('click', () => {
+      const text = buildWordleShareText();
+      generateResultCardBlob(async (blob) => {
+        if (!blob) {
+          copyTextWithFallback(text, '📋 ¡Texto copiado! Pégalo en tus Stories de Instagram');
+          return;
+        }
+        const file = new File([blob], 'penaltazo-resultado.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: '¡PENALTAZO! ⚽🧤',
+              text,
+              files: [file]
+            });
+            return;
+          } catch (e) {
+            if (e && e.name === 'AbortError') return;
+          }
+        }
+        // Fallback en navegador que no soporte share con archivos
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'penaltazo-resultado.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        copyTextWithFallback(text, '📸 ¡Tarjeta descargada y texto copiado! Súbela a tus Stories de Instagram.');
+      });
+    });
+  }
+
+  // 5. Facebook
+  if (shareResultFbBtn) {
+    shareResultFbBtn.addEventListener('click', () => {
+      const url = getShareTargetUrl();
+      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+      window.open(fbUrl, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  // 6. Copiar para pegar en otra parte
+  if (shareResultCopyBtn) {
+    shareResultCopyBtn.addEventListener('click', () => {
+      const text = buildWordleShareText();
+      copyTextWithFallback(text, '📋 ¡Resultado copiado al portapapeles! Pégalo donde quieras');
+    });
+  }
+
+  // 7. Descargar Tarjeta de Resultado (Imagen)
   if (downloadResultCardBtn) {
     downloadResultCardBtn.addEventListener('click', () => {
-      const scores = (lastGameOverData && lastGameOverData.scores) ? lastGameOverData.scores : lastScores;
-      const winnerRole = (lastGameOverData && lastGameOverData.winner) ? lastGameOverData.winner : (scores.P1 >= scores.P2 ? 'P1' : 'P2');
-      const winnerName = playerNames[winnerRole] || 'Campeón';
-      const sWins = (lastRoomState && lastRoomState.seriesWins) ? lastRoomState.seriesWins : { P1: 0, P2: 0 };
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 460;
-      const ctx = canvas.getContext('2d');
-
-      // Fondo estilo estadio nocturno deportivo
-      const grad = ctx.createLinearGradient(0, 0, 800, 460);
-      grad.addColorStop(0, '#0f172a');
-      grad.addColorStop(0.55, '#0369a1');
-      grad.addColorStop(1, '#15803d');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 800, 460);
-
-      // Marco arcade amarillo
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(16, 16, 768, 428);
-
-      // Cabecera periódico deportivo
-      ctx.fillStyle = '#facc15';
-      ctx.font = '900 32px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚽ DIARIO ¡PENALTAZO! — MARCADOR OFICIAL', 400, 68);
-
-      // Subtítulo del ganador
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '800 26px Montserrat, sans-serif';
-      ctx.fillText(`🏆 ¡${winnerName.toUpperCase()} SE LLEVA LA TANDA DE PENALTIS!`, 400, 118);
-
-      // Caja central del marcador
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
-      ctx.fillRect(80, 148, 640, 165);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(80, 148, 640, 165);
-
-      // Nombres y goles
-      ctx.fillStyle = '#e0f2fe';
-      ctx.font = '800 24px Montserrat, sans-serif';
-      ctx.fillText(String(playerNames.P1 || 'Jugador 1').slice(0, 18), 230, 195);
-      ctx.fillText(String(playerNames.P2 || 'Jugador 2').slice(0, 18), 570, 195);
-
-      ctx.fillStyle = '#facc15';
-      ctx.font = '900 74px Montserrat, sans-serif';
-      ctx.fillText(`${scores.P1 ?? 0}`, 230, 278);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 44px Montserrat, sans-serif';
-      ctx.fillText('VS', 400, 265);
-      ctx.fillStyle = '#facc15';
-      ctx.font = '900 74px Montserrat, sans-serif';
-      ctx.fillText(`${scores.P2 ?? 0}`, 570, 278);
-
-      // Serie H2H
-      ctx.fillStyle = '#fef08a';
-      ctx.font = '700 20px Montserrat, sans-serif';
-      ctx.fillText(`⚔️ Balance H2H Serie: ${playerNames.P1} ${sWins.P1 || 0} - ${sWins.P2 || 0} ${playerNames.P2}`, 400, 358);
-
-      // Pie de firma
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = '700 16px Montserrat, sans-serif';
-      ctx.fillText('⚽ Juego hecho por Legnatore en 2026 • ¡Juega gratis en tu navegador!', 400, 412);
-
-      canvas.toBlob(async (blob) => {
+      generateResultCardBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], 'penaltazo-resultado.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2046,7 +2084,7 @@ document.addEventListener('DOMContentLoaded', () => {
         a.remove();
         URL.revokeObjectURL(url);
         showToast('📸 ¡Tarjeta de resultado descargada!');
-      }, 'image/png');
+      });
     });
   }
 

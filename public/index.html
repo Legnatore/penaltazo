@@ -897,23 +897,35 @@
       <div class="modal-card async-share-modal-card">
         <div class="game-over-title victory">⚔️ ¡DESAFÍO GRABADO!</div>
         <p class="game-over-subtitle">
-          Tus 5 estiradas como portero han quedado codificadas en este enlace secreto. ¡Envíaselo a tu amigo para ver cuántos goles es capaz de meterte!
+          Tu tanda completa (5 tiros y 5 paradas) ha quedado codificada en este enlace. ¡Mándaselo a tu amigo para disputar la tanda de penaltis frente a frente!
         </p>
 
         <div id="async-recorded-summary" class="async-recorded-summary"></div>
 
-        <div class="share-box">
-          <label for="async-challenge-url-input">Enlace directo del desafío asíncrono:</label>
+        <div class="share-box async-url-box">
+          <label for="async-challenge-url-input">Enlace directo del desafío:</label>
           <div class="link-copy-row">
             <input type="text" id="async-challenge-url-input" readonly>
-            <button type="button" id="async-copy-url-btn" class="btn btn-primary">Copiar 📋</button>
+            <button type="button" id="async-copy-url-btn" class="btn btn-primary">Copiar Enlace 📋</button>
           </div>
         </div>
 
-        <div class="modal-actions">
-          <button type="button" id="async-send-whatsapp-btn" class="btn social-btn btn-whatsapp btn-large">
-            📲 Manda este reto a tu amigo por WhatsApp
-          </button>
+        <div class="async-share-channels">
+          <div class="share-channels-title">📲 Enviar desafío directamente por:</div>
+          <div class="async-channels-grid">
+            <button type="button" id="async-send-whatsapp-btn" class="btn social-btn btn-whatsapp" title="Enviar por WhatsApp">
+              <span>💬</span> WhatsApp
+            </button>
+            <button type="button" id="async-send-telegram-btn" class="btn social-btn btn-telegram" title="Enviar por Telegram">
+              <span>✈️</span> Telegram
+            </button>
+            <button type="button" id="async-send-sms-btn" class="btn social-btn btn-sms" title="Enviar por SMS">
+              <span>✉️</span> Mensaje SMS
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 1.1rem;">
           <button type="button" id="async-back-lobby-btn" class="btn btn-outline">
             Volver al Menú Principal 🏠
           </button>

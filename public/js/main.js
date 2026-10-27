@@ -79,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const asyncChallengeUrlInput = document.getElementById('async-challenge-url-input');
   const asyncCopyUrlBtn = document.getElementById('async-copy-url-btn');
   const asyncSendWhatsappBtn = document.getElementById('async-send-whatsapp-btn');
+  const asyncSendTelegramBtn = document.getElementById('async-send-telegram-btn');
+  const asyncSendSmsBtn = document.getElementById('async-send-sms-btn');
   const asyncBackLobbyBtn = document.getElementById('async-back-lobby-btn');
 
   // Nuevos elementos de partido: H2H, Rey de la Pista, Reloj 12s, Carrusel y Emotes
@@ -965,29 +967,34 @@ document.addEventListener('DOMContentLoaded', () => {
       asyncChallengeUrlInput.value = challengeUrl;
     }
 
-    const waChallengeText =
+    const challengeText =
       `⚔️ *¡DESAFÍO DE PENALTIS EN ¡PENALTAZO!* ⚽🧤\n` +
       `He grabado mi tanda completa (5 tiros y 5 paradas).\n` +
       `🎯 ¿Aceptas el reto de disputar la tanda de penaltis contra mí? 👉 ${challengeUrl}`;
 
     if (asyncSendWhatsappBtn) {
-      asyncSendWhatsappBtn.onclick = async () => {
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: '¡PENALTAZO! - Desafío de Penaltis ⚽🧤',
-              text: waChallengeText
-            });
-            return;
-          } catch (err) {}
-        }
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(waChallengeText)}`, '_blank', 'noopener,noreferrer');
+      asyncSendWhatsappBtn.onclick = () => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(challengeText)}`, '_blank', 'noopener,noreferrer');
+      };
+    }
+
+    if (asyncSendTelegramBtn) {
+      asyncSendTelegramBtn.onclick = () => {
+        const tgText = `⚔️ ¡DESAFÍO DE PENALTIS EN ¡PENALTAZO! ⚽🧤\nHe grabado mi tanda completa (5 tiros y 5 paradas). ¿Aceptas el reto?`;
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(challengeUrl)}&text=${encodeURIComponent(tgText)}`, '_blank', 'noopener,noreferrer');
+      };
+    }
+
+    if (asyncSendSmsBtn) {
+      asyncSendSmsBtn.onclick = () => {
+        const smsBody = `⚔️ ¡DESAFÍO EN ¡PENALTAZO! He grabado mi tanda completa (5 tiros y 5 paradas). ¿Aceptas el reto? Juega aquí: ${challengeUrl}`;
+        window.location.href = `sms:?&body=${encodeURIComponent(smsBody)}`;
       };
     }
 
     if (asyncCopyUrlBtn) {
       asyncCopyUrlBtn.onclick = () => {
-        copyTextWithFallback(challengeUrl, '📋 ¡Enlace del desafío copiado! Pégalo en WhatsApp');
+        copyTextWithFallback(challengeUrl, '📋 ¡Enlace del desafío copiado al portapapeles!');
       };
     }
 

@@ -737,6 +737,8 @@ function resolveTurn(room) {
     }
   }
 
+  const enteringSuddenDeath = !room.isSuddenDeath && nextIsSuddenDeath;
+
   io.to(room.id).emit('turn_resolved', {
     turnIndex: room.turnIndex,
     shooterRole,
@@ -746,6 +748,8 @@ function resolveTurn(room) {
     isGoal,
     isOut: isOut || isPost,
     isPost,
+    isSuddenDeath: room.isSuddenDeath,
+    suddenDeathRound: room.suddenDeathRound,
     scores: { ...room.scores },
     history: {
       P1: [...room.history.P1],
@@ -764,6 +768,12 @@ function resolveTurn(room) {
   room.turnIndex = nextTurnIndex;
   room.isSuddenDeath = nextIsSuddenDeath;
   room.suddenDeathRound = nextSuddenDeathRound;
+
+  // Al entrar en Muerte Súbita desde la tanda normal, reiniciar marcadores e historial a 0-0
+  if (enteringSuddenDeath) {
+    room.scores = { P1: 0, P2: 0 };
+    room.history = { P1: [], P2: [] };
+  }
 
   if (gameOver) {
     room.state = 'game_over';

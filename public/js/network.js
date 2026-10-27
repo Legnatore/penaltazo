@@ -437,6 +437,8 @@ class NetworkManager {
         }
       }
 
+      const enteringSuddenDeath = !this.localState.isSuddenDeath && nextIsSuddenDeath;
+
       this.trigger('turn_resolved', {
         turnIndex: this.localState.turnIndex,
         shooterRole,
@@ -446,6 +448,8 @@ class NetworkManager {
         isGoal,
         isOut: isOut || isPost,
         isPost,
+        isSuddenDeath: this.localState.isSuddenDeath,
+        suddenDeathRound: this.localState.suddenDeathRound,
         scores: { ...this.localState.scores },
         history: {
           P1: [...this.localState.history.P1],
@@ -479,6 +483,12 @@ class NetworkManager {
       this.localState.turnIndex = nextTurnIndex;
       this.localState.isSuddenDeath = nextIsSuddenDeath;
       this.localState.suddenDeathRound = nextSuddenDeathRound;
+
+      // Al entrar en Muerte Súbita desde la tanda normal, reiniciar marcadores e historial a 0-0
+      if (enteringSuddenDeath) {
+        this.localState.scores = { P1: 0, P2: 0 };
+        this.localState.history = { P1: [], P2: [] };
+      }
 
       if (!gameOver) {
         setTimeout(() => {

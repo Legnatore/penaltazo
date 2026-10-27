@@ -1261,8 +1261,8 @@ document.addEventListener('DOMContentLoaded', () => {
           currentTurnIndex: data.turnIndex,
           shooterRole: data.shooterRole,
           keeperRole: data.keeperRole,
-          isSuddenDeath: data.nextIsSuddenDeath,
-          suddenDeathRound: data.nextSuddenDeathRound,
+          isSuddenDeath: Boolean(data.isSuddenDeath),
+          suddenDeathRound: data.suddenDeathRound || 0,
           penaltiesPerPlayer: currentPenaltiesPerPlayer,
           myRole,
           showActiveDot: false

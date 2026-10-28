@@ -1085,9 +1085,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    openSecondTabBtn.onclick = () => {
-      window.open(`/?room=${encodeURIComponent(roomId)}`, '_blank');
-    };
+    if (openSecondTabBtn) {
+      openSecondTabBtn.onclick = () => {
+        window.open(`/?room=${encodeURIComponent(roomId)}`, '_blank');
+      };
+    }
   }
 
   copyLinkBtn.addEventListener('click', () => {

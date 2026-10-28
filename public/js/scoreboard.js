@@ -44,13 +44,17 @@ class Scoreboard {
     if (this.p1RoleEl) {
       const isShooter = shooterRole === 'P1';
       this.p1RoleEl.className = `role-badge ${isShooter ? 'role-shooter' : 'role-keeper'}`;
-      this.p1RoleEl.innerHTML = isShooter ? '⚽ Tirador' : '🧤 Portero';
+      this.p1RoleEl.innerHTML = isShooter
+        ? '<span class="role-icon">⚽</span><span class="role-text"> Tirador</span>'
+        : '<span class="role-icon">🧤</span><span class="role-text"> Portero</span>';
     }
 
     if (this.p2RoleEl) {
       const isShooter = shooterRole === 'P2';
       this.p2RoleEl.className = `role-badge ${isShooter ? 'role-shooter' : 'role-keeper'}`;
-      this.p2RoleEl.innerHTML = isShooter ? '⚽ Tirador' : '🧤 Portero';
+      this.p2RoleEl.innerHTML = isShooter
+        ? '<span class="role-icon">⚽</span><span class="role-text"> Tirador</span>'
+        : '<span class="role-icon">🧤</span><span class="role-text"> Portero</span>';
     }
 
     // 3. Determinar número total de intentos a mostrar:
@@ -83,13 +87,12 @@ class Scoreboard {
     if (this.roundInfoEl) {
       if (isAsyncChallenge) {
         const currentShot = Math.min(penaltiesPerPlayer, currentTurnIndex + 1);
-        this.roundInfoEl.innerHTML = `⚔️ Desafío Asíncrono &bull; Penalti #${currentShot} de ${penaltiesPerPlayer}`;
+        this.roundInfoEl.innerHTML = `<span class="round-text-full">⚔️ Desafío Asíncrono &bull; Penalti #${currentShot} de ${penaltiesPerPlayer}</span><span class="round-text-short">⚔️ #${currentShot}/${penaltiesPerPlayer}</span>`;
       } else if (isSuddenDeath) {
-        this.roundInfoEl.HTML = `Muerte Súbita (Ronda #${suddenDeathRound || 1}) &bull; Tiro #${currentTurnIndex + 1}`;
-        this.roundInfoEl.innerHTML = `Muerte Súbita (Ronda #${suddenDeathRound || 1}) &bull; Tiro #${currentTurnIndex + 1}`;
+        this.roundInfoEl.innerHTML = `<span class="round-text-full">Muerte Súbita (Ronda #${suddenDeathRound || 1}) &bull; Tiro #${currentTurnIndex + 1}</span><span class="round-text-short">SÚBITA R#${suddenDeathRound || 1}</span>`;
       } else {
         const roundNum = Math.floor(currentTurnIndex / 2) + 1;
-        this.roundInfoEl.innerHTML = `Ronda ${roundNum} de ${penaltiesPerPlayer} &bull; Penalti #${currentTurnIndex + 1}`;
+        this.roundInfoEl.innerHTML = `<span class="round-text-full">Ronda ${roundNum} de ${penaltiesPerPlayer} &bull; Penalti #${currentTurnIndex + 1}</span><span class="round-text-short">R${roundNum}/${penaltiesPerPlayer}</span>`;
       }
     }
   }

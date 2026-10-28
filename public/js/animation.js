@@ -38,7 +38,7 @@ class PenaltyAnimator {
       this.goalkeeper.style.transition = 'none';
       this.goalkeeper.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
       this.goalkeeper.style.left = '50%';
-      this.goalkeeper.style.top = '72%';
+      this.goalkeeper.style.top = '70%';
       this.goalkeeper.classList.remove('diving', 'jumping', 'diving-left', 'diving-right', 'diving-top', 'diving-bottom', 'saving', 'missed');
     }
 

@@ -30,11 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Elementos de sala de espera 1v1
   const waitingRoomCode = document.getElementById('waiting-room-code');
+  const openShareModalBtn = document.getElementById('open-share-modal-btn');
+  const roomShareModal = document.getElementById('room-share-modal');
+  const closeShareModalBtn = document.getElementById('close-share-modal-btn');
   const shareLinkInput = document.getElementById('share-link-input');
   const copyLinkBtn = document.getElementById('copy-link-btn');
   const copyToast = document.getElementById('copy-toast');
   const shareWhatsappBtn = document.getElementById('share-whatsapp-btn');
   const shareTelegramBtn = document.getElementById('share-telegram-btn');
+  const shareSmsBtn = document.getElementById('share-sms-btn');
   const shareTwitterBtn = document.getElementById('share-twitter-btn');
   const shareEmailBtn = document.getElementById('share-email-btn');
   const shareNativeBtn = document.getElementById('share-native-btn');
@@ -402,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gameScreen.classList.add('hidden');
     gameOverModal.classList.add('hidden');
     if (asyncShareModal) asyncShareModal.classList.add('hidden');
+    if (roomShareModal) roomShareModal.classList.add('hidden');
 
     screen.classList.remove('hidden');
   }
@@ -820,6 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     gameOverModal.classList.add('hidden');
     if (asyncShareModal) asyncShareModal.classList.add('hidden');
+    if (roomShareModal) roomShareModal.classList.add('hidden');
 
     network.initAsyncRecordMode(name);
   }
@@ -1051,6 +1057,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (shareTelegramBtn) {
       shareTelegramBtn.href = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
     }
+    if (shareSmsBtn) {
+      shareSmsBtn.onclick = () => {
+        window.location.href = `sms:?&body=${encodedFull}`;
+      };
+    }
     if (shareTwitterBtn) {
       shareTwitterBtn.href = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
     }
@@ -1090,6 +1101,27 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(`/?room=${encodeURIComponent(roomId)}`, '_blank');
       };
     }
+  }
+
+  // Pop-up modal para invitar oponente (Duelo 1v1)
+  if (openShareModalBtn && roomShareModal) {
+    openShareModalBtn.addEventListener('click', () => {
+      roomShareModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeShareModalBtn && roomShareModal) {
+    closeShareModalBtn.addEventListener('click', () => {
+      roomShareModal.classList.add('hidden');
+    });
+  }
+
+  if (roomShareModal) {
+    roomShareModal.addEventListener('click', (e) => {
+      if (e.target === roomShareModal) {
+        roomShareModal.classList.add('hidden');
+      }
+    });
   }
 
   copyLinkBtn.addEventListener('click', () => {
@@ -1571,6 +1603,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingRematchVotes = [];
     gameOverModal.classList.add('hidden');
     if (asyncShareModal) asyncShareModal.classList.add('hidden');
+    if (roomShareModal) roomShareModal.classList.add('hidden');
 
     if (turnTimerBadge) turnTimerBadge.classList.remove('hidden');
     if (turnTimerBarTrack) turnTimerBarTrack.classList.remove('hidden');

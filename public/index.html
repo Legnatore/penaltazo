@@ -266,38 +266,13 @@
           <span id="waiting-room-code" class="code-value">ABC-123</span>
         </div>
 
-        <div class="share-box">
-          <label for="share-link-input">Enlace directo de invitación:</label>
-          <div class="link-copy-row">
-            <input type="text" id="share-link-input" readonly>
-            <button id="copy-link-btn" class="btn btn-primary">Copiar 📋</button>
-          </div>
-        </div>
+        <!-- Botón único para abrir el pop-up de opciones para compartir -->
+        <button id="open-share-modal-btn" type="button" class="btn btn-primary btn-large btn-invite-popup" title="Opciones para invitar a tu oponente">
+          <span class="btn-icon">📲</span>
+          <span class="btn-text">Invitar / Compartir Sala</span>
+        </button>
 
-        <!-- Compartir por redes sociales y mensajería -->
-        <div class="social-share-container">
-          <p class="social-share-title">📲 Compartir invitación directamente por:</p>
-          <div class="social-share-grid">
-            <a id="share-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-whatsapp">
-              <span>💬</span> WhatsApp
-            </a>
-            <a id="share-telegram-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-telegram">
-              <span>✈️</span> Telegram
-            </a>
-            <a id="share-twitter-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-twitter">
-              <span>🐦</span> X / Twitter
-            </a>
-            <a id="share-email-btn" href="#" class="btn social-btn btn-email">
-              <span>✉️</span> Correo
-            </a>
-            <button id="share-native-btn" type="button" class="btn social-btn btn-native-share">
-              <span>📤</span> Más apps...
-            </button>
-          </div>
-          <div id="local-ips-container" class="local-ips-container"></div>
-        </div>
-
-        <!-- Opciones adicionales -->
+        <!-- Opciones adicionales y estado de espera -->
         <div class="waiting-footer">
           <div class="waiting-status">
             <div class="pulse-loader"></div>
@@ -881,6 +856,56 @@
         <div class="modal-actions">
           <button type="button" id="close-rules-faq-modal-btn" class="btn btn-primary">
             ¡Entendido, a jugar! ⚽
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. MODAL POP-UP PARA COMPARTIR INVITACIÓN DE SALA 1v1 -->
+    <div id="room-share-modal" class="modal-overlay hidden">
+      <div class="modal-card room-share-modal-card">
+        <div class="modal-header">
+          <div class="modal-icon" style="font-size: 2.2rem; margin-bottom: 0.35rem;">📲</div>
+          <h2>Invitar Oponente al Duelo</h2>
+          <p>Manda la invitación a tu amigo por cualquier canal para empezar la tanda:</p>
+        </div>
+
+        <div class="share-box">
+          <label for="share-link-input">Enlace directo de invitación:</label>
+          <div class="link-copy-row">
+            <input type="text" id="share-link-input" readonly>
+            <button id="copy-link-btn" type="button" class="btn btn-primary">Copiar 📋</button>
+          </div>
+        </div>
+
+        <div class="social-share-container" style="margin-bottom: 0.8rem;">
+          <p class="social-share-title">Compartir directamente por:</p>
+          <div class="social-share-grid">
+            <a id="share-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-whatsapp">
+              <span>💬</span> WhatsApp
+            </a>
+            <a id="share-telegram-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-telegram">
+              <span>✈️</span> Telegram
+            </a>
+            <button id="share-sms-btn" type="button" class="btn social-btn btn-sms" title="Enviar por SMS">
+              <span>✉️</span> SMS
+            </button>
+            <a id="share-twitter-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-twitter">
+              <span>🐦</span> X / Twitter
+            </a>
+            <a id="share-email-btn" href="#" class="btn social-btn btn-email">
+              <span>📧</span> Correo
+            </a>
+            <button id="share-native-btn" type="button" class="btn social-btn btn-native-share">
+              <span>📤</span> Más apps...
+            </button>
+          </div>
+          <div id="local-ips-container" class="local-ips-container"></div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 1rem;">
+          <button type="button" id="close-share-modal-btn" class="btn btn-outline">
+            Cerrar ✕
           </button>
         </div>
       </div>

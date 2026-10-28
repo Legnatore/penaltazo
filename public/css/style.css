@@ -607,6 +607,57 @@ body {
   line-height: 1;
 }
 
+.btn-invite-popup {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  padding: 0.85rem 1.4rem !important;
+  font-size: 1.05rem !important;
+  border: 3px solid #0f172a !important;
+  border-radius: 14px !important;
+  box-shadow: 0 5px 0 #0369a1, 0 8px 15px rgba(2, 132, 199, 0.35) !important;
+  cursor: pointer;
+  margin: 0.5rem 0 !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-invite-popup:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7dd3fc 0%, #0ea5e9 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 #0369a1, 0 12px 20px rgba(2, 132, 199, 0.45) !important;
+}
+
+.room-share-modal-card {
+  max-width: 520px;
+  width: 100%;
+}
+
+.room-share-modal-card .social-share-container {
+  background: var(--bg-surface);
+  border: 2px dashed var(--border-subtle);
+  border-radius: 14px;
+  padding: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.room-share-modal-card .social-share-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 500px) {
+  .room-share-modal-card .social-share-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .share-box {
   margin-bottom: 1.5rem;
   text-align: left;
@@ -6000,7 +6051,89 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
     overflow-y: auto !important;
   }
 
-  .waiting-card,
+  .waiting-screen {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .waiting-card {
+    max-width: 480px;
+    padding: 1.1rem 1.6rem 0.85rem !important;
+    overflow: hidden !important;
+    max-height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+    margin: auto;
+  }
+
+  .waiting-card .waiting-header {
+    margin-bottom: 0.1rem;
+  }
+
+  .waiting-card .waiting-header h2 {
+    font-size: 2.2rem !important;
+    margin-bottom: 0.1rem;
+    line-height: 1;
+  }
+
+  .waiting-card .waiting-header p {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+
+  .waiting-card .room-code-display {
+    padding: 0.55rem 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+    border-radius: 12px !important;
+    gap: 0.1rem;
+  }
+
+  .waiting-card .room-code-display .code-label {
+    font-size: 0.74rem !important;
+  }
+
+  .waiting-card .room-code-display .code-value {
+    font-size: 2.5rem !important;
+    line-height: 1 !important;
+  }
+
+  .waiting-card .btn-invite-popup {
+    padding: 0.58rem 1rem !important;
+    font-size: 0.92rem !important;
+    border-radius: 11px !important;
+    margin: 0.15rem 0 !important;
+  }
+
+  .waiting-card .waiting-footer {
+    gap: 0.45rem !important;
+    margin: 0.15rem 0 !important;
+  }
+
+  .waiting-card .waiting-status {
+    padding: 0.38rem 0.75rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  .waiting-card #cancel-wait-btn {
+    padding: 0.4rem 0.9rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .waiting-card .ad-slot-waiting {
+    margin-top: 0.15rem !important;
+    padding: 0.2rem !important;
+  }
+
+  .waiting-card .ad-placeholder-banner {
+    padding: 0.35rem !important;
+    font-size: 0.72rem !important;
+  }
+
   .tourney-lobby-card {
     max-height: 100%;
     padding: 1rem 1.4rem;
@@ -6732,6 +6865,8 @@ body[data-theme="oscuro"] .wordle-result-preview {
 }
 
 body[data-theme="pcfutbol"] .btn-async-challenge,
+body[data-theme="pcfutbol"] .btn-invite-popup,
+body[data-theme="pcfutbol"] .room-share-modal-card,
 body[data-theme="pcfutbol"] .wordle-result-preview,
 body[data-theme="pcfutbol"] .async-recorded-summary,
 body[data-theme="pcfutbol"] .async-dive-pill,
@@ -6746,6 +6881,8 @@ body[data-theme="pcfutbol"] .btn-async-challenge {
 }
 
 body[data-theme="sensible"] .btn-async-challenge,
+body[data-theme="sensible"] .btn-invite-popup,
+body[data-theme="sensible"] .room-share-modal-card,
 body[data-theme="sensible"] .wordle-result-preview,
 body[data-theme="sensible"] .async-recorded-summary,
 body[data-theme="sensible"] .async-dive-pill,

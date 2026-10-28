@@ -191,7 +191,12 @@ body {
   width: 100%;
 }
 
-.hidden {
+.hidden,
+.screen.hidden,
+.waiting-screen.hidden,
+.tournament-lobby-screen.hidden,
+.tournament-bracket-screen.hidden,
+.game-screen.hidden {
   display: none !important;
 }
 
@@ -6016,13 +6021,13 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
   }
 
   /* Salas de Espera y Torneos en escritorio: permitir barras de scroll en el cuadro del torneo */
-  .waiting-screen,
-  .tournament-lobby-screen {
+  .waiting-screen:not(.hidden),
+  .tournament-lobby-screen:not(.hidden) {
     padding: 0.2rem 0;
     height: 100%;
   }
 
-  .tournament-bracket-screen {
+  .tournament-bracket-screen:not(.hidden) {
     padding: 0.3rem 0.2rem;
     height: 100%;
     min-height: 0;
@@ -6050,8 +6055,8 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
     overflow-y: auto !important;
   }
 
-  .waiting-screen {
-    display: flex !important;
+  .waiting-screen:not(.hidden) {
+    display: flex;
     align-items: center !important;
     justify-content: center !important;
     height: 100% !important;

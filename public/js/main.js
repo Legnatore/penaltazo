@@ -1727,10 +1727,6 @@ document.addEventListener('DOMContentLoaded', () => {
     goalGrid.clearSelection();
     updatePitchMarkings();
 
-    if ((amIShooter || amIKeeper) && window.soundEngine && typeof window.soundEngine.playTension === 'function') {
-      window.soundEngine.playTension();
-    }
-
     const turnRoleCartel = document.getElementById('turn-role-cartel');
     if (amIShooter) {
       goalGrid.enable('shooter');

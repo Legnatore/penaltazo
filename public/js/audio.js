@@ -117,84 +117,11 @@ class PenaltazoAudio {
   }
 
   // =========================================================================
-  // 1. playTension(): Zumbido sutil o murmullo de estadio mientras eligen
+  // 1. playTension(): Desactivado por solicitud (el zumbido/murmullo resultaba molesto)
   // =========================================================================
   playTension() {
-    if (this.muted) return;
-    this.init();
-    if (!this.ctx) return;
-
-    // Si ya hay tensión sonando, no solapar
-    if (this.tensionState) return;
-
-    const now = this.ctx.currentTime;
-
-    // Oscilador grave 1 (sub-grave 55Hz - La1)
-    const osc1 = this.ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(55, now);
-
-    // Oscilador grave 2 (110Hz con ligero desajuste para batimento orgánico)
-    const osc2 = this.ctx.createOscillator();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(110.5, now);
-
-    // Ruido filtrado muy bajo (aire/murmullo tenue de la grada en silencio)
-    const noiseBuffer = this.getWhiteNoiseBuffer(3.0);
-    let noiseSource = null;
-    let noiseFilter = null;
-    let noiseGain = null;
-
-    if (noiseBuffer) {
-      noiseSource = this.ctx.createBufferSource();
-      noiseSource.buffer = noiseBuffer;
-      noiseSource.loop = true;
-
-      noiseFilter = this.ctx.createBiquadFilter();
-      noiseFilter.type = 'lowpass';
-      noiseFilter.frequency.setValueAtTime(180, now);
-      noiseFilter.Q.setValueAtTime(1.5, now);
-
-      noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.0001, now);
-      noiseGain.gain.linearRampToValueAtTime(0.035, now + 1.2);
-
-      noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-    }
-
-    // LFO suave que modula la tensión como una respiración contenida
-    const lfo = this.ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(0.4, now); // respiración lenta cada 2.5s
-
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.setValueAtTime(0.02, now);
-    lfo.connect(lfoGain.gain);
-
-    // Ganancia maestra de tensión
-    const masterGain = this.ctx.createGain();
-    masterGain.gain.setValueAtTime(0.0001, now);
-    masterGain.gain.linearRampToValueAtTime(0.065, now + 1.2);
-
-    osc1.connect(masterGain);
-    osc2.connect(masterGain);
-    if (noiseGain) noiseGain.connect(masterGain);
-
-    masterGain.connect(this.ctx.destination);
-
-    osc1.start(now);
-    osc2.start(now);
-    lfo.start(now);
-    if (noiseSource) noiseSource.start(now);
-
-    this.tensionState = {
-      osc1,
-      osc2,
-      lfo,
-      noiseSource,
-      masterGain
-    };
+    // Silenciado de forma permanente
+    return;
   }
 
   stopTension(fadeMs = 250) {

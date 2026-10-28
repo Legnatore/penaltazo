@@ -1846,6 +1846,442 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 }
 
 /* =========================================================
+   DELANTERO / TIRADOR (VISTO DESDE LA PERSPECTIVA DEL PORTERO)
+   ========================================================= */
+.animated-shooter {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  transform: translate(-50%, -50%) scale(1.08);
+  width: 76px;
+  height: 118px;
+  z-index: 18;
+  pointer-events: none;
+  transition: transform 0.25s ease;
+}
+
+.shooter-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.shooter-head {
+  position: relative;
+  width: 22px;
+  height: 24px;
+  background: #fbd38d;
+  border-radius: 50% 50% 45% 45%;
+  border: 2px solid #0f172a;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  z-index: 4;
+}
+
+.shooter-hair {
+  width: 100%;
+  height: 8px;
+  background: #172554;
+  border-bottom: 1px solid #0f172a;
+}
+
+.shooter-face {
+  display: flex;
+  justify-content: space-around;
+  padding: 4px 4px 0;
+}
+
+.shooter-eye {
+  width: 3px;
+  height: 3px;
+  background: #0f172a;
+  border-radius: 50%;
+}
+
+.shooter-neck {
+  width: 9px;
+  height: 5px;
+  background: #f6ad55;
+  margin-top: -2px;
+  z-index: 3;
+}
+
+.shooter-torso {
+  position: relative;
+  width: 38px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--shooter-primary, #ef4444) 0%, var(--shooter-secondary, #b91c1c) 100%);
+  border-radius: 8px 8px 4px 4px;
+  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0f172a;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  z-index: 3;
+}
+
+.shooter-jersey-collar {
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 4px;
+  background: var(--shooter-accent, #ffffff);
+  border-radius: 0 0 5px 5px;
+}
+
+.shooter-jersey-number {
+  font-family: 'Teko', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--shooter-num-color, #ffffff);
+  line-height: 1;
+  margin-top: 2px;
+  text-shadow: 0 1px 2px #0f172a;
+}
+
+.shooter-arm {
+  position: absolute;
+  top: 4px;
+  width: 28px;
+  height: 9px;
+  background: var(--shooter-primary, #ef4444);
+  border: 1.5px solid #0f172a;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.25s ease;
+}
+
+.shooter-arm.arm-left {
+  left: -24px;
+  transform: rotate(-18deg);
+  transform-origin: right center;
+}
+
+.shooter-arm.arm-right {
+  right: -24px;
+  transform: rotate(18deg);
+  transform-origin: left center;
+}
+
+.shooter-forearm {
+  position: absolute;
+  width: 9px;
+  height: 7px;
+  background: #fbd38d;
+  border-radius: 50%;
+}
+
+.shooter-arm.arm-left .shooter-forearm { left: -4px; }
+.shooter-arm.arm-right .shooter-forearm { right: -4px; }
+
+.shooter-shorts {
+  width: 36px;
+  height: 15px;
+  background: var(--shooter-shorts, #ffffff);
+  border: 1.5px solid #0f172a;
+  border-radius: 2px 2px 5px 5px;
+  margin-top: -2px;
+  z-index: 2;
+  position: relative;
+}
+
+.shooter-legs {
+  display: flex;
+  justify-content: space-between;
+  width: 30px;
+  height: 32px;
+  margin-top: -1px;
+  z-index: 1;
+}
+
+.shooter-leg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 10px;
+  height: 100%;
+  transform-origin: top center;
+  transition: transform 0.25s ease;
+}
+
+.shooter-knee {
+  width: 8px;
+  height: 8px;
+  background: #fbd38d;
+  border-left: 1px solid #0f172a;
+  border-right: 1px solid #0f172a;
+}
+
+.shooter-sock {
+  width: 9px;
+  height: 16px;
+  background: var(--shooter-primary, #ef4444);
+  border: 1px solid #0f172a;
+  border-radius: 2px;
+}
+
+.shooter-boot {
+  width: 13px;
+  height: 6px;
+  background: #0f172a;
+  border: 1px solid var(--shooter-accent, #ffffff);
+  border-radius: 3px 3px 2px 2px;
+  margin-top: -1px;
+}
+
+/* Animación de carrera y chut del delantero */
+.animated-shooter.kicking {
+  animation: shooterKickingRun 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animated-shooter.kicking .arm-left {
+  transform: rotate(35deg) translateY(-2px);
+}
+
+.animated-shooter.kicking .arm-right {
+  transform: rotate(-45deg) translateY(-4px);
+}
+
+.animated-shooter.kicking .leg-left {
+  transform: rotate(-12deg);
+}
+
+.animated-shooter.kicking .leg-right {
+  transform: rotate(45deg) translateY(-4px);
+}
+
+@keyframes shooterKickingRun {
+  0% { transform: translate(-50%, -50%) scale(1.08); }
+  35% { transform: translate(-50%, -53%) scale(1.12); }
+  60% { transform: translate(-50%, -49%) scale(1.15); }
+  100% { transform: translate(-50%, -50%) scale(1.08); }
+}
+
+/* =========================================================
+   GUANTES EN 1ª PERSONA (PERSPECTIVA DE PORTERO)
+   ========================================================= */
+.keeper-pov-gloves {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  gap: 36px;
+  z-index: 28;
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pov-glove {
+  font-size: 2.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+}
+
+.pov-glove-left {
+  transform: rotate(-12deg);
+  animation: povGloveIdleLeft 2.2s ease-in-out infinite alternate;
+}
+
+.pov-glove-right {
+  transform: rotate(12deg) scaleX(-1);
+  animation: povGloveIdleRight 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes povGloveIdleLeft {
+  0% { transform: rotate(-12deg) translateY(0); }
+  100% { transform: rotate(-8deg) translateY(-4px); }
+}
+
+@keyframes povGloveIdleRight {
+  0% { transform: rotate(12deg) scaleX(-1) translateY(0); }
+  100% { transform: rotate(8deg) scaleX(-1) translateY(-4px); }
+}
+
+/* Posicionamiento dinámico de los guantes según la zona elegida por el portero */
+.keeper-pov-gloves.dive-r0-c0 {
+  left: 24% !important;
+  bottom: 56% !important;
+  transform: translate(-50%, 0) rotate(-22deg) scale(1.15) !important;
+}
+.keeper-pov-gloves.dive-r0-c1 {
+  left: 50% !important;
+  bottom: 58% !important;
+  transform: translate(-50%, 0) scale(1.2) !important;
+}
+.keeper-pov-gloves.dive-r0-c2 {
+  left: 76% !important;
+  bottom: 56% !important;
+  transform: translate(-50%, 0) rotate(22deg) scale(1.15) !important;
+}
+.keeper-pov-gloves.dive-r1-c0 {
+  left: 25% !important;
+  bottom: 24% !important;
+  transform: translate(-50%, 0) rotate(-30deg) scale(1.1) !important;
+}
+.keeper-pov-gloves.dive-r1-c1 {
+  left: 50% !important;
+  bottom: 20% !important;
+  transform: translate(-50%, 0) scale(1.1) !important;
+}
+.keeper-pov-gloves.dive-r1-c2 {
+  left: 75% !important;
+  bottom: 24% !important;
+  transform: translate(-50%, 0) rotate(30deg) scale(1.1) !important;
+}
+
+/* Impacto de parada exitosa en los guantes */
+.keeper-pov-gloves.saving-impact {
+  animation: povSaveImpact 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes povSaveImpact {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(250, 204, 21, 0)); }
+  40% { transform: scale(1.35); filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.95)) brightness(1.3); }
+  100% { transform: scale(1.15); filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)); }
+}
+
+/* =========================================================
+   ESTILOS DE PERSPECTIVA SEGÚN EL ROL ACTIVO (PORTERO VS TIRADOR)
+   ========================================================= */
+#stadium-arena.view-keeper {
+  background: linear-gradient(180deg, #0284c7 0%, #38bdf8 26%, #bae6fd 38%, #15803d 38%, #16a34a 100%);
+}
+
+#stadium-arena.view-keeper .stadium-crowd {
+  top: 4%;
+  height: 34%;
+  bottom: auto;
+  opacity: 0.85;
+}
+
+#stadium-arena.view-keeper .pitch-turf {
+  transform: rotateX(35deg);
+  height: 62%;
+}
+
+#stadium-arena.view-keeper .goal-structure {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  transform: none !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  border-radius: 0 !important;
+  z-index: 20;
+}
+
+#stadium-arena.view-keeper .goal-crossbar {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 18px !important;
+  border-radius: 0 !important;
+  z-index: 26;
+}
+
+#stadium-arena.view-keeper .goal-post.post-left {
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 18px !important;
+  border-radius: 0 !important;
+  z-index: 26;
+}
+
+#stadium-arena.view-keeper .goal-post.post-right {
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 18px !important;
+  border-radius: 0 !important;
+  z-index: 26;
+}
+
+#stadium-arena.view-keeper .goal-line {
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 10px !important;
+  z-index: 26;
+}
+
+#stadium-arena.view-keeper .goal-net-background {
+  /* Al mirar desde dentro de la portería hacia fuera, la red queda a los lados y fondo */
+  background: 
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 7%, transparent 93%, rgba(255, 255, 255, 0.2) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, transparent 12%);
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.35);
+}
+
+#stadium-arena.view-keeper .goal-grid {
+  inset: 18px !important;
+  padding: 8px;
+  gap: 8px;
+}
+
+#stadium-arena.view-keeper .animated-keeper {
+  display: none !important;
+}
+
+#stadium-arena.view-keeper .animated-shooter {
+  display: flex !important;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1.15);
+  z-index: 18;
+}
+
+#stadium-arena.view-keeper .keeper-pov-gloves {
+  display: flex !important;
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  z-index: 28;
+}
+
+#stadium-arena.view-keeper .animated-ball {
+  top: 64%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+#stadium-arena.view-keeper .ball-shadow {
+  top: 67%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.75);
+}
+
+#stadium-arena.view-shooter .animated-shooter,
+#stadium-arena:not(.view-keeper) .animated-shooter {
+  display: none !important;
+}
+
+#stadium-arena.view-shooter .keeper-pov-gloves,
+#stadium-arena:not(.view-keeper) .keeper-pov-gloves {
+  display: none !important;
+}
+
+#stadium-arena.view-shooter .animated-keeper,
+#stadium-arena:not(.view-keeper) .animated-keeper {
+  display: block;
+}
+
+/* =========================================================
    BARRA INFERIOR DE CONTROLES
    ========================================================= */
 .controls-bar {

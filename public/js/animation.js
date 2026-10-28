@@ -9,27 +9,69 @@ class PenaltyAnimator {
     this.ball = document.getElementById('animated-ball');
     this.ballShadow = document.getElementById('ball-shadow');
     this.goalkeeper = document.getElementById('animated-keeper');
+    this.shooter = document.getElementById('animated-shooter');
+    this.povGloves = document.getElementById('keeper-pov-gloves');
     this.penaltySpot = document.getElementById('penalty-spot');
     this.impactOverlay = document.getElementById('impact-overlay');
     this.bannerOverlay = document.getElementById('banner-overlay');
+    this.currentPerspective = 'shooter'; // 'shooter' | 'keeper'
+  }
+
+  setPerspective(perspective = 'shooter') {
+    this.currentPerspective = perspective;
+    if (this.arena) {
+      this.arena.classList.toggle('view-keeper', perspective === 'keeper');
+      this.arena.classList.toggle('view-shooter', perspective === 'shooter');
+    }
+    this.resetPositions();
+  }
+
+  setPovGlovesDive(row, col) {
+    if (!this.povGloves || this.currentPerspective !== 'keeper') return;
+    this.povGloves.className = `keeper-pov-gloves dive-r${row}-c${col}`;
+  }
+
+  resetPovGloves() {
+    if (!this.povGloves || this.currentPerspective !== 'keeper') return;
+    this.povGloves.className = 'keeper-pov-gloves';
   }
 
   resetPositions() {
+    const isKeeperView = (this.currentPerspective === 'keeper');
+
+    if (this.shooter) {
+      this.shooter.classList.remove('kicking');
+      this.shooter.style.transition = 'none';
+    }
+
+    if (this.povGloves) {
+      this.povGloves.className = 'keeper-pov-gloves';
+      this.povGloves.style.transition = 'none';
+    }
+
     // Restablecer balón al punto de penalti
     if (this.ball) {
       this.ball.style.transition = 'none';
-      this.ball.style.transform = 'translate(-50%, -50%) scale(1.3) rotate(0deg)';
-      this.ball.style.left = '50%';
-      this.ball.style.top = '88%';
-      this.ball.style.opacity = '1';
       this.ball.classList.remove('deflected', 'in-net');
+      this.ball.style.opacity = '1';
+      if (isKeeperView) {
+        // En vista de portero: el balón está a los pies del tirador en el punto de penalti
+        this.ball.style.left = '50%';
+        this.ball.style.top = '65%';
+        this.ball.style.transform = 'translate(-50%, -50%) scale(0.92) rotate(0deg)';
+      } else {
+        // En vista de tirador: el balón está en el punto de penalti en primer plano
+        this.ball.style.left = '50%';
+        this.ball.style.top = '88%';
+        this.ball.style.transform = 'translate(-50%, -50%) scale(1.3) rotate(0deg)';
+      }
     }
 
     if (this.ballShadow) {
       this.ballShadow.style.transition = 'none';
-      this.ballShadow.style.transform = 'translate(-50%, -50%) scale(1)';
       this.ballShadow.style.left = '50%';
-      this.ballShadow.style.top = '91%';
+      this.ballShadow.style.top = isKeeperView ? '68%' : '91%';
+      this.ballShadow.style.transform = isKeeperView ? 'translate(-50%, -50%) scale(0.7)' : 'translate(-50%, -50%) scale(1)';
       this.ballShadow.style.opacity = '0.6';
     }
 
@@ -119,140 +161,227 @@ class PenaltyAnimator {
     const targetKeeperX = ((keeperCellRect.left + keeperCellRect.width / 2 - goalStructRect.left) / goalStructRect.width) * 100;
     const targetKeeperY = ((keeperCellRect.top + keeperCellRect.height / 2 - goalStructRect.top) / goalStructRect.height) * 100;
 
-    // 2. Comienza la carrera y el Chut
-    if (window.soundEngine) {
-      window.soundEngine.playKick();
-    }
+    const isKeeperPOV = (this.currentPerspective === 'keeper');
 
-    // Duración del vuelo del balón y estirada del portero
-    const flightDuration = 850; // ms
+    if (isKeeperPOV) {
+      // PERSPECTIVA DE PORTERO: El usuario ve al delantero lanzar hacia él
+      if (this.shooter) {
+        this.shooter.classList.add('kicking');
+      }
+      await this.wait(220);
 
-    // Aplicar transiciones al balón
-    this.ball.style.transition = `left ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${flightDuration}ms cubic-bezier(0.33, 1, 0.68, 1), transform ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-    this.ball.style.left = `${targetBallX}%`;
-    this.ball.style.top = `${targetBallY}%`;
-    const rotation = (shooterChoice.col === 0 ? -720 : (shooterChoice.col === 2 ? 720 : 540));
-    this.ball.style.transform = `translate(-50%, -50%) scale(0.72) rotate(${rotation}deg)`;
-
-    // Sombra del balón
-    if (this.ballShadow) {
-      this.ballShadow.style.transition = `left ${flightDuration}ms linear, top ${flightDuration}ms linear, transform ${flightDuration}ms linear, opacity ${flightDuration}ms linear`;
-      this.ballShadow.style.left = `${targetBallX}%`;
-      this.ballShadow.style.top = `${Math.min(targetBallY + 5, 58)}%`;
-      this.ballShadow.style.transform = `translate(-50%, -50%) scale(0.4)`;
-      this.ballShadow.style.opacity = '0.2';
-    }
-
-    // Portero se lanza claramente hacia la casilla exacta que eligió
-    const keeperDuration = 720;
-    this.goalkeeper.style.transition = `left ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1), top ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-    this.goalkeeper.style.left = `${targetKeeperX}%`;
-    this.goalkeeper.style.top = `${targetKeeperY}%`;
-
-    // Postura y rotación del portero según la casilla elegida
-    let diveAngle = 0;
-    if (keeperChoice.col === 0) {
-      // Estirada a la izquierda (escuadra o raso)
-      diveAngle = keeperChoice.row === 0 ? -62 : -76;
-      this.goalkeeper.classList.add('diving');
-    } else if (keeperChoice.col === 2) {
-      // Estirada a la derecha (escuadra o raso)
-      diveAngle = keeperChoice.row === 0 ? 62 : 76;
-      this.goalkeeper.classList.add('diving');
-    } else if (keeperChoice.row === 0 && keeperChoice.col === 1) {
-      // Salto arriba al centro con brazos arriba
-      diveAngle = 0;
-      this.goalkeeper.classList.add('jumping');
-    }
-
-    this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.95) rotate(${diveAngle}deg)`;
-
-    // Esperar a que el balón y portero lleguen a su destino
-    await this.wait(flightDuration - 20);
-
-    // 3. Momento del IMPACTO (sonido victorioso o de derrota según la perspectiva del jugador local)
-    if (isGoal) {
-      // ¡¡GOL!! -> Victorioso si disparé yo (verde), derrota si me lo metieron a mí (rojo)
       if (window.soundEngine) {
-        window.soundEngine.playGoal(Boolean(isMyShot));
+        window.soundEngine.playKick();
       }
 
-      this.ball.classList.add('in-net');
-      shooterCellEl.classList.add('net-ripple');
+      const flightDuration = 800; // ms
 
-      // Efecto visual de gol
-      const goalMsg = isMyShot
-        ? '¡Qué gran disparo acabas de marcar!'
-        : `¡Gran disparo de ${shooterName || 'el rival'}!`;
-      this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg, Boolean(isMyShot));
-      this.triggerGoalParticles(targetBallX, targetBallY);
-    } else if (isPost) {
-      // ¡¡AL PALO / AL LARGUERO!! -> Victorioso si defendí yo de portero (verde), derrota si tiré yo al palo (rojo)
+      // Los guantes en 1ª persona se lanzan a la casilla elegida por el portero
+      this.setPovGlovesDive(keeperChoice.row, keeperChoice.col);
+
+      // El balón sale desde el punto de penalti (65%) hacia la casilla del chut en primer plano (creciendo a scale 1.6)
+      this.ball.style.transition = `left ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${flightDuration}ms cubic-bezier(0.33, 1, 0.68, 1), transform ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+      this.ball.style.left = `${targetBallX}%`;
+      this.ball.style.top = `${targetBallY}%`;
+      const rotation = (shooterChoice.col === 0 ? -720 : (shooterChoice.col === 2 ? 720 : 540));
+      this.ball.style.transform = `translate(-50%, -50%) scale(1.65) rotate(${rotation}deg)`;
+
+      if (this.ballShadow) {
+        this.ballShadow.style.transition = `left ${flightDuration}ms linear, top ${flightDuration}ms linear, transform ${flightDuration}ms linear, opacity ${flightDuration}ms linear`;
+        this.ballShadow.style.left = `${targetBallX}%`;
+        this.ballShadow.style.top = `${Math.min(targetBallY + 8, 76)}%`;
+        this.ballShadow.style.transform = `translate(-50%, -50%) scale(1.1)`;
+        this.ballShadow.style.opacity = '0.35';
+      }
+
+      await this.wait(flightDuration - 20);
+
+      // 3. Momento del IMPACTO (perspectiva de portero)
+      if (isGoal) {
+        if (window.soundEngine) {
+          window.soundEngine.playGoal(false);
+        }
+        this.ball.classList.add('in-net');
+        shooterCellEl.classList.add('net-ripple');
+        this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', `¡Gran disparo de ${shooterName || 'el rival'}!`, false);
+        this.triggerGoalParticles(targetBallX, targetBallY);
+      } else if (isPost) {
+        if (window.soundEngine) {
+          if (typeof window.soundEngine.playPost === 'function') {
+            window.soundEngine.playPost(true);
+          } else {
+            window.soundEngine.playMiss(true);
+          }
+        }
+        if (goalStructEl) {
+          goalStructEl.classList.add('post-shake');
+          setTimeout(() => goalStructEl.classList.remove('post-shake'), 550);
+        }
+        this.ball.classList.add('deflected');
+        const reboundX = targetBallX + (shooterChoice.col === 0 ? -12 : (shooterChoice.col === 2 ? 12 : 0));
+        const reboundY = shooterChoice.row === 0 && shooterChoice.col === 1 ? targetBallY - 8 : targetBallY + 14;
+        this.ball.style.transition = 'left 380ms ease-out, top 380ms ease-out, transform 380ms ease-out';
+        this.ball.style.left = `${reboundX}%`;
+        this.ball.style.top = `${reboundY}%`;
+        this.ball.style.transform = 'translate(-50%, -50%) scale(1.2) rotate(360deg)';
+
+        const isCrossbar = shooterChoice.row === 0 && shooterChoice.col === 1;
+        const postTitle = isCrossbar ? '¡¡AL LARGUERO!!' : '¡¡AL PALOOO!!';
+        this.showCelebrationBanner(postTitle, 'save', `¡El disparo de ${shooterName || 'el rival'} reventó ${isCrossbar ? 'el larguero' : 'el palo'}!`, true);
+        this.triggerSaveFlash(targetBallX, targetBallY);
+      } else if (isOut) {
+        if (window.soundEngine) {
+          window.soundEngine.playMiss(true);
+        }
+        this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
+        this.ball.style.transform = 'translate(-50%, -50%) scale(2.2) rotate(900deg)';
+        this.ball.style.opacity = '0';
+        this.showCelebrationBanner('¡¡FUERAAA!!', 'save', `¡El disparo de ${shooterName || 'el rival'} se marchó fuera!`, true);
+      } else {
+        // ¡¡PARADA EN 1ª PERSONA!!
+        if (window.soundEngine) {
+          window.soundEngine.playSave(true);
+        }
+        if (this.povGloves) {
+          this.povGloves.classList.add('saving-impact');
+        }
+        this.ball.classList.add('deflected');
+        const deflectX = targetBallX + (shooterChoice.col === 0 ? 12 : (shooterChoice.col === 2 ? -12 : 0));
+        const deflectY = targetBallY + 16;
+        this.ball.style.transition = 'left 400ms ease-out, top 400ms ease-out, transform 400ms ease-out';
+        this.ball.style.left = `${deflectX}%`;
+        this.ball.style.top = `${deflectY}%`;
+        this.ball.style.transform = 'translate(-50%, -50%) scale(1.15) rotate(180deg)';
+
+        this.showCelebrationBanner('¡¡PARADÓN!!', 'save', '¡Adivinaste la intención y blocaste el penalti!', true);
+        this.triggerSaveFlash(targetBallX, targetBallY);
+      }
+    } else {
+      // PERSPECTIVA DE TIRADOR (clásica)
       if (window.soundEngine) {
-        if (typeof window.soundEngine.playPost === 'function') {
-          window.soundEngine.playPost(Boolean(isMySave));
-        } else {
+        window.soundEngine.playKick();
+      }
+
+      // Duración del vuelo del balón y estirada del portero
+      const flightDuration = 850; // ms
+
+      // Aplicar transiciones al balón
+      this.ball.style.transition = `left ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${flightDuration}ms cubic-bezier(0.33, 1, 0.68, 1), transform ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+      this.ball.style.left = `${targetBallX}%`;
+      this.ball.style.top = `${targetBallY}%`;
+      const rotation = (shooterChoice.col === 0 ? -720 : (shooterChoice.col === 2 ? 720 : 540));
+      this.ball.style.transform = `translate(-50%, -50%) scale(0.72) rotate(${rotation}deg)`;
+
+      // Sombra del balón
+      if (this.ballShadow) {
+        this.ballShadow.style.transition = `left ${flightDuration}ms linear, top ${flightDuration}ms linear, transform ${flightDuration}ms linear, opacity ${flightDuration}ms linear`;
+        this.ballShadow.style.left = `${targetBallX}%`;
+        this.ballShadow.style.top = `${Math.min(targetBallY + 5, 58)}%`;
+        this.ballShadow.style.transform = `translate(-50%, -50%) scale(0.4)`;
+        this.ballShadow.style.opacity = '0.2';
+      }
+
+      // Portero se lanza claramente hacia la casilla exacta que eligió
+      const keeperDuration = 720;
+      this.goalkeeper.style.transition = `left ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1), top ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${keeperDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+      this.goalkeeper.style.left = `${targetKeeperX}%`;
+      this.goalkeeper.style.top = `${targetKeeperY}%`;
+
+      // Postura y rotación del portero según la casilla elegida
+      let diveAngle = 0;
+      if (keeperChoice.col === 0) {
+        diveAngle = keeperChoice.row === 0 ? -62 : -76;
+        this.goalkeeper.classList.add('diving');
+      } else if (keeperChoice.col === 2) {
+        diveAngle = keeperChoice.row === 0 ? 62 : 76;
+        this.goalkeeper.classList.add('diving');
+      } else if (keeperChoice.row === 0 && keeperChoice.col === 1) {
+        diveAngle = 0;
+        this.goalkeeper.classList.add('jumping');
+      }
+
+      this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.95) rotate(${diveAngle}deg)`;
+
+      // Esperar a que el balón y portero lleguen a su destino
+      await this.wait(flightDuration - 20);
+
+      // 3. Momento del IMPACTO (sonido victorioso o de derrota según la perspectiva del jugador local)
+      if (isGoal) {
+        if (window.soundEngine) {
+          window.soundEngine.playGoal(Boolean(isMyShot));
+        }
+
+        this.ball.classList.add('in-net');
+        shooterCellEl.classList.add('net-ripple');
+
+        const goalMsg = isMyShot
+          ? '¡Qué gran disparo acabas de marcar!'
+          : `¡Gran disparo de ${shooterName || 'el rival'}!`;
+        this.showCelebrationBanner('¡¡GOOOOOOL!!', 'goal', goalMsg, Boolean(isMyShot));
+        this.triggerGoalParticles(targetBallX, targetBallY);
+      } else if (isPost) {
+        if (window.soundEngine) {
+          if (typeof window.soundEngine.playPost === 'function') {
+            window.soundEngine.playPost(Boolean(isMySave));
+          } else {
+            window.soundEngine.playMiss(Boolean(isMySave));
+          }
+        }
+
+        if (goalStructEl) {
+          goalStructEl.classList.add('post-shake');
+          setTimeout(() => goalStructEl.classList.remove('post-shake'), 550);
+        }
+
+        this.ball.classList.add('deflected');
+        const reboundX = targetBallX + (shooterChoice.col === 0 ? -16 : (shooterChoice.col === 2 ? 16 : (Math.random() < 0.5 ? -12 : 12)));
+        const reboundY = shooterChoice.row === 0 && shooterChoice.col === 1 ? targetBallY - 12 : targetBallY + 14;
+        this.ball.style.transition = 'left 380ms ease-out, top 380ms ease-out, transform 380ms ease-out';
+        this.ball.style.left = `${reboundX}%`;
+        this.ball.style.top = `${reboundY}%`;
+        this.ball.style.transform = 'translate(-50%, -50%) scale(0.58) rotate(540deg)';
+
+        const isCrossbar = shooterChoice.row === 0 && shooterChoice.col === 1;
+        const postTitle = isCrossbar ? '¡¡AL LARGUERO!!' : '¡¡AL PALOOO!!';
+        const postMsg = isMyShot
+          ? `¡Tu disparo se estrelló contra ${isCrossbar ? 'el larguero' : 'el poste'} y salió repelido!`
+          : `¡El disparo de ${shooterName || 'el rival'} reventó ${isCrossbar ? 'el larguero' : 'el palo'}!`;
+        this.showCelebrationBanner(postTitle, 'save', postMsg, Boolean(isMySave));
+        this.triggerSaveFlash(targetBallX, targetBallY);
+      } else if (isOut) {
+        if (window.soundEngine) {
           window.soundEngine.playMiss(Boolean(isMySave));
         }
+
+        this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
+        this.ball.style.transform = 'translate(-50%, -50%) scale(0.45) rotate(900deg)';
+        this.ball.style.opacity = '0.5';
+
+        const outMsg = isMyShot
+          ? '¡Buscaste ajustar demasiado y el balón se marchó fuera!'
+          : `¡El disparo de ${shooterName || 'el rival'} se ha ido directamente fuera!`;
+        this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg, Boolean(isMySave));
+      } else {
+        if (window.soundEngine) {
+          window.soundEngine.playSave(Boolean(isMySave));
+        }
+
+        this.ball.classList.add('deflected');
+        this.goalkeeper.classList.add('saving');
+
+        const deflectX = targetBallX + (shooterChoice.col === 0 ? 15 : (shooterChoice.col === 2 ? -15 : 0));
+        const deflectY = targetBallY + 18;
+        this.ball.style.transition = 'left 400ms ease-out, top 400ms ease-out, transform 400ms ease-out';
+        this.ball.style.left = `${deflectX}%`;
+        this.ball.style.top = `${deflectY}%`;
+        this.ball.style.transform = 'translate(-50%, -50%) scale(0.65) rotate(180deg)';
+
+        const saveMsg = isMySave
+          ? '¡Adivinaste la intención y detuviste el penalti!'
+          : `¡${keeperName || 'El portero'} adivinó la dirección del tiro!`;
+        this.showCelebrationBanner('¡¡PARADÓN!!', 'save', saveMsg, Boolean(isMySave));
+        this.triggerSaveFlash(targetBallX, targetBallY);
       }
-
-      if (goalStructEl) {
-        goalStructEl.classList.add('post-shake');
-        setTimeout(() => goalStructEl.classList.remove('post-shake'), 550);
-      }
-
-      this.ball.classList.add('deflected');
-      const reboundX = targetBallX + (shooterChoice.col === 0 ? -16 : (shooterChoice.col === 2 ? 16 : (Math.random() < 0.5 ? -12 : 12)));
-      const reboundY = shooterChoice.row === 0 && shooterChoice.col === 1 ? targetBallY - 12 : targetBallY + 14;
-      this.ball.style.transition = 'left 380ms ease-out, top 380ms ease-out, transform 380ms ease-out';
-      this.ball.style.left = `${reboundX}%`;
-      this.ball.style.top = `${reboundY}%`;
-      this.ball.style.transform = 'translate(-50%, -50%) scale(0.58) rotate(540deg)';
-
-      const isCrossbar = shooterChoice.row === 0 && shooterChoice.col === 1;
-      const postTitle = isCrossbar ? '¡¡AL LARGUERO!!' : '¡¡AL PALOOO!!';
-      const postMsg = isMyShot
-        ? `¡Tu disparo se estrelló contra ${isCrossbar ? 'el larguero' : 'el poste'} y salió repelido!`
-        : `¡El disparo de ${shooterName || 'el rival'} reventó ${isCrossbar ? 'el larguero' : 'el palo'}!`;
-      this.showCelebrationBanner(postTitle, 'save', postMsg, Boolean(isMySave));
-      this.triggerSaveFlash(targetBallX, targetBallY);
-    } else if (isOut) {
-      // ¡¡FUERA!! -> Victorioso si defendí yo de portero (verde), derrota si tiré yo fuera (rojo)
-      if (window.soundEngine) {
-        window.soundEngine.playMiss(Boolean(isMySave));
-      }
-
-      this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
-      this.ball.style.transform = 'translate(-50%, -50%) scale(0.45) rotate(900deg)';
-      this.ball.style.opacity = '0.5';
-
-      const outMsg = isMyShot
-        ? '¡Buscaste ajustar demasiado y el balón se marchó fuera!'
-        : `¡El disparo de ${shooterName || 'el rival'} se ha ido directamente fuera!`;
-      this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg, Boolean(isMySave));
-    } else {
-      // ¡¡PARADA!! -> Victorioso si paré yo (verde), derrota si me la paró el rival (rojo)
-      if (window.soundEngine) {
-        window.soundEngine.playSave(Boolean(isMySave));
-      }
-
-      this.ball.classList.add('deflected');
-      this.goalkeeper.classList.add('saving');
-
-      // Animación de rebote del balón repelido por los guantes
-      const deflectX = targetBallX + (shooterChoice.col === 0 ? 15 : (shooterChoice.col === 2 ? -15 : 0));
-      const deflectY = targetBallY + 18;
-      this.ball.style.transition = 'left 400ms ease-out, top 400ms ease-out, transform 400ms ease-out';
-      this.ball.style.left = `${deflectX}%`;
-      this.ball.style.top = `${deflectY}%`;
-      this.ball.style.transform = 'translate(-50%, -50%) scale(0.65) rotate(180deg)';
-
-      // Efecto visual de parada
-      const saveMsg = isMySave
-        ? '¡Adivinaste la intención y detuviste el penalti!'
-        : `¡${keeperName || 'El portero'} adivinó la dirección del tiro!`;
-      this.showCelebrationBanner('¡¡PARADÓN!!', 'save', saveMsg, Boolean(isMySave));
-      this.triggerSaveFlash(targetBallX, targetBallY);
     }
 
     // Resaltar casillas en la cuadrícula y actualizar marcador en el momento del impacto

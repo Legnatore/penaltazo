@@ -5,6 +5,8 @@ class GoalGrid {
   constructor(containerElement, onCellSelect) {
     this.container = containerElement;
     this.onCellSelect = onCellSelect;
+    this.onCellHover = null;
+    this.onCellLeave = null;
     this.selectedCell = null;
     this.currentRole = 'shooter'; // 'shooter' | 'keeper'
     this.interactive = false;
@@ -39,6 +41,13 @@ class GoalGrid {
           </div>
         `;
 
+        cell.addEventListener('mouseenter', () => {
+          if (!this.interactive) return;
+          if (typeof this.onCellHover === 'function') {
+            this.onCellHover(r, c);
+          }
+        });
+
         cell.addEventListener('click', () => this.handleCellClick(r, c));
         cell.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -51,6 +60,13 @@ class GoalGrid {
         this.cells[r][c] = cell;
       }
     }
+
+    this.container.addEventListener('mouseleave', () => {
+      if (!this.interactive) return;
+      if (typeof this.onCellLeave === 'function') {
+        this.onCellLeave();
+      }
+    });
   }
 
   handleCellClick(row, col) {

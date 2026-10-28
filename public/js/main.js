@@ -136,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     hasConfirmedChoice = true;
     goalGrid.disable();
 
+    if (currentKeeperRole === myRole && animator) {
+      animator.setPovGlovesDive(row, col);
+    }
+
     const rowName = row === 0 ? 'Arriba' : 'Raso';
     const colName = col === 0 ? 'Izquierda' : (col === 1 ? 'Centro' : 'Derecha');
     selectedZoneLabel.textContent = `Zona seleccionada: ${rowName} - ${colName}`;
@@ -148,6 +152,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   animator = new PenaltyAnimator(stadiumArena, goalGrid);
+
+  goalGrid.onCellHover = (row, col) => {
+    if (hasConfirmedChoice || isResolvingTurn) return;
+    if (currentKeeperRole === myRole && animator) {
+      animator.setPovGlovesDive(row, col);
+    }
+  };
+
+  goalGrid.onCellLeave = () => {
+    if (hasConfirmedChoice || isResolvingTurn) return;
+    if (currentKeeperRole === myRole && animator && !mySelectedCell) {
+      animator.resetPovGloves();
+    }
+  };
 
   // Inicializar Gestor de Vistas de Torneo
   tournamentView = new TournamentView({
@@ -638,6 +656,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (p2ScoreBox) {
       p2ScoreBox.style.background = `linear-gradient(180deg, ${p2Kit.primary} 0%, ${p2Kit.shorts} 140%)`;
       p2ScoreBox.style.color = p2Kit.accent;
+    }
+  }
+
+  function updateActiveShooterAppearance(shooterRole = currentShooterRole) {
+    const shooterEl = document.getElementById('animated-shooter');
+    const shooterNumberEl = document.getElementById('shooter-jersey-number');
+    if (!shooterEl) return;
+
+    const isLocalShooter = (myRole === 'spectator')
+      ? (shooterRole === 'P1')
+      : (shooterRole === myRole);
+
+    const activeKit = isLocalShooter ? getMyActiveKitObject() : getRivalActiveKitObject();
+    const activeNumber = isLocalShooter ? myCurrentMatchNumber : rivalCurrentMatchNumber;
+
+    shooterEl.style.setProperty('--shooter-primary', activeKit.primary);
+    shooterEl.style.setProperty('--shooter-secondary', activeKit.secondary);
+    shooterEl.style.setProperty('--shooter-accent', activeKit.accent);
+    shooterEl.style.setProperty('--shooter-shorts', activeKit.shorts);
+    shooterEl.style.setProperty('--shooter-num-color', activeKit.numColor || '#ffffff');
+
+    if (shooterNumberEl) {
+      shooterNumberEl.textContent = String(activeNumber);
     }
   }
 
@@ -1376,11 +1417,11 @@ document.addEventListener('DOMContentLoaded', () => {
       currentPenaltiesPerPlayer = roomState.penaltiesPerPlayer;
     }
 
-    animator.resetPositions();
-    goalGrid.clearSelection();
-
     const amIShooter = (myRole === shooterRole);
     const amIKeeper = (myRole === keeperRole);
+
+    animator.setPerspective(amIKeeper ? 'keeper' : 'shooter');
+    goalGrid.clearSelection();
 
     if (amIShooter) {
       goalGrid.enable('shooter');
@@ -1433,8 +1474,9 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     }
 
-    // Actualizar la equipación y el dorsal del portero según a quién le toque parar en este turno
+    // Actualizar la equipación y el dorsal del portero y del tirador según el turno
     updateActiveKeeperAppearance(keeperRole);
+    updateActiveShooterAppearance(shooterRole);
 
     // Actualizar pancartas de ánimo en las gradas del estadio para el jugador actual
     const cheerLeft = document.getElementById('cheer-banner-left');

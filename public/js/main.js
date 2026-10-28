@@ -409,6 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (roomShareModal) roomShareModal.classList.add('hidden');
 
     screen.classList.remove('hidden');
+
+    if (screen === gameScreen) {
+      document.body.classList.add('game-active');
+    } else {
+      document.body.classList.remove('game-active');
+    }
   }
 
   // --- REGISTRO DE SERVICE WORKER (PWA) ---

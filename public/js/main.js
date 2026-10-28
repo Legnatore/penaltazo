@@ -172,6 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
     myStatusBadge.innerHTML = '✅ ¡Listo!';
 
     setCommentatorText(`🎯 Decisión tomada en secreto (${rowName} ${colName}). ¡Esperando el pitido del árbitro!`);
+    if (window.soundEngine && typeof window.soundEngine.stopTension === 'function') {
+      window.soundEngine.stopTension(350);
+    }
     network.submitChoice(row, col);
   });
 
@@ -989,15 +992,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (window.soundEngine) {
+    const isMuted = window.soundEngine.isMuted();
+    soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
+    soundToggleBtn.setAttribute('title', isMuted ? 'Sonido desactivado' : 'Sonido activado');
+  }
+
   soundToggleBtn.addEventListener('click', () => {
     const isMuted = window.soundEngine.toggleMute();
     soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
     soundToggleBtn.setAttribute('title', isMuted ? 'Sonido desactivado' : 'Sonido activado');
   });
 
-  document.addEventListener('click', () => {
+  const unlockAudio = () => {
     if (window.soundEngine) window.soundEngine.init();
-  }, { once: true });
+  };
+  ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, unlockAudio, { passive: true });
+  });
 
   // --- EVENTOS DEL LOBBY PRINCIPAL ---
   function getSelectedLobbyPenalties() {
@@ -1714,6 +1726,10 @@ document.addEventListener('DOMContentLoaded', () => {
     goalGrid.clearSelection();
     updatePitchMarkings();
 
+    if ((amIShooter || amIKeeper) && window.soundEngine && typeof window.soundEngine.playTension === 'function') {
+      window.soundEngine.playTension();
+    }
+
     const turnRoleCartel = document.getElementById('turn-role-cartel');
     if (amIShooter) {
       goalGrid.enable('shooter');
@@ -2002,6 +2018,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   network.on('turn_resolved', (data) => {
     isResolvingTurn = true;
+    if (window.soundEngine && typeof window.soundEngine.stopTension === 'function') {
+      window.soundEngine.stopTension(80);
+    }
     stopClientTurnTimer();
     goalGrid.disable();
     recordTurnStats(data);

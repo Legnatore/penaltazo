@@ -203,7 +203,8 @@ class PenaltyAnimator {
       // 3. Momento del IMPACTO (perspectiva de portero)
       if (isGoal) {
         if (window.soundEngine) {
-          window.soundEngine.playGoal(false);
+          window.soundEngine.playNet();
+          window.soundEngine.playDisappointment();
         }
         this.ball.classList.add('in-net');
         shooterCellEl.classList.add('net-ripple');
@@ -211,11 +212,8 @@ class PenaltyAnimator {
         this.triggerGoalParticles(targetBallX, targetBallY);
       } else if (isPost) {
         if (window.soundEngine) {
-          if (typeof window.soundEngine.playPost === 'function') {
-            window.soundEngine.playPost(true);
-          } else {
-            window.soundEngine.playMiss(true);
-          }
+          window.soundEngine.playPost();
+          window.soundEngine.playCheer(1.6);
         }
         if (goalStructEl) {
           goalStructEl.classList.add('post-shake');
@@ -235,7 +233,7 @@ class PenaltyAnimator {
         this.triggerSaveFlash(targetBallX, targetBallY);
       } else if (isOut) {
         if (window.soundEngine) {
-          window.soundEngine.playMiss(true);
+          window.soundEngine.playDisappointment();
         }
         this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
         this.ball.style.transform = 'translate(-50%, -50%) scale(2.2) rotate(900deg)';
@@ -244,7 +242,8 @@ class PenaltyAnimator {
       } else {
         // ¡¡PARADA EN 1ª PERSONA!!
         if (window.soundEngine) {
-          window.soundEngine.playSave(true);
+          window.soundEngine.playSave();
+          window.soundEngine.playCheer(2.0);
         }
         if (this.povGloves) {
           this.povGloves.classList.add('saving-impact');
@@ -312,7 +311,13 @@ class PenaltyAnimator {
       // 3. Momento del IMPACTO (sonido victorioso o de derrota según la perspectiva del jugador local)
       if (isGoal) {
         if (window.soundEngine) {
-          window.soundEngine.playGoal(Boolean(isMyShot));
+          window.soundEngine.playNet();
+          if (isMyShot) {
+            window.soundEngine.playCheer();
+            window.soundEngine.playVictoryFanfare();
+          } else {
+            window.soundEngine.playDisappointment();
+          }
         }
 
         this.ball.classList.add('in-net');
@@ -325,10 +330,11 @@ class PenaltyAnimator {
         this.triggerGoalParticles(targetBallX, targetBallY);
       } else if (isPost) {
         if (window.soundEngine) {
-          if (typeof window.soundEngine.playPost === 'function') {
-            window.soundEngine.playPost(Boolean(isMySave));
+          window.soundEngine.playPost();
+          if (isMySave) {
+            window.soundEngine.playCheer(1.6);
           } else {
-            window.soundEngine.playMiss(Boolean(isMySave));
+            window.soundEngine.playDisappointment(1.8);
           }
         }
 
@@ -354,7 +360,11 @@ class PenaltyAnimator {
         this.triggerSaveFlash(targetBallX, targetBallY);
       } else if (isOut) {
         if (window.soundEngine) {
-          window.soundEngine.playMiss(Boolean(isMySave));
+          if (isMySave) {
+            window.soundEngine.playCheer(1.6);
+          } else {
+            window.soundEngine.playDisappointment(1.8);
+          }
         }
 
         this.ball.style.transition = 'transform 350ms ease-out, opacity 350ms ease-out';
@@ -367,7 +377,12 @@ class PenaltyAnimator {
         this.showCelebrationBanner('¡¡FUERAAA!!', 'save', outMsg, Boolean(isMySave));
       } else {
         if (window.soundEngine) {
-          window.soundEngine.playSave(Boolean(isMySave));
+          window.soundEngine.playSave();
+          if (isMySave) {
+            window.soundEngine.playCheer(2.0);
+          } else {
+            window.soundEngine.playDisappointment(1.8);
+          }
         }
 
         this.ball.classList.add('deflected');

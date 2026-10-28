@@ -57,6 +57,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const soundToggleBtn = document.getElementById('sound-toggle-btn');
   const headerRoomBadge = document.getElementById('header-room-badge');
 
+  // Control de desvanecimiento de carteles cuando ambos han decidido
+  let vanishTimeoutId = null;
+
+  function triggerTurnDecisionVanish() {
+    if (vanishTimeoutId) {
+      clearTimeout(vanishTimeoutId);
+      vanishTimeoutId = null;
+    }
+    const banner = document.querySelector('.instruction-banner');
+    vanishTimeoutId = setTimeout(() => {
+      if (banner) banner.classList.add('turn-resolving-vanish');
+    }, 280);
+  }
+
+  function resetTurnDecisionVanish() {
+    if (vanishTimeoutId) {
+      clearTimeout(vanishTimeoutId);
+      vanishTimeoutId = null;
+    }
+    const banner = document.querySelector('.instruction-banner');
+    if (banner) banner.classList.remove('turn-resolving-vanish');
+  }
+
   // Elementos de fin de juego
   const gameOverTitle = document.getElementById('game-over-title');
   const gameOverSubtitle = document.getElementById('game-over-subtitle');
@@ -142,10 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rowName = row === 0 ? 'Arriba' : 'Raso';
     const colName = col === 0 ? 'Izquierda' : (col === 1 ? 'Centro' : 'Derecha');
-    selectedZoneLabel.textContent = `Zona seleccionada: ${rowName} - ${colName}`;
+    selectedZoneLabel.textContent = `Zona: ${rowName} - ${colName}`;
 
     myStatusBadge.className = 'status-badge ready';
-    myStatusBadge.innerHTML = '✅ ¡Elección enviada!';
+    myStatusBadge.innerHTML = '✅ ¡Listo!';
 
     setCommentatorText(`🎯 Decisión tomada en secreto (${rowName} ${colName}). ¡Esperando el pitido del árbitro!`);
     network.submitChoice(row, col);
@@ -853,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
       roleInstructions.innerHTML = '';
       roleInstructions.classList.add('hidden');
       myStatusBadge.className = 'status-badge waiting';
-      myStatusBadge.innerHTML = `⚽ Elige disparo #${roundNumber}/5...`;
+      myStatusBadge.innerHTML = `⚽ Disparo #${roundNumber}`;
       selectedZoneLabel.textContent = `Ronda ${roundNumber} (Tiro ${roundNumber}/5): haz clic donde quieras disparar`;
       setCommentatorText(`🎯 Grabando tanda: Ronda ${roundNumber} de 5 (Tu Tiro). ¡Elige dónde vas a clavar el balón!`);
     } else {
@@ -866,13 +889,13 @@ document.addEventListener('DOMContentLoaded', () => {
       roleInstructions.innerHTML = '';
       roleInstructions.classList.add('hidden');
       myStatusBadge.className = 'status-badge waiting';
-      myStatusBadge.innerHTML = `🧤 Elige estirada #${roundNumber}/5...`;
+      myStatusBadge.innerHTML = `🧤 Parada #${roundNumber}`;
       selectedZoneLabel.textContent = `Ronda ${roundNumber} (Parada ${roundNumber}/5): haz clic hacia dónde lanzarte a parar`;
       setCommentatorText(`🧤 Grabando tanda: Ronda ${roundNumber} de 5 (Tu Parada). ¡Elige dónde vas a volar para pararlo!`, 'save');
     }
 
     rivalStatusBadge.className = 'status-badge ready';
-    rivalStatusBadge.innerHTML = `🔗 Se guardará en el enlace`;
+    rivalStatusBadge.innerHTML = `🔗 En enlace`;
   }
 
   function startAsyncRecordingFlow(explicitName = null) {
@@ -949,14 +972,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (role === 'shooter') {
       if (window.soundEngine) window.soundEngine.playKick();
       myStatusBadge.className = 'status-badge ready';
-      myStatusBadge.innerHTML = `✅ Tiro #${round}/5 guardado`;
+      myStatusBadge.innerHTML = `✅ Tiro #${round}`;
     } else {
       if (animator && animator.keeperEl) {
         animator.keeperEl.className = `goalkeeper-sprite dive-r${row}-c${col}`;
       }
       if (window.soundEngine) window.soundEngine.playSave();
       myStatusBadge.className = 'status-badge ready';
-      myStatusBadge.innerHTML = `✅ Parada #${round}/5 guardada`;
+      myStatusBadge.innerHTML = `✅ Parada #${round}`;
     }
 
     const recordedHistoryP1 = recordedShots.map((idx, i) => ({
@@ -1364,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
           hasConfirmedChoice = true;
           goalGrid.disable();
           myStatusBadge.className = 'status-badge ready';
-          myStatusBadge.innerHTML = '⏱️ ¡Tiempo agotado (azar)!';
+          myStatusBadge.innerHTML = '⏱️ ¡Tiempo!';
           setCommentatorText('⏱️ ¡Pitido del árbitro por límite de 12 segundos! Decisión automática al azar.', 'urgent');
           network.submitChoice(randRow, randCol);
         }
@@ -1431,6 +1454,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const amIShooter = (myRole === shooterRole);
     const amIKeeper = (myRole === keeperRole);
 
+    resetTurnDecisionVanish();
     animator.setPerspective('shooter');
     goalGrid.clearSelection();
 
@@ -1470,17 +1494,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     myStatusBadge.className = 'status-badge waiting';
-    myStatusBadge.innerHTML = '⏳ Esperando tu elección...';
+    myStatusBadge.innerHTML = '⏳ Tu turno';
 
     if (network.mode === 'async_play') {
       rivalStatusBadge.className = 'status-badge ready';
-      rivalStatusBadge.innerHTML = '🔒 Parada ya programada';
+      rivalStatusBadge.innerHTML = '🔒 Programada';
     } else {
       rivalStatusBadge.className = 'status-badge waiting';
-      rivalStatusBadge.innerHTML = '⏳ Rival pensando...';
+      rivalStatusBadge.innerHTML = '⏳ Rival...';
     }
 
-    selectedZoneLabel.textContent = 'Haz clic en una de las 6 zonas de la portería para elegir al instante';
+    selectedZoneLabel.textContent = 'Elige una de las 6 zonas de la portería';
 
     if (roomState && roomState.players) {
       const p1 = roomState.players.find(p => p.role === 'P1');
@@ -1706,10 +1730,10 @@ document.addEventListener('DOMContentLoaded', () => {
   network.on('choice_confirmed', ({ role }) => {
     if (role === myRole) {
       myStatusBadge.className = 'status-badge ready';
-      myStatusBadge.innerHTML = '✅ ¡Tu elección está bloqueada!';
+      myStatusBadge.innerHTML = '✅ ¡Listo!';
     } else {
       rivalStatusBadge.className = 'status-badge ready';
-      rivalStatusBadge.innerHTML = '✅ ¡El rival ya ha elegido!';
+      rivalStatusBadge.innerHTML = '✅ Rival listo';
     }
   });
 
@@ -1723,9 +1747,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     myStatusBadge.className = 'status-badge resolving';
-    myStatusBadge.innerHTML = '⚡ ¡Resolviendo penalti!';
+    myStatusBadge.innerHTML = '⚡ ¡En juego!';
     rivalStatusBadge.className = 'status-badge resolving';
-    rivalStatusBadge.innerHTML = '⚡ ¡Resolviendo penalti!';
+    rivalStatusBadge.innerHTML = '⚡ ¡En juego!';
+
+    // Al haber tomado ambos contrincantes su decisión, los carteles desaparecen con efecto
+    triggerTurnDecisionVanish();
 
     const shooterName = playerNames[data.shooterRole] || (data.shooterRole === 'P1' ? 'Jugador 1' : 'Jugador 2');
     const keeperName = playerNames[data.keeperRole] || (data.keeperRole === 'P1' ? 'Jugador 1' : 'Jugador 2');
@@ -1794,7 +1821,7 @@ document.addEventListener('DOMContentLoaded', () => {
   network.on('player_left', ({ role, name }) => {
     showToast(`⚠️ ${name || 'El oponente'} se ha desconectado.`);
     rivalStatusBadge.className = 'status-badge disconnected';
-    rivalStatusBadge.innerHTML = '❌ Rival desconectado';
+    rivalStatusBadge.innerHTML = '❌ Desconectado';
   });
 
   // --- FIN DE PARTIDO & REVANCHA / RETORNO A TORNEO ---

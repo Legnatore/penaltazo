@@ -5289,37 +5289,36 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
   display: contents;
 }
 
-.primary-actions-row,
-.competition-modes-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.55rem;
+.actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
   width: 100%;
 }
 
-.btn-competition-mode {
+.btn-competition-option {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 0.45rem !important;
+  gap: 0.55rem !important;
   width: 100% !important;
   min-height: 48px !important;
-  padding: 0.65rem 0.75rem !important;
-  font-size: 0.88rem !important;
+  padding: 0.75rem 1.2rem !important;
+  font-size: 0.96rem !important;
   font-weight: 800 !important;
   box-sizing: border-box !important;
   margin: 0 !important;
   text-align: center !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
 }
 
-.btn-competition-mode .btn-icon {
-  font-size: 1.15rem;
+.btn-competition-option .btn-icon {
+  font-size: 1.25rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
-.btn-competition-mode .btn-text {
+.btn-competition-option .btn-text {
   font-weight: 800;
   white-space: normal;
   line-height: 1.2;
@@ -5570,7 +5569,8 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
     flex-direction: column;
     justify-content: space-between;
     gap: 0.45rem;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .lobby-card::before {
@@ -5584,7 +5584,8 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
     flex: 1 1 0%;
     min-height: 0;
     gap: 0.4rem;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .lobby-col-right {
@@ -5676,19 +5677,10 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
     gap: 0.35rem;
   }
 
-  .primary-actions-row,
-  .competition-modes-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.45rem;
-    width: 100%;
-  }
-
-  .primary-actions-row .btn-large,
-  .btn-competition-mode {
-    padding: 0.48rem 0.4rem !important;
-    font-size: 0.78rem !important;
-    min-height: 42px !important;
+  .btn-competition-option {
+    padding: 0.5rem 0.85rem !important;
+    font-size: 0.84rem !important;
+    min-height: 40px !important;
     border-radius: 11px !important;
     margin: 0 !important;
   }

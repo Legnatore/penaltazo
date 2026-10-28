@@ -82,8 +82,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Montserrat:ital,wght@0,500;0,700;0,800;0,900;1,800&family=Press+Start+2P&family=Teko:wght@600;700&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=3.5">
-  <link rel="stylesheet" href="css/animations.css?v=3.5">
+  <link rel="stylesheet" href="css/style.css?v=3.6">
+  <link rel="stylesheet" href="css/animations.css?v=3.6">
 </head>
 <body>
   <!-- Encabezado de la aplicación -->
@@ -127,128 +127,134 @@
     <section id="lobby-screen" class="screen lobby-screen">
       <div class="lobby-card">
         <div class="lobby-col-left">
-        <div class="lobby-hero">
-          <div class="hero-icons">⚽ 🆚 🧤</div>
-          <h1>¡PENALTAZO!</h1>
-          <p class="hero-subtitle">Duelo táctico de disparos y estiradas a ciegas en tiempo real</p>
-        </div>
-
-        <div class="lobby-form">
-          <div class="input-group">
-            <label for="player-name-input">Tu Nombre o Apodo:</label>
-            <input type="text" id="player-name-input" placeholder="Escribe aquí tu nombre (ej. CR7, Dibu...)" maxlength="15" value="">
+          <div class="lobby-hero">
+            <div class="hero-icons">⚽ 🆚 🧤</div>
+            <h1>¡PENALTAZO!</h1>
+            <p class="hero-subtitle">Duelo táctico de disparos y estiradas a ciegas en tiempo real</p>
           </div>
 
-          <!-- Bloque exclusivo cuando entras mediante enlace de invitación (?room= o ?tournament=) -->
-          <div id="direct-invite-banner" class="direct-invite-banner hidden">
-            <div class="invite-badge" id="invite-badge-title">🏆 INVITACIÓN A TORNEO</div>
-            <p id="invite-badge-desc">Escribe tu nombre arriba y pulsa el botón para entrar directamente:</p>
-            <button id="direct-join-btn" class="btn btn-confirm btn-large">
-              ⚡ ¡ENTRAR AHORA!
-            </button>
-          </div>
+          <div class="lobby-form">
+            <!-- Bloque superior: Nombre + Formato de Tanda -->
+            <div class="lobby-meta-row">
+              <div class="input-group">
+                <label for="player-name-input">Tu Nombre o Apodo:</label>
+                <input type="text" id="player-name-input" placeholder="Escribe aquí tu nombre (ej. CR7, Dibu...)" maxlength="15" value="">
+              </div>
 
-          <div id="lobby-format-group" class="input-group">
-            <label>Formato de la Tanda (1 vs 1 / IA):</label>
-            <div class="size-selector-grid">
-              <label class="size-option">
-                <input type="radio" name="lobby-penalties" value="0">
-                <div class="size-card">
-                  <span class="size-num">🔥</span>
-                  <span class="size-label">Muerte Súbita</span>
-                  <span class="size-desc">Al fallo directo</span>
-                </div>
-              </label>
-
-              <label class="size-option">
-                <input type="radio" name="lobby-penalties" value="3">
-                <div class="size-card">
-                  <span class="size-num">3</span>
-                  <span class="size-label">3 Penaltis</span>
-                  <span class="size-desc">Tanda rápida</span>
-                </div>
-              </label>
-
-              <label class="size-option">
-                <input type="radio" name="lobby-penalties" value="5" checked>
-                <div class="size-card">
-                  <span class="size-num">5</span>
-                  <span class="size-label">5 Penaltis</span>
-                  <span class="size-desc">Tanda oficial</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div class="actions-grid">
-            <button id="create-room-btn" class="btn btn-primary btn-large btn-competition-option">
-              <span class="btn-icon">➕</span>
-              <span class="btn-text">Crear Duelo 1 vs 1</span>
-            </button>
-
-            <!-- Botón de Modo Torneo -->
-            <button id="open-tourney-modal-btn" class="btn btn-tournament btn-large btn-competition-option">
-              <span class="btn-icon">🏆</span>
-              <span class="btn-text">Crear Torneo Eliminatorio</span>
-            </button>
-
-            <!-- Modo Asíncrono: Desafío por Enlace (sin coincidir en vivo) -->
-            <button id="start-async-challenge-btn" type="button" class="btn btn-async-challenge btn-large btn-competition-option">
-              <span class="btn-icon">⚔️</span>
-              <span class="btn-text">Desafiar a un colega (Modo Asíncrono)</span>
-            </button>
-
-            <div class="divider"><span>o únete con código</span></div>
-
-            <div class="join-box">
-              <input type="text" id="join-room-input" placeholder="Código (ej. ABC-123 o COPA-...)" maxlength="16">
-              <button id="join-room-btn" class="btn btn-secondary">Unirse</button>
-            </div>
-
-            <div class="divider"><span>o entrena en solitario</span></div>
-
-            <div class="ai-practice-box">
-              <label for="ai-personality-select" class="ai-personality-label">🧠 Personalidad y nivel de la IA:</label>
-              <div class="ai-practice-controls">
-                <select id="ai-personality-select" class="ai-personality-select">
-                  <option value="novato">🐣 El Novato (Predecible y tira raso)</option>
-                  <option value="psicologo" selected>🧠 El Psicólogo (Estudia tu mapa de calor)</option>
-                  <option value="escuadras">🚀 Cazador de Escuadras (Arriesga siempre arriba)</option>
-                  <option value="loco">🤪 El Portero Loco (Caza Panenkas y vacila)</option>
-                </select>
-                <button id="play-ai-btn" class="btn btn-outline">
-                  <span class="btn-icon">🤖</span>
-                  <span class="btn-text">Jugar contra la IA (Modo Práctica)</span>
+              <!-- Bloque exclusivo cuando entras mediante enlace de invitación (?room= o ?tournament=) -->
+              <div id="direct-invite-banner" class="direct-invite-banner hidden">
+                <div class="invite-badge" id="invite-badge-title">🏆 INVITACIÓN A TORNEO</div>
+                <p id="invite-badge-desc">Escribe tu nombre arriba y pulsa el botón para entrar directamente:</p>
+                <button id="direct-join-btn" class="btn btn-confirm btn-large">
+                  ⚡ ¡ENTRAR AHORA!
                 </button>
+              </div>
+
+              <div id="lobby-format-group" class="input-group">
+                <label>Formato de la Tanda (1 vs 1 / IA):</label>
+                <div class="size-selector-grid">
+                  <label class="size-option">
+                    <input type="radio" name="lobby-penalties" value="0">
+                    <div class="size-card">
+                      <span class="size-num">🔥</span>
+                      <span class="size-label">Muerte Súbita</span>
+                      <span class="size-desc">Al fallo directo</span>
+                    </div>
+                  </label>
+
+                  <label class="size-option">
+                    <input type="radio" name="lobby-penalties" value="3">
+                    <div class="size-card">
+                      <span class="size-num">3</span>
+                      <span class="size-label">3 Penaltis</span>
+                      <span class="size-desc">Tanda rápida</span>
+                    </div>
+                  </label>
+
+                  <label class="size-option">
+                    <input type="radio" name="lobby-penalties" value="5" checked>
+                    <div class="size-card">
+                      <span class="size-num">5</span>
+                      <span class="size-label">5 Penaltis</span>
+                      <span class="size-desc">Tanda oficial</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de tipos de competición (mismo tamaño, distinto color) -->
+            <div class="competition-options-grid">
+              <button id="create-room-btn" class="btn btn-primary btn-large btn-competition-option">
+                <span class="btn-icon">➕</span>
+                <span class="btn-text">Crear Duelo 1 vs 1</span>
+              </button>
+
+              <button id="open-tourney-modal-btn" class="btn btn-tournament btn-large btn-competition-option">
+                <span class="btn-icon">🏆</span>
+                <span class="btn-text">Crear Torneo Eliminatorio</span>
+              </button>
+
+              <button id="start-async-challenge-btn" type="button" class="btn btn-async-challenge btn-large btn-competition-option">
+                <span class="btn-icon">⚔️</span>
+                <span class="btn-text">Desafiar a un colega (Asíncrono)</span>
+              </button>
+            </div>
+
+            <!-- Opciones secundarias: Código de sala y Entrenamiento vs IA -->
+            <div class="secondary-options-grid">
+              <div class="secondary-option-box">
+                <div class="divider"><span>o únete con código</span></div>
+                <div class="join-box">
+                  <input type="text" id="join-room-input" placeholder="Código (ej. ABC-123 o COPA-...)" maxlength="16">
+                  <button id="join-room-btn" class="btn btn-secondary">Unirse</button>
+                </div>
+              </div>
+
+              <div class="secondary-option-box">
+                <div class="divider"><span>o entrena en solitario</span></div>
+                <div class="ai-practice-box">
+                  <label for="ai-personality-select" class="ai-personality-label">🧠 Nivel de la IA:</label>
+                  <div class="ai-practice-controls">
+                    <select id="ai-personality-select" class="ai-personality-select">
+                      <option value="novato">🐣 El Novato (Tira raso)</option>
+                      <option value="psicologo" selected>🧠 El Psicólogo (Táctico)</option>
+                      <option value="escuadras">🚀 Cazador de Escuadras</option>
+                      <option value="loco">🤪 El Portero Loco</option>
+                    </select>
+                    <button id="play-ai-btn" class="btn btn-outline">
+                      <span class="btn-icon">🤖</span>
+                      <span class="btn-text">Jugar vs IA</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        </div>
 
         <div class="lobby-col-right">
-        <!-- Botón para abrir Reglas, Guía Táctica y FAQ en ventana emergente (Pop-up) -->
-        <button type="button" id="open-rules-faq-btn" class="btn btn-outline lobby-rules-btn">
-          <span class="btn-icon">📖</span>
-          <span class="btn-text">Cómo se juega, Reglas y Preguntas Frecuentes (FAQ)</span>
-        </button>
+          <!-- Botón para abrir Reglas, Guía Táctica y FAQ en ventana emergente (Pop-up) -->
+          <button type="button" id="open-rules-faq-btn" class="btn btn-outline lobby-rules-btn">
+            <span class="btn-icon">📖</span>
+            <span class="btn-text">Cómo se juega, Reglas y Preguntas Frecuentes (FAQ)</span>
+          </button>
 
-        <!-- Espacio publicitario seguro para Google AdSense (Lobby) -->
-        <aside class="ad-slot-container" aria-label="Publicidad">
-          <span class="ad-slot-label">PUBLICIDAD</span>
-          <div id="ad-slot-lobby" class="ad-slot-box">
-            <!-- Bloque AdSense Display (se activa automáticamente al configurar tu ca-pub) -->
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-0000000000000000"
-                 data-ad-slot="1111111111"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <div class="ad-placeholder-banner">
-              <span>🏟️ Espacio reservado para Patrocinadores / Google AdSense</span>
+          <!-- Espacio publicitario seguro para Google AdSense (Lobby) -->
+          <aside class="ad-slot-container" aria-label="Publicidad">
+            <span class="ad-slot-label">PUBLICIDAD</span>
+            <div id="ad-slot-lobby" class="ad-slot-box">
+              <ins class="adsbygoogle"
+                   style="display:block"
+                   data-ad-client="ca-pub-0000000000000000"
+                   data-ad-slot="1111111111"
+                   data-ad-format="auto"
+                   data-full-width-responsive="true"></ins>
+              <div class="ad-placeholder-banner">
+                <span>🏟️ Espacio reservado para Patrocinadores / Google AdSense</span>
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
         </div>
       </div>
     </section>
@@ -954,14 +960,23 @@
 
   </main>
 
-  <!-- Pie de página con créditos de autoría y enlaces legales requeridos por AdSense -->
+    <!-- Pie de página con créditos de autoría, redes y enlaces legales requeridos por AdSense -->
   <footer class="app-footer">
     <div class="footer-top-row">
       <div class="footer-credit-badge">
-        ⚽ Juego hecho por <strong>Legnatore</strong> en <strong>2026</strong>
+        ⚽ Creado por <strong>Legnatore</strong> (2026)
       </div>
-      <a href="https://ko-fi.com/legnatore" target="_blank" rel="noopener noreferrer" class="kofi-pill-btn kofi-footer-btn">
-        <span>☕</span> Invítame a un café
+      <a href="https://ko-fi.com/legnatore" target="_blank" rel="noopener noreferrer" class="kofi-pill-btn kofi-footer-btn" title="Invítame a un café en Ko-fi">
+        <span>☕</span> Ko-fi
+      </a>
+      <a href="https://twitter.com/intent/tweet?text=%C2%A1Juega%20a%20PENALTAZO!%20Duelos%20de%20penaltis%20online%20gratis&url=https://penaltazo.com" target="_blank" rel="noopener noreferrer" class="footer-social-pill" title="Compartir en X / Twitter">
+        <span>🐦</span> X
+      </a>
+      <a href="https://api.whatsapp.com/send?text=%C2%A1Vamos%20a%20echar%20una%20tanda%20de%20penaltis!%20Juega%20gratis%20en%20https://penaltazo.com" target="_blank" rel="noopener noreferrer" class="footer-social-pill" title="Compartir por WhatsApp">
+        <span>💬</span> WhatsApp
+      </a>
+      <a href="https://github.com/Legnatore/penaltazo" target="_blank" rel="noopener noreferrer" class="footer-social-pill" title="Código en GitHub">
+        <span>🐙</span> GitHub
       </a>
     </div>
     <div class="footer-legal-links">
@@ -978,13 +993,13 @@
 
   <!-- Scripts: Socket.io primero, luego módulos -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="js/audio.js?v=3.5"></script>
-  <script src="js/ai-opponent.js?v=3.5"></script>
-  <script src="js/goal-grid.js?v=3.5"></script>
-  <script src="js/animation.js?v=3.5"></script>
-  <script src="js/scoreboard.js?v=3.5"></script>
-  <script src="js/tournament.js?v=3.5"></script>
-  <script src="js/network.js?v=3.5"></script>
-  <script src="js/main.js?v=3.5"></script>
+  <script src="js/audio.js?v=3.6"></script>
+  <script src="js/ai-opponent.js?v=3.6"></script>
+  <script src="js/goal-grid.js?v=3.6"></script>
+  <script src="js/animation.js?v=3.6"></script>
+  <script src="js/scoreboard.js?v=3.6"></script>
+  <script src="js/tournament.js?v=3.6"></script>
+  <script src="js/network.js?v=3.6"></script>
+  <script src="js/main.js?v=3.6"></script>
 </body>
 </html>

@@ -5233,10 +5233,40 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
   display: contents;
 }
 
-.primary-actions-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+.primary-actions-row,
+.competition-modes-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.btn-competition-mode {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+  min-height: 48px !important;
+  padding: 0.65rem 0.75rem !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  text-align: center !important;
+  border-radius: 12px !important;
+}
+
+.btn-competition-mode .btn-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.btn-competition-mode .btn-text {
+  font-weight: 800;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .ai-practice-controls {
@@ -5590,16 +5620,21 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
     gap: 0.35rem;
   }
 
-  .primary-actions-row {
+  .primary-actions-row,
+  .competition-modes-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+    width: 100%;
   }
 
-  .primary-actions-row .btn-large {
-    padding: 0.52rem 0.65rem;
-    font-size: 0.82rem;
-    border-radius: 11px;
+  .primary-actions-row .btn-large,
+  .btn-competition-mode {
+    padding: 0.48rem 0.4rem !important;
+    font-size: 0.78rem !important;
+    min-height: 42px !important;
+    border-radius: 11px !important;
+    margin: 0 !important;
   }
 
   .divider {
@@ -6486,7 +6521,7 @@ body[data-theme="sensible"] .heatmap-cell {
   color: #ffffff;
   border: 3px solid #0f172a;
   box-shadow: 0 5px 0 #0f172a;
-  margin-top: 0.45rem;
+  margin: 0;
 }
 
 .btn-async-challenge:hover:not(:disabled) {
@@ -6704,6 +6739,12 @@ body[data-theme="pcfutbol"] .async-share-channels {
   border-radius: 0 !important;
 }
 
+body[data-theme="pcfutbol"] .btn-async-challenge {
+  background: #550055;
+  color: #ffcc00;
+  border: 2px solid #ffffff;
+}
+
 body[data-theme="sensible"] .btn-async-challenge,
 body[data-theme="sensible"] .wordle-result-preview,
 body[data-theme="sensible"] .async-recorded-summary,
@@ -6711,6 +6752,12 @@ body[data-theme="sensible"] .async-dive-pill,
 body[data-theme="sensible"] .async-share-channels {
   border-radius: 0 !important;
   border-color: #ffcc00 !important;
+}
+
+body[data-theme="sensible"] .btn-async-challenge {
+  background: #880088;
+  color: #ffffff;
+  border: 2px solid #ffcc00;
 }
 
 

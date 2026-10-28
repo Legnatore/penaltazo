@@ -490,12 +490,6 @@ class NetworkManager {
       this.localState.isSuddenDeath = nextIsSuddenDeath;
       this.localState.suddenDeathRound = nextSuddenDeathRound;
 
-      // Al entrar en Muerte Súbita desde la tanda normal, reiniciar marcadores e historial a 0-0
-      if (enteringSuddenDeath) {
-        this.localState.scores = { P1: 0, P2: 0 };
-        this.localState.history = { P1: [], P2: [] };
-      }
-
       if (!gameOver) {
         setTimeout(() => {
           const nextRoles = {

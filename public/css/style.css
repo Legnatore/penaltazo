@@ -1210,10 +1210,10 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 /* Grada colorida festiva con valla publicitaria deportiva */
 .stadium-crowd {
   position: absolute;
-  top: 18%;
+  top: 8%;
   left: 0;
   right: 0;
-  height: 30%;
+  bottom: 38.2%;
   background:
     /* Valla publicitaria deportiva al pie de la grada */
     repeating-linear-gradient(
@@ -1367,7 +1367,8 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 /* Estructura física de la portería (Proporción reglamentaria oficial Fútbol 11: 7.32m x 2.44m -> 3:1) */
 .goal-structure {
   position: absolute;
-  top: 10%;
+  top: auto;
+  bottom: 38.2%;
   left: 50%;
   transform: translateX(-50%);
   aspect-ratio: 3 / 1;
@@ -1409,6 +1410,20 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 .post-right {
   right: -10px;
   border-radius: 0 8px 0 0;
+}
+
+/* Línea de gol blanca reglamentaria bajo los postes */
+.goal-line {
+  position: absolute;
+  bottom: 0;
+  left: -12px;
+  right: -12px;
+  height: 6px;
+  background: var(--chalk-line, #ffffff);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+  z-index: 26;
+  pointer-events: none;
 }
 
 /* Red blanca deportiva de la portería */
@@ -3066,7 +3081,8 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   }
 
   .goal-structure {
-    top: 9%;
+    top: auto;
+    bottom: 38.2%;
     aspect-ratio: 3 / 1;
     height: clamp(95px, 46%, 165px);
     width: calc(3 * clamp(95px, 46%, 165px));
@@ -3227,7 +3243,8 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   }
 
   .goal-structure {
-    top: 7%;
+    top: auto;
+    bottom: 38.2%;
     aspect-ratio: 3 / 1;
     height: clamp(110px, 52%, 180px);
     width: calc(3 * clamp(110px, 52%, 180px));
@@ -3630,8 +3647,9 @@ body[data-theme="oscuro"] .stadium-lights {
 }
 
 body[data-theme="oscuro"] .stadium-crowd {
-  top: 16%;
-  height: 32%;
+  top: 8%;
+  bottom: 38.2%;
+  height: auto;
   background:
     repeating-linear-gradient(
       90deg,
@@ -3902,8 +3920,9 @@ body[data-theme="pcfutbol"] .stadium-lights {
 }
 
 body[data-theme="pcfutbol"] .stadium-crowd {
-  top: 16%;
-  height: 32%;
+  top: 8%;
+  bottom: 38.2%;
+  height: auto;
   background:
     repeating-linear-gradient(
       90deg,
@@ -4184,8 +4203,9 @@ body[data-theme="sensible"] .stadium-lights {
 }
 
 body[data-theme="sensible"] .stadium-crowd {
-  top: 16%;
-  height: 32%;
+  top: 8%;
+  bottom: 38.2%;
+  height: auto;
   background:
     repeating-linear-gradient(
       90deg,
@@ -7426,7 +7446,8 @@ body[data-theme="sensible"] .footer-social-pill {
   }
 
   .goal-structure {
-    top: 9%;
+    top: auto;
+    bottom: 38.2%;
     aspect-ratio: 3 / 1;
     height: clamp(120px, 47%, 210px);
     width: calc(3 * clamp(120px, 47%, 210px));

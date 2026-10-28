@@ -395,6 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 180);
       }
     }
+  } else if (urlParams.get('ia') === '1') {
+    setTimeout(() => {
+      playerNameInput.value = 'Tirador';
+      playAiBtn.click();
+    }, 150);
   }
 
   // --- GESTIÓN DE PANTALLAS ---
@@ -1844,7 +1849,8 @@ document.addEventListener('DOMContentLoaded', () => {
           gameOverSubtitle.textContent = `${asyncRivalName} se impuso por ${data.scores.P1} a ${data.scores.P2} goles. ¡Devuélvele el reto y tómate la revancha!`;
         }
       } else if (isSpectator) {
-        gameOverTitle.textContent = `🏆 ¡${data.winner === 'P1' ? 'Jugador 1' : 'Jugador 2'} se lleva el partido!`;
+        const winnerName = (data.winner === 'P1' ? playerNames.P1 : playerNames.P2) || (data.winner === 'P1' ? 'Jugador 1' : 'Jugador 2');
+        gameOverTitle.textContent = `🏆 ¡${winnerName} se lleva el partido!`;
         gameOverSubtitle.textContent = 'Partidazo resuelto en la tanda.';
       } else if (iWon) {
         gameOverTitle.innerHTML = '🏆 ¡¡HAS GANADO LA TANDA!!';

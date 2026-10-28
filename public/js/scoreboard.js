@@ -54,8 +54,8 @@ class Scoreboard {
     }
 
     // 3. Determinar número total de intentos a mostrar:
-    // En Muerte Súbita no cuentan los tiros de la tanda normal, se empieza desde 1 tiro por ronda
-    const baseAttempts = isSuddenDeath ? 1 : (penaltiesPerPlayer > 0 ? penaltiesPerPlayer : 1);
+    // Conserva los tiros regulares (ej. 5 o 3) y añade dinámicamente cada ronda de muerte súbita
+    const baseAttempts = penaltiesPerPlayer > 0 ? penaltiesPerPlayer : 1;
     const totalSlots = Math.max(
       baseAttempts,
       history.P1.length + (showActiveDot && shooterRole === 'P1' ? 1 : 0),
@@ -63,8 +63,8 @@ class Scoreboard {
     );
 
     // 4. Renderizar puntos de P1 y P2
-    this.renderDots(this.p1DotsContainer, history.P1, totalSlots, showActiveDot && shooterRole === 'P1', isSuddenDeath ? 0 : penaltiesPerPlayer);
-    this.renderDots(this.p2DotsContainer, history.P2, totalSlots, showActiveDot && shooterRole === 'P2', isSuddenDeath ? 0 : penaltiesPerPlayer);
+    this.renderDots(this.p1DotsContainer, history.P1, totalSlots, showActiveDot && shooterRole === 'P1', penaltiesPerPlayer);
+    this.renderDots(this.p2DotsContainer, history.P2, totalSlots, showActiveDot && shooterRole === 'P2', penaltiesPerPlayer);
 
     // 5. Banner de muerte súbita
     if (this.suddenDeathBanner) {

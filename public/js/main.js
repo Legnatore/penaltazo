@@ -841,9 +841,15 @@ document.addEventListener('DOMContentLoaded', () => {
     animator.resetPositions();
     goalGrid.clearSelection();
 
+    const turnRoleCartel = document.getElementById('turn-role-cartel');
+
     if (isShooterStep) {
       goalGrid.enable('shooter');
       updateActiveKeeperAppearance('P2');
+      if (turnRoleCartel) {
+        turnRoleCartel.className = 'turn-role-cartel role-shoot';
+        turnRoleCartel.innerHTML = '<span class="cartel-icon">⚽</span><span class="cartel-text">¡TE TOCA DISPARAR!</span>';
+      }
       roleInstructions.innerHTML = '';
       roleInstructions.classList.add('hidden');
       myStatusBadge.className = 'status-badge waiting';
@@ -853,6 +859,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       goalGrid.enable('keeper');
       updateActiveKeeperAppearance('P1');
+      if (turnRoleCartel) {
+        turnRoleCartel.className = 'turn-role-cartel role-save';
+        turnRoleCartel.innerHTML = '<span class="cartel-icon">🧤</span><span class="cartel-text">¡TE TOCA PARAR!</span>';
+      }
       roleInstructions.innerHTML = '';
       roleInstructions.classList.add('hidden');
       myStatusBadge.className = 'status-badge waiting';
@@ -1421,19 +1431,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const amIShooter = (myRole === shooterRole);
     const amIKeeper = (myRole === keeperRole);
 
-    animator.setPerspective(amIKeeper ? 'keeper' : 'shooter');
+    animator.setPerspective('shooter');
     goalGrid.clearSelection();
 
+    const turnRoleCartel = document.getElementById('turn-role-cartel');
     if (amIShooter) {
       goalGrid.enable('shooter');
+      if (turnRoleCartel) {
+        turnRoleCartel.className = 'turn-role-cartel role-shoot';
+        turnRoleCartel.innerHTML = '<span class="cartel-icon">⚽</span><span class="cartel-text">¡TE TOCA DISPARAR!</span>';
+      }
       roleInstructions.innerHTML = '';
       roleInstructions.classList.add('hidden');
     } else if (amIKeeper) {
       goalGrid.enable('keeper');
+      if (turnRoleCartel) {
+        turnRoleCartel.className = 'turn-role-cartel role-save';
+        turnRoleCartel.innerHTML = '<span class="cartel-icon">🧤</span><span class="cartel-text">¡TE TOCA PARAR!</span>';
+      }
       roleInstructions.innerHTML = '';
       roleInstructions.classList.add('hidden');
     } else {
       goalGrid.disable();
+      if (turnRoleCartel) {
+        turnRoleCartel.className = 'turn-role-cartel role-spectator';
+        turnRoleCartel.innerHTML = '<span class="cartel-icon">👑</span><span class="cartel-text">MODO ESPECTADOR</span>';
+      }
       roleInstructions.classList.remove('hidden');
       const queue = (roomState && roomState.challengerQueue) ? roomState.challengerQueue : [];
       const myQueueIndex = queue.findIndex(c => c.clientId === network.clientId);

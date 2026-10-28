@@ -1119,21 +1119,63 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   background: #ffffff;
   border: 3px solid #0f172a;
   border-radius: 16px;
-  padding: 0.75rem 1.2rem;
-  box-shadow: 0 5px 0 rgba(15, 23, 42, 0.18);
-  gap: 1rem;
-}
-
-.instruction-banner:has(.role-instructions.hidden),
-.instruction-banner:has(.role-instructions:empty) {
-  justify-content: center;
   padding: 0.45rem 1rem;
+  box-shadow: 0 5px 0 rgba(15, 23, 42, 0.18);
+  gap: 0.85rem;
 }
 
-.instruction-banner:has(.role-instructions.hidden) .status-indicators,
-.instruction-banner:has(.role-instructions:empty) .status-indicators {
-  justify-content: center;
-  width: auto;
+/* Cartel llamativo de turno ("Te toca disparar" / "Te toca parar") */
+.turn-role-cartel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 1.05rem;
+  border-radius: 9999px;
+  border: 2.5px solid #0f172a;
+  font-family: 'Fredoka', 'Montserrat', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: cartelPopIn 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0;
+}
+
+.turn-role-cartel.role-shoot {
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 0 #14532d, 0 0 16px rgba(34, 197, 94, 0.55);
+  text-shadow: 0 2px 0 #14532d;
+}
+
+.turn-role-cartel.role-save {
+  background: linear-gradient(135deg, #c2410c 0%, #ea580c 50%, #f97316 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 0 #7c2d12, 0 0 16px rgba(249, 115, 22, 0.55);
+  text-shadow: 0 2px 0 #7c2d12;
+}
+
+.turn-role-cartel.role-spectator {
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+  color: #f8fafc;
+  box-shadow: 0 3px 0 #0f172a;
+}
+
+.turn-role-cartel .cartel-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.turn-role-cartel .cartel-text {
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+
+@keyframes cartelPopIn {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .role-title {
@@ -3634,23 +3676,37 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   .instruction-banner {
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
     padding: 0.18rem 0.45rem !important;
     border-radius: 10px !important;
     border-width: 2px !important;
+    gap: 0.3rem !important;
+  }
+
+  .turn-role-cartel {
+    font-size: 0.72rem !important;
+    padding: 0.14rem 0.5rem !important;
+    border-width: 2px !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: 0 2px 0 #0f172a !important;
+  }
+
+  .turn-role-cartel .cartel-icon {
+    font-size: 0.88rem !important;
   }
 
   .status-indicators {
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    gap: 0.35rem !important;
-    width: 100% !important;
+    justify-content: flex-end !important;
+    gap: 0.2rem !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
   .status-badge {
-    font-size: 0.65rem !important;
-    padding: 0.14rem 0.45rem !important;
+    font-size: 0.58rem !important;
+    padding: 0.1rem 0.28rem !important;
     border-radius: 6px !important;
     border-width: 1.5px !important;
     white-space: nowrap !important;

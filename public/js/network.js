@@ -311,13 +311,15 @@ class NetworkManager {
   }
 
   // --- MODO OFFLINE / CONTRA LA IA ---
-  initAIMode(roomId = 'SOLO-AI', playerName = 'Tirador', penaltiesPerPlayer = 5, personality = 'psicologo') {
+  initAIMode(roomId = 'SOLO-AI', playerName = 'Tirador', penaltiesPerPlayer = 5) {
     this.mode = 'ai';
     this.roomId = roomId;
     this.playerRole = 'P1';
     this.playerName = playerName;
-    this.ai.setPersonality(personality || 'psicologo');
-    this.aiName = this.ai.getRandomBotName(this.ai.personality);
+    // Seleccionar aleatoriamente una parodia de un jugador o leyenda famosa
+    const parody = this.ai.pickRandomCharacter();
+    this.aiName = parody.name;
+    this.aiCharacter = parody;
     this.penaltiesPerPlayer = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
     this.localSeriesWins = { P1: 0, P2: 0 };
     this.localKingRole = null;
@@ -346,7 +348,11 @@ class NetworkManager {
 
   startAIGame() {
     this.ai.reset();
-    if (!this.aiName) this.aiName = this.ai.getRandomBotName(this.ai.personality);
+    if (!this.aiName || !this.aiCharacter) {
+      const parody = this.ai.pickRandomCharacter();
+      this.aiName = parody.name;
+      this.aiCharacter = parody;
+    }
     if (!this.localSeriesWins) this.localSeriesWins = { P1: 0, P2: 0 };
     const basePenalties = this.penaltiesPerPlayer !== undefined ? this.penaltiesPerPlayer : 5;
     this.localState = {
@@ -367,6 +373,7 @@ class NetworkManager {
       suddenDeathRound: this.localState.suddenDeathRound,
       penaltiesPerPlayer: basePenalties,
       turnTimeLimit: 12,
+      aiCharacter: this.aiCharacter,
       roomState: {
         id: this.roomId,
         penaltiesPerPlayer: basePenalties,

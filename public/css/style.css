@@ -7074,6 +7074,32 @@ body[data-theme="claro"] .footer-sep {
   padding: 0.85rem;
 }
 
+.ai-practice-desc-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+}
+
+.ai-practice-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-main);
+  opacity: 0.95;
+}
+
+.ai-practice-desc {
+  font-size: 0.74rem;
+  line-height: 1.25;
+  color: var(--text-muted, #475569);
+}
+
+.ai-play-btn {
+  width: 100%;
+}
+
 .ai-personality-label {
   font-size: 0.82rem;
   font-weight: 800;
@@ -8212,25 +8238,23 @@ body[data-theme="sensible"] .footer-social-pill {
     border-width: 2px;
   }
 
-  .ai-personality-label {
-    font-size: 0.7rem;
-    margin: 0;
+  .ai-practice-desc-wrap {
+    gap: 0.1rem;
   }
 
-  .ai-practice-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.35rem;
-    align-items: center;
+  .ai-practice-tag {
+    font-size: 0.65rem;
   }
 
-  .ai-personality-select {
-    padding: 0.3rem 0.45rem;
-    font-size: 0.74rem;
-    border-radius: 8px;
-    border-width: 2px;
-    height: 34px;
-    box-sizing: border-box;
+  .ai-practice-desc {
+    font-size: 0.68rem;
+    line-height: 1.15;
+  }
+
+  .ai-play-btn {
+    height: 32px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.78rem;
   }
 
   #play-ai-btn {
@@ -8687,6 +8711,14 @@ body[data-theme="oscuro"] .ai-practice-box {
   border: 1.5px dashed #475569;
 }
 
+body[data-theme="oscuro"] .ai-practice-tag {
+  color: #facc15 !important;
+}
+
+body[data-theme="oscuro"] .ai-practice-desc {
+  color: #cbd5e1 !important;
+}
+
 body[data-theme="oscuro"] .ai-personality-label {
   color: #f8fafc !important;
 }
@@ -8847,6 +8879,14 @@ body[data-theme="claro"] .ai-practice-box {
   border: 1.5px dashed #cbd5e1;
 }
 
+body[data-theme="claro"] .ai-practice-tag {
+  color: #0284c7 !important;
+}
+
+body[data-theme="claro"] .ai-practice-desc {
+  color: #475569 !important;
+}
+
 body[data-theme="claro"] .ai-personality-select {
   background: #ffffff;
   color: #0f172a;
@@ -8900,6 +8940,15 @@ body[data-theme="pcfutbol"] .ai-practice-box {
   border-left: 2px solid #ffffff;
   border-right: 2px solid #404040;
   border-bottom: 2px solid #404040;
+}
+
+body[data-theme="pcfutbol"] .ai-practice-tag {
+  color: #000080 !important;
+  font-family: 'Montserrat', sans-serif;
+}
+
+body[data-theme="pcfutbol"] .ai-practice-desc {
+  color: #000000 !important;
 }
 
 body[data-theme="pcfutbol"] .ai-personality-label {
@@ -9004,6 +9053,18 @@ body[data-theme="sensible"] .ai-practice-box {
   background: #002266;
   border-radius: 0 !important;
   border: 2px solid #ffffff;
+}
+
+body[data-theme="sensible"] .ai-practice-tag {
+  color: #ffcc00 !important;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.62rem;
+}
+
+body[data-theme="sensible"] .ai-practice-desc {
+  color: #ffff88 !important;
+  font-family: 'VT323', monospace;
+  font-size: 0.95rem;
 }
 
 body[data-theme="sensible"] .ai-personality-label {

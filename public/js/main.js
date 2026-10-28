@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Instancias de módulos
   const network = new NetworkManager();
+  window.network = network;
   const scoreboard = new Scoreboard();
   let goalGrid = null;
   let animator = null;
@@ -1072,8 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const raw = playerNameInput.value.trim();
     const name = !isDefaultOrEmptyName(raw) ? raw : 'Jugador 1';
     const penaltiesPerPlayer = getSelectedLobbyPenalties();
-    const personality = aiPersonalitySelect ? aiPersonalitySelect.value : 'psicologo';
-    network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer, personality);
+    network.initAIMode('SOLO-CPU', name, penaltiesPerPlayer);
   });
 
   // --- FLUJO DE GRABACIÓN DEL MODO ASÍNCRONO («DESAFÍO POR ENLACE») ---
@@ -1981,6 +1981,13 @@ document.addEventListener('DOMContentLoaded', () => {
       window.soundEngine.playPenaltazoTheme();
     }
     prepareTurn(data);
+    if (network.mode === 'ai' && (!data || !data.turnIndex || data.turnIndex === 0)) {
+      const char = (data && data.aiCharacter) || network.aiCharacter;
+      if (char) {
+        showToast(`⚽ Rival: ${char.name} (${char.levelTitle})`);
+        setCommentatorText(char.intro, 'normal');
+      }
+    }
   });
 
   network.on('choice_confirmed', ({ role }) => {

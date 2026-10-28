@@ -11,6 +11,14 @@ class PenaltazoAudio {
     this.tensionState = null;
     this.whiteNoiseBuffer = null;
 
+    // Archivo de audio original de Penaltazo (para inicio y fin de partida)
+    try {
+      this.themeAudio = new Audio('assets/audio/penaltazo.mp3');
+      this.themeAudio.preload = 'auto';
+    } catch (e) {
+      this.themeAudio = null;
+    }
+
     // Escuchar interacción del usuario para desbloquear AudioContext en móviles
     this.bindUnlockEvents();
   }
@@ -108,8 +116,18 @@ class PenaltazoAudio {
     if (this.muted) {
       this.stopActiveEffects();
       this.stopTension(50);
+      this.stopTheme();
     }
     return this.muted;
+  }
+
+  stopTheme() {
+    if (this.themeAudio) {
+      try {
+        this.themeAudio.pause();
+        this.themeAudio.currentTime = 0;
+      } catch (e) {}
+    }
   }
 
   isMuted() {
@@ -156,6 +174,7 @@ class PenaltazoAudio {
     this.init();
     if (!this.ctx) return;
 
+    this.stopTheme();
     this.stopTension(80);
 
     const now = this.ctx.currentTime;
@@ -633,46 +652,29 @@ class PenaltazoAudio {
   }
 
   /**
-   * Himno/melodía procedimental de Penaltazo (sin dependencias mp3)
+   * Pista de audio oficial de Penaltazo (assets/audio/penaltazo.mp3)
+   * Reproducida al inicio de cada tanda y al final de cada partido.
    */
   playPenaltazoTheme() {
     if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
-
-    this.stopActiveEffects();
-    const now = this.ctx.currentTime;
-
-    // Fanfarria arcade épica de inicio de partido
-    const melody = [
-      { f: 440.00, t: 0.00, d: 0.14 }, // La4
-      { f: 554.37, t: 0.14, d: 0.14 }, // Do#5
-      { f: 659.25, t: 0.28, d: 0.14 }, // Mi5
-      { f: 880.00, t: 0.42, d: 0.35 }, // La5
-      { f: 783.99, t: 0.77, d: 0.14 }, // Sol5
-      { f: 880.00, t: 0.91, d: 0.55 }  // La5
-    ];
-
-    melody.forEach(({ f, t, d }) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      const startTime = now + t;
-
-      osc.frequency.setValueAtTime(f, startTime);
-
-      gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.linearRampToValueAtTime(0.20, startTime + 0.02);
-      gain.gain.setValueAtTime(0.18, startTime + d - 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + d);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + d + 0.02);
-      this.registerNode(osc);
-    });
+    try {
+      this.stopActiveEffects();
+      if (!this.themeAudio) {
+        this.themeAudio = new Audio('assets/audio/penaltazo.mp3');
+        this.themeAudio.preload = 'auto';
+      }
+      this.themeAudio.pause();
+      this.themeAudio.currentTime = 0;
+      const playPromise = this.themeAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('Reproducción de penaltazo.mp3 bloqueada por el navegador:', err);
+        });
+      }
+    } catch (e) {
+      console.warn('Error al reproducir penaltazo.mp3:', e);
+    }
   }
 
   // Alias retrocompatible

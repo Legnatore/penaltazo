@@ -93,6 +93,10 @@ class PenaltyAnimator {
       this.bannerOverlay.className = 'banner-overlay hidden';
       this.bannerOverlay.innerHTML = '';
     }
+
+    if (this.arena) {
+      this.arena.classList.remove('crowd-celebrating');
+    }
   }
 
   /**
@@ -399,6 +403,9 @@ class PenaltyAnimator {
   }
 
   showCelebrationBanner(title, type, subtitle, isFavorable = true) {
+    if (this.arena) {
+      this.arena.classList.add('crowd-celebrating');
+    }
     if (!this.bannerOverlay) return;
     const outcomeClass = isFavorable ? 'banner-favorable' : 'banner-unfavorable';
     this.bannerOverlay.className = `banner-overlay active ${type} ${outcomeClass}`;

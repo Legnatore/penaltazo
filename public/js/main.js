@@ -458,10 +458,122 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (screen === gameScreen) {
       document.body.classList.add('game-active');
+      initStadiumCrowd();
     } else {
       document.body.classList.remove('game-active');
     }
   }
+
+  // --- GENERACIÓN DE AFICIÓN REALISTA Y VIVA EN LAS GRADAS ---
+  let crowdResizeTimer = null;
+
+  function initStadiumCrowd() {
+    const standsContainer = document.getElementById('crowd-stands');
+    if (!standsContainer) return;
+    standsContainer.innerHTML = '';
+
+    const arenaWidth = stadiumArena ? (stadiumArena.clientWidth || 600) : 600;
+    const fanWidth = 16;
+    const baseCount = Math.max(16, Math.min(54, Math.floor(arenaWidth / fanWidth)));
+
+    const shirtColors = [
+      '#ef4444', '#dc2626', // Rojo
+      '#3b82f6', '#1d4ed8', // Azul
+      '#ffffff', '#f8fafc', // Blanco
+      '#facc15', '#eab308', // Amarillo
+      '#22c55e', '#16a34a', // Verde
+      '#f97316', '#ea580c', // Naranja
+      '#a855f7', '#7e22ce', // Morado
+      'striped-red', 'striped-blue', 'striped-green'
+    ];
+
+    const skinTones = ['#fcd34d', '#fed7aa', '#fde047', '#d97706', '#b45309', '#fbcfe8'];
+    const hairColors = ['#0f172a', '#78350f', '#ca8a04', '#475569', '#334155', 'cap'];
+
+    const rowConfigs = [
+      { className: 'row-0', countMultiplier: 1.08 },
+      { className: 'row-1', countMultiplier: 1.04 },
+      { className: 'row-2', countMultiplier: 1.0 },
+      { className: 'row-3', countMultiplier: 0.96 }
+    ];
+
+    rowConfigs.forEach((config, rowIndex) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = `crowd-row ${config.className}`;
+      const count = Math.round(baseCount * config.countMultiplier);
+
+      for (let i = 0; i < count; i++) {
+        const fan = document.createElement('div');
+        const swayType = (i * 3 + rowIndex * 2) % 4; // 0, 1, 2, 3
+        fan.className = `fan fan-sway-${swayType}`;
+
+        // Desfases y duraciones individuales asíncronas para movimiento natural orgánico
+        const delay = (-(Math.random() * 3.2)).toFixed(2);
+        const duration = (1.5 + Math.random() * 1.5).toFixed(2);
+        fan.style.setProperty('--delay', `${delay}s`);
+        fan.style.setProperty('--duration', `${duration}s`);
+
+        const shirt = shirtColors[(i * 4 + rowIndex * 7) % shirtColors.length];
+        const skin = skinTones[(i * 3 + rowIndex * 2) % skinTones.length];
+        const hair = hairColors[(i * 5 + rowIndex * 3) % hairColors.length];
+
+        // Accesorios vivos de grada (bufandas, banderas ondeando, brazos en alto)
+        const hasFlag = (i % 9 === 3 && rowIndex <= 2);
+        const hasArmsUp = (i % 8 === 5 && !hasFlag);
+        const hasScarf = (i % 4 === 1 && !hasFlag && !hasArmsUp);
+
+        let accessoryHtml = '';
+        if (hasFlag) {
+          const flagEmoji = (i % 2 === 0) ? '🚩' : '🏳️';
+          accessoryHtml = `<div class="fan-flag">${flagEmoji}</div>`;
+        } else if (hasArmsUp) {
+          accessoryHtml = `<div class="fan-arms">🙌</div>`;
+        } else if (hasScarf) {
+          const scarfCol = (shirt.startsWith('striped-') ? '#facc15' : shirt);
+          accessoryHtml = `<div class="fan-scarf" style="--scarf-color: ${scarfCol};"></div>`;
+        }
+
+        const hairHtml = hair === 'cap'
+          ? `<div class="fan-cap" style="background: ${shirt.startsWith('striped-') ? '#ef4444' : shirt};"></div>`
+          : `<div class="fan-hair" style="background: ${hair};"></div>`;
+
+        let shirtStyle = '';
+        if (shirt === 'striped-red') {
+          shirtStyle = 'background: repeating-linear-gradient(90deg, #ef4444 0px, #ef4444 2.5px, #ffffff 2.5px, #ffffff 5px);';
+        } else if (shirt === 'striped-blue') {
+          shirtStyle = 'background: repeating-linear-gradient(90deg, #2563eb 0px, #2563eb 2.5px, #ffffff 2.5px, #ffffff 5px);';
+        } else if (shirt === 'striped-green') {
+          shirtStyle = 'background: repeating-linear-gradient(90deg, #16a34a 0px, #16a34a 2.5px, #ffffff 2.5px, #ffffff 5px);';
+        } else {
+          shirtStyle = `background: ${shirt};`;
+        }
+
+        fan.innerHTML = `
+          <div class="fan-person">
+            <div class="fan-head" style="background: ${skin};">
+              ${hairHtml}
+            </div>
+            <div class="fan-torso" style="${shirtStyle}">
+              ${accessoryHtml}
+            </div>
+          </div>
+        `;
+
+        rowEl.appendChild(fan);
+      }
+
+      standsContainer.appendChild(rowEl);
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    clearTimeout(crowdResizeTimer);
+    crowdResizeTimer = setTimeout(() => {
+      if (document.body.classList.contains('game-active')) {
+        initStadiumCrowd();
+      }
+    }, 250);
+  });
 
   // --- REGISTRO DE SERVICE WORKER (PWA) ---
   if ('serviceWorker' in navigator) {

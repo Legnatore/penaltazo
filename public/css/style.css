@@ -1321,6 +1321,262 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   pointer-events: none;
 }
 
+/* =========================================================
+   GRADAS CON AFICIÓN REAL EN MOVIMIENTO (LIVING STADIUM CROWD)
+   ========================================================= */
+.crowd-stands {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 18px; /* Por encima de las vallas publicitarias */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.crowd-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+  width: 104%;
+  margin-left: -2%;
+  position: relative;
+  overflow: visible;
+  padding: 0 2px;
+}
+
+.crowd-row.row-0 {
+  height: 23%;
+  filter: brightness(0.85);
+  opacity: 0.92;
+  border-bottom: 2px solid rgba(15, 23, 42, 0.45);
+}
+
+.crowd-row.row-1 {
+  height: 25%;
+  filter: brightness(0.92);
+  border-bottom: 2px solid rgba(15, 23, 42, 0.5);
+}
+
+.crowd-row.row-2 {
+  height: 26%;
+  filter: brightness(0.98);
+  border-bottom: 2px solid rgba(15, 23, 42, 0.55);
+}
+
+.crowd-row.row-3 {
+  height: 26%;
+  filter: brightness(1.04);
+}
+
+/* Peldaños de hormigón de la grada */
+.crowd-row::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 1;
+}
+
+/* Aficionado individual */
+.fan {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  will-change: transform;
+  pointer-events: none;
+  z-index: 2;
+  transform-origin: bottom center;
+}
+
+.row-0 .fan {
+  transform: scale(0.72);
+}
+
+.row-1 .fan {
+  transform: scale(0.82);
+}
+
+.row-2 .fan {
+  transform: scale(0.92);
+}
+
+.row-3 .fan {
+  transform: scale(1.02);
+}
+
+/* Cuerpo del aficionado */
+.fan-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Cabeza con sombra y forma anatómica */
+.fan-head {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  position: relative;
+  z-index: 4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.fan-hair {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  border-radius: 4px 4px 0 0;
+}
+
+.fan-cap {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -2px;
+  height: 4px;
+  border-radius: 4px 4px 1px 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+/* Torso con camiseta de equipo */
+.fan-torso {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px 3px 1px 1px;
+  position: relative;
+  margin-top: -1px;
+  z-index: 3;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Bufanda futbolera */
+.fan-scarf {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  right: -2px;
+  height: 3px;
+  background: var(--scarf-color, #ef4444);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  z-index: 5;
+}
+
+/* Bandera que ondea al viento */
+.fan-flag {
+  position: absolute;
+  bottom: 8px;
+  left: 7px;
+  font-size: 11px;
+  line-height: 1;
+  transform-origin: bottom left;
+  animation: flagWave 1.4s ease-in-out infinite alternate;
+  z-index: 6;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+@keyframes flagWave {
+  0% { transform: rotate(-10deg) scaleX(1); }
+  50% { transform: rotate(10deg) scaleX(0.9); }
+  100% { transform: rotate(-6deg) scaleX(1.05); }
+}
+
+/* Brazos levantados en tensión/ánimo */
+.fan-arms {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  line-height: 1;
+  z-index: 5;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+/* Perfiles de movimiento natural orgánico de grada */
+.fan.fan-sway-0 .fan-person {
+  animation: fanBobbing var(--duration, 2.1s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+
+.fan.fan-sway-1 .fan-person {
+  animation: fanSwaying var(--duration, 1.8s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+
+.fan.fan-sway-2 .fan-person {
+  animation: fanBreathing var(--duration, 2.6s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+
+.fan.fan-sway-3 .fan-person {
+  animation: fanTilting var(--duration, 1.6s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes fanBobbing {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+  100% { transform: translateY(0.6px); }
+}
+
+@keyframes fanSwaying {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(2deg); }
+  100% { transform: translateY(-0.8px) rotate(-1.5deg); }
+}
+
+@keyframes fanBreathing {
+  0% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(1.5px) scaleY(0.96); }
+  100% { transform: translateY(-2px) scaleY(1.04); }
+}
+
+@keyframes fanTilting {
+  0% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-2.8px) translateX(1px); }
+  100% { transform: translateY(-1px) translateX(-1px); }
+}
+
+/* Celebración eufórica de la grada al marcar gol o hacer paradón */
+.crowd-celebrating .fan-person {
+  animation: crowdJump 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate !important;
+}
+
+.crowd-celebrating .fan:nth-child(2n) .fan-person {
+  animation-delay: -0.19s !important;
+}
+
+.crowd-celebrating .fan:nth-child(3n) .fan-person {
+  animation-delay: -0.1s !important;
+}
+
+.crowd-celebrating .fan:nth-child(5n) .fan-person {
+  animation-delay: -0.28s !important;
+}
+
+@keyframes crowdJump {
+  0% { transform: translateY(0) scaleY(1); }
+  40% { transform: translateY(-8px) scaleY(1.1) rotate(-2deg); }
+  100% { transform: translateY(-13px) scaleY(1.18) rotate(3deg); }
+}
+
 /* Pancartas de ánimo al jugador en la grada */
 .stadium-cheer-banners {
   position: absolute;

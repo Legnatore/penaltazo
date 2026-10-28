@@ -210,16 +210,6 @@ class TournamentView {
         this.participantsGridEl.appendChild(slotEl);
       }
     }
-            <div class="participant-info">
-              <span class="participant-name empty-name">Plaza libre #${i + 1}</span>
-              <span class="participant-tag empty-tag">Se cubrirá con IA de jugador famoso</span>
-            </div>
-          `;
-        }
-
-        this.participantsGridEl.appendChild(slotEl);
-      }
-    }
 
     // Controles de anfitrión vs invitado
     if (this.isHost) {

@@ -82,8 +82,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Montserrat:ital,wght@0,500;0,700;0,800;0,900;1,800&family=Press+Start+2P&family=Teko:wght@600;700&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4.0">
-  <link rel="stylesheet" href="css/animations.css?v=4.0">
+  <link rel="stylesheet" href="css/style.css?v=4.1">
+  <link rel="stylesheet" href="css/animations.css?v=4.1">
 </head>
 <body>
   <!-- Encabezado de la aplicación -->
@@ -481,7 +481,7 @@
 
       <!-- Barra de instrucciones y estado -->
       <div class="instruction-banner">
-        <div id="role-instructions" class="role-instructions"></div>
+        <div id="role-instructions" class="role-instructions hidden"></div>
         <div class="status-indicators">
           <div id="my-status-badge" class="status-badge waiting">⏳ Esperando tu elección...</div>
           <div id="rival-status-badge" class="status-badge waiting">⏳ Rival pensando...</div>
@@ -545,11 +545,25 @@
                 <div id="keeper-jersey-number" class="keeper-jersey-number">1</div>
                 <div class="keeper-arm arm-left">
                   <div class="keeper-forearm"></div>
-                  <div class="keeper-glove glove-left">🧤</div>
+                  <div class="keeper-glove glove-left">
+                    <svg class="single-glove-svg" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 21 C4 18, 4.5 8, 5.5 5.5 C6.5 3, 9 2.5, 11 3.5 C12 4.2, 13 4.2, 14 3.5 C16 2.5, 18.5 3, 19.5 5.5 C20.5 8, 21 18, 21 21 Z" class="glove-palm" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M4.5 15 C2 13.5, 1.5 10.5, 2.8 8.8 C4 7.2, 6 8.5, 7 11 Z" class="glove-thumb" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                      <rect x="4" y="21" width="17" height="6" rx="2" fill="#0f172a" stroke="#0f172a" stroke-width="1.2"/>
+                      <rect x="6" y="22.5" width="13" height="3" rx="1.5" fill="#facc15"/>
+                    </svg>
+                  </div>
                 </div>
                 <div class="keeper-arm arm-right">
                   <div class="keeper-forearm"></div>
-                  <div class="keeper-glove glove-right">🧤</div>
+                  <div class="keeper-glove glove-right">
+                    <svg class="single-glove-svg" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 21 C4 18, 4.5 8, 5.5 5.5 C6.5 3, 9 2.5, 11 3.5 C12 4.2, 13 4.2, 14 3.5 C16 2.5, 18.5 3, 19.5 5.5 C20.5 8, 21 18, 21 21 Z" class="glove-palm" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M4.5 15 C2 13.5, 1.5 10.5, 2.8 8.8 C4 7.2, 6 8.5, 7 11 Z" class="glove-thumb" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+                      <rect x="4" y="21" width="17" height="6" rx="2" fill="#0f172a" stroke="#0f172a" stroke-width="1.2"/>
+                      <rect x="6" y="22.5" width="13" height="3" rx="1.5" fill="#facc15"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
               <div class="keeper-shorts"></div>
@@ -614,8 +628,22 @@
 
         <!-- Guantes en primera persona del portero (visibles en perspectiva del portero) -->
         <div id="keeper-pov-gloves" class="keeper-pov-gloves">
-          <div class="pov-glove pov-glove-left">🧤</div>
-          <div class="pov-glove pov-glove-right">🧤</div>
+          <div class="pov-glove pov-glove-left">
+            <svg class="pov-glove-svg" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 21 C4 18, 4.5 8, 5.5 5.5 C6.5 3, 9 2.5, 11 3.5 C12 4.2, 13 4.2, 14 3.5 C16 2.5, 18.5 3, 19.5 5.5 C20.5 8, 21 18, 21 21 Z" class="glove-palm" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M4.5 15 C2 13.5, 1.5 10.5, 2.8 8.8 C4 7.2, 6 8.5, 7 11 Z" class="glove-thumb" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+              <rect x="4" y="21" width="17" height="6" rx="2" fill="#0f172a" stroke="#0f172a" stroke-width="1.2"/>
+              <rect x="6" y="22.5" width="13" height="3" rx="1.5" fill="#facc15"/>
+            </svg>
+          </div>
+          <div class="pov-glove pov-glove-right">
+            <svg class="pov-glove-svg" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 21 C4 18, 4.5 8, 5.5 5.5 C6.5 3, 9 2.5, 11 3.5 C12 4.2, 13 4.2, 14 3.5 C16 2.5, 18.5 3, 19.5 5.5 C20.5 8, 21 18, 21 21 Z" class="glove-palm" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M4.5 15 C2 13.5, 1.5 10.5, 2.8 8.8 C4 7.2, 6 8.5, 7 11 Z" class="glove-thumb" fill="currentColor" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+              <rect x="4" y="21" width="17" height="6" rx="2" fill="#0f172a" stroke="#0f172a" stroke-width="1.2"/>
+              <rect x="6" y="22.5" width="13" height="3" rx="1.5" fill="#facc15"/>
+            </svg>
+          </div>
         </div>
 
         <!-- Capas de efectos de impacto y pancarta de celebración -->
@@ -1047,13 +1075,13 @@
 
   <!-- Scripts: Socket.io primero, luego módulos -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="js/audio.js?v=4.0"></script>
-  <script src="js/ai-opponent.js?v=4.0"></script>
-  <script src="js/goal-grid.js?v=4.0"></script>
-  <script src="js/animation.js?v=4.0"></script>
-  <script src="js/scoreboard.js?v=4.0"></script>
-  <script src="js/tournament.js?v=4.0"></script>
-  <script src="js/network.js?v=4.0"></script>
-  <script src="js/main.js?v=4.0"></script>
+  <script src="js/audio.js?v=4.1"></script>
+  <script src="js/ai-opponent.js?v=4.1"></script>
+  <script src="js/goal-grid.js?v=4.1"></script>
+  <script src="js/animation.js?v=4.1"></script>
+  <script src="js/scoreboard.js?v=4.1"></script>
+  <script src="js/tournament.js?v=4.1"></script>
+  <script src="js/network.js?v=4.1"></script>
+  <script src="js/main.js?v=4.1"></script>
 </body>
 </html>

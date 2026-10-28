@@ -637,6 +637,11 @@ document.addEventListener('DOMContentLoaded', () => {
     keeperEl.style.setProperty('--keeper-shorts', activeKit.shorts);
     keeperEl.style.setProperty('--keeper-num-color', activeKit.numColor || '#ffffff');
 
+    const povGlovesEl = document.getElementById('keeper-pov-gloves');
+    if (povGlovesEl) {
+      povGlovesEl.style.setProperty('--keeper-accent', activeKit.accent);
+    }
+
     if (keeperNumberEl) {
       keeperNumberEl.textContent = String(activeNumber);
     }
@@ -839,10 +844,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isShooterStep) {
       goalGrid.enable('shooter');
       updateActiveKeeperAppearance('P2');
-      roleInstructions.innerHTML = `
-        <div class="role-title shooter">⚽ RONDA ${roundNumber} DE 5 — TU TIRO (${stepNumber}/10)</div>
-        <p class="role-desc">Haz clic en la portería para elegir hacia dónde dispararás tu penalti #${roundNumber}.</p>
-      `;
+      roleInstructions.innerHTML = '';
+      roleInstructions.classList.add('hidden');
       myStatusBadge.className = 'status-badge waiting';
       myStatusBadge.innerHTML = `⚽ Elige disparo #${roundNumber}/5...`;
       selectedZoneLabel.textContent = `Ronda ${roundNumber} (Tiro ${roundNumber}/5): haz clic donde quieras disparar`;
@@ -850,10 +853,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       goalGrid.enable('keeper');
       updateActiveKeeperAppearance('P1');
-      roleInstructions.innerHTML = `
-        <div class="role-title keeper">🧤 RONDA ${roundNumber} DE 5 — TU PARADA (${stepNumber}/10)</div>
-        <p class="role-desc">Haz clic en la portería para elegir hacia dónde te estirarás cuando chute tu rival en la ronda #${roundNumber}.</p>
-      `;
+      roleInstructions.innerHTML = '';
+      roleInstructions.classList.add('hidden');
       myStatusBadge.className = 'status-badge waiting';
       myStatusBadge.innerHTML = `🧤 Elige estirada #${roundNumber}/5...`;
       selectedZoneLabel.textContent = `Ronda ${roundNumber} (Parada ${roundNumber}/5): haz clic hacia dónde lanzarte a parar`;
@@ -1425,18 +1426,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (amIShooter) {
       goalGrid.enable('shooter');
-      roleInstructions.innerHTML = `
-        <div class="role-title shooter">⚽ ERES EL TIRADOR</div>
-        <p class="role-desc">Haz clic directamente en la zona a la que quieres disparar (tienes 12 segundos).</p>
-      `;
+      roleInstructions.innerHTML = '';
+      roleInstructions.classList.add('hidden');
     } else if (amIKeeper) {
       goalGrid.enable('keeper');
-      roleInstructions.innerHTML = `
-        <div class="role-title keeper">🧤 ERES EL PORTERO</div>
-        <p class="role-desc">Haz clic directamente en la zona hacia la que quieras lanzarte a parar (tienes 12 segundos).</p>
-      `;
+      roleInstructions.innerHTML = '';
+      roleInstructions.classList.add('hidden');
     } else {
       goalGrid.disable();
+      roleInstructions.classList.remove('hidden');
       const queue = (roomState && roomState.challengerQueue) ? roomState.challengerQueue : [];
       const myQueueIndex = queue.findIndex(c => c.clientId === network.clientId);
       const queueHint = myQueueIndex !== -1

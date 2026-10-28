@@ -1124,6 +1124,18 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   gap: 1rem;
 }
 
+.instruction-banner:has(.role-instructions.hidden),
+.instruction-banner:has(.role-instructions:empty) {
+  justify-content: center;
+  padding: 0.45rem 1rem;
+}
+
+.instruction-banner:has(.role-instructions.hidden) .status-indicators,
+.instruction-banner:has(.role-instructions:empty) .status-indicators {
+  justify-content: center;
+  width: auto;
+}
+
 .role-title {
   font-size: 1.12rem;
   font-weight: 800;
@@ -1747,17 +1759,32 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 }
 
 .keeper-glove {
-  font-size: 1.55rem;
   position: absolute;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+  width: 22px;
+  height: 26px;
+  color: var(--keeper-accent, #c084fc);
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.single-glove-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .glove-left {
-  left: -12px;
+  left: -14px;
+  top: -8px;
+  transform: scaleX(-1);
 }
 
 .glove-right {
-  right: -12px;
+  right: -14px;
+  top: -8px;
 }
 
 .keeper-shorts {
@@ -2076,31 +2103,38 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 }
 
 .pov-glove {
-  font-size: 2.75rem;
-  line-height: 1;
+  width: 58px;
+  height: 68px;
+  color: var(--keeper-accent, #c084fc);
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: inline-block;
 }
 
+.pov-glove-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .pov-glove-left {
-  transform: rotate(-12deg);
+  transform: rotate(-12deg) scaleX(-1);
   animation: povGloveIdleLeft 2.2s ease-in-out infinite alternate;
 }
 
 .pov-glove-right {
-  transform: rotate(12deg) scaleX(-1);
+  transform: rotate(12deg);
   animation: povGloveIdleRight 2.2s ease-in-out infinite alternate;
 }
 
 @keyframes povGloveIdleLeft {
-  0% { transform: rotate(-12deg) translateY(0); }
-  100% { transform: rotate(-8deg) translateY(-4px); }
+  0% { transform: rotate(-12deg) scaleX(-1) translateY(0); }
+  100% { transform: rotate(-8deg) scaleX(-1) translateY(-4px); }
 }
 
 @keyframes povGloveIdleRight {
-  0% { transform: rotate(12deg) scaleX(-1) translateY(0); }
-  100% { transform: rotate(8deg) scaleX(-1) translateY(-4px); }
+  0% { transform: rotate(12deg) translateY(0); }
+  100% { transform: rotate(8deg) translateY(-4px); }
 }
 
 /* Posicionamiento dinámico de los guantes según la zona elegida por el portero */
@@ -3473,32 +3507,37 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   }
 
   .team-panel {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.15rem !important;
+    display: grid !important;
+    grid-template-areas:
+      "header header"
+      "dots score" !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+    gap: 0.15rem 0.25rem !important;
     min-width: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+  }
+
+  .team-panel.team-p2 {
+    grid-template-areas:
+      "header header"
+      "score dots" !important;
+    grid-template-columns: auto 1fr !important;
   }
 
   .team-top-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 0.2rem !important;
-    width: 100% !important;
-  }
-
-  .team-p2 .team-top-row {
-    flex-direction: row-reverse !important;
+    display: contents !important;
   }
 
   .team-header {
+    grid-area: header !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     gap: 0.2rem !important;
+    width: 100% !important;
     min-width: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .team-p2 .team-header {
@@ -3509,13 +3548,15 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   .team-name {
     font-size: 0.78rem !important;
     font-weight: 800 !important;
-    max-width: 68px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    letter-spacing: -0.2px !important;
   }
 
   .team-score-wrapper {
+    grid-area: score !important;
     flex-shrink: 0 !important;
   }
 
@@ -3530,11 +3571,12 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   }
 
   .penalty-dots-row {
+    grid-area: dots !important;
     display: flex !important;
     align-items: center !important;
     gap: 2.5px !important;
     flex-wrap: nowrap !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .team-p2 .penalty-dots-row {
@@ -3580,47 +3622,35 @@ body:has(#game-screen:not(.hidden)) .app-footer {
     white-space: nowrap !important;
   }
 
-  /* Barra de instrucciones y comentarista minimalistas en móvil */
+  /* Barra de instrucciones minimalista sin texto de rol */
   #commentator-ticker {
     display: none !important;
   }
 
-  .role-desc {
+  .role-instructions {
     display: none !important;
   }
 
   .instruction-banner {
     display: flex !important;
-    flex-direction: row !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
     padding: 0.18rem 0.45rem !important;
-    gap: 0.3rem !important;
     border-radius: 10px !important;
     border-width: 2px !important;
-  }
-
-  .role-instructions {
-    min-width: 0 !important;
-  }
-
-  .role-title {
-    font-size: 0.72rem !important;
-    margin: 0 !important;
-    white-space: nowrap !important;
   }
 
   .status-indicators {
     display: flex !important;
     align-items: center !important;
-    gap: 0.2rem !important;
-    width: auto !important;
-    flex-shrink: 0 !important;
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
   }
 
   .status-badge {
-    font-size: 0.58rem !important;
-    padding: 0.1rem 0.28rem !important;
+    font-size: 0.65rem !important;
+    padding: 0.14rem 0.45rem !important;
     border-radius: 6px !important;
     border-width: 1.5px !important;
     white-space: nowrap !important;
@@ -3804,8 +3834,9 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   }
 
   .team-name {
-    max-width: 82px;
-    font-size: 0.78rem;
+    max-width: none !important;
+    text-overflow: clip !important;
+    font-size: 0.74rem;
   }
 
   .keeper-body {

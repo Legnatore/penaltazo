@@ -9,6 +9,7 @@ class NetworkManager {
     this.mode = 'multiplayer'; // 'multiplayer' | 'ai'
     this.roomId = null;
     this.activeTournamentId = null;
+    this.activeTournamentMatch = null;
     this.playerRole = null;
     this.playerName = 'Tú';
     this.penaltiesPerPlayer = 5;
@@ -93,8 +94,18 @@ class NetworkManager {
         } else if (this.mode === 'multiplayer' && this.activeTournamentId) {
           this.socket.emit('join_tournament', {
             tournamentId: this.activeTournamentId,
-            playerName: this.playerName
+            playerName: this.playerName,
+            clientId: this.clientId
           });
+          if (this.activeTournamentMatch) {
+            this.socket.emit('enter_tournament_match', {
+              tournamentId: this.activeTournamentMatch.tournamentId,
+              roundIndex: this.activeTournamentMatch.roundIndex,
+              matchIndex: this.activeTournamentMatch.matchIndex,
+              clientId: this.clientId,
+              playerName: this.playerName
+            });
+          }
         }
       });
 
@@ -189,6 +200,7 @@ class NetworkManager {
     this.playerName = playerName || 'Jugador 1';
     this.penaltiesPerPlayer = penaltiesPerPlayer;
     this.activeTournamentId = null;
+    this.activeTournamentMatch = null;
     if (this.mode === 'multiplayer' && this.socket) {
       this.socket.emit('join_room', {
         roomId,
@@ -251,28 +263,50 @@ class NetworkManager {
 
   // --- SISTEMA DE TORNEOS ---
   createTournament(size, name, playerName, penaltiesPerPlayer = 5) {
+    this.playerName = playerName || 'Anfitrión';
+    this.penaltiesPerPlayer = penaltiesPerPlayer;
+    this.activeTournamentMatch = null;
     this.initMultiplayer();
     if (this.socket) {
-      this.socket.emit('create_tournament', { size, name, playerName, penaltiesPerPlayer });
+      this.socket.emit('create_tournament', { size, name, playerName: this.playerName, penaltiesPerPlayer, clientId: this.clientId });
     }
   }
 
   joinTournament(tournamentId, playerName) {
+    this.playerName = playerName || this.playerName || 'Jugador';
+    this.activeTournamentId = (tournamentId || '').toUpperCase();
+    this.roomId = null;
     this.initMultiplayer();
     if (this.socket) {
-      this.socket.emit('join_tournament', { tournamentId, playerName });
+      this.socket.emit('join_tournament', { tournamentId, playerName: this.playerName, clientId: this.clientId });
+    }
+  }
+
+  leaveTournament(tournamentId) {
+    const cleanId = (tournamentId || this.activeTournamentId || '').toUpperCase();
+    this.activeTournamentId = null;
+    this.activeTournamentMatch = null;
+    if (this.socket && cleanId) {
+      this.socket.emit('leave_tournament', { tournamentId: cleanId, clientId: this.clientId });
     }
   }
 
   startTournament(tournamentId) {
     if (this.socket) {
-      this.socket.emit('start_tournament', { tournamentId });
+      this.socket.emit('start_tournament', { tournamentId, clientId: this.clientId });
     }
   }
 
   enterTournamentMatch(tournamentId, roundIndex, matchIndex) {
+    this.activeTournamentMatch = { tournamentId, roundIndex, matchIndex };
     if (this.socket) {
-      this.socket.emit('enter_tournament_match', { tournamentId, roundIndex, matchIndex });
+      this.socket.emit('enter_tournament_match', {
+        tournamentId,
+        roundIndex,
+        matchIndex,
+        clientId: this.clientId,
+        playerName: this.playerName
+      });
     }
   }
 

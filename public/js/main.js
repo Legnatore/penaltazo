@@ -1333,12 +1333,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Salir de torneo al menú
   if (tourneyLeaveBtn) {
     tourneyLeaveBtn.addEventListener('click', () => {
-      window.location.href = window.location.pathname;
+      if (confirm('¿Seguro que deseas abandonar la sala del torneo?')) {
+        sessionStorage.removeItem('penaltazo_active_tournament');
+        if (activeTournament) {
+          network.leaveTournament(activeTournament.id);
+        }
+        isInTournament = false;
+        activeTournament = null;
+        window.location.href = window.location.pathname;
+      }
     });
   }
   if (bracketBackMenuBtn) {
     bracketBackMenuBtn.addEventListener('click', () => {
-      if (confirm('¿Seguro que deseas salir al menú principal?')) {
+      if (confirm('¿Seguro que deseas salir al menú principal? Podrás volver si el torneo sigue en marcha.')) {
         window.location.href = window.location.pathname;
       }
     });
@@ -1458,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- EVENTOS DEL SISTEMA DE TORNEOS ---
-  network.on('tournament_joined', ({ tournament, myId, isHost }) => {
+  network.on('tournament_joined', ({ tournament, myId, myClientId, isHost }) => {
     isInTournament = true;
     activeTournament = tournament;
     myUserId = myId;
@@ -1472,38 +1480,51 @@ document.addEventListener('DOMContentLoaded', () => {
     headerRoomBadge.textContent = `Torneo: ${tournament.id}`;
     headerRoomBadge.classList.remove('hidden');
 
+    // Si el usuario ya está disputando un partido del torneo en pantalla de juego, sincronizar datos sin sacarlo al cuadro
+    if (network.activeTournamentMatch && currentScreen === gameScreen) {
+      tournamentView.setTournamentData(tournament, myId, isHost, network.clientId, savedPlayerName);
+      return;
+    }
+
     if (tournament.status === 'lobby') {
       showScreen(tournamentLobbyScreen);
-      tournamentView.renderLobby(tournament, myId, isHost);
+      tournamentView.renderLobby(tournament, myId, isHost, network.clientId, savedPlayerName);
     } else {
       showScreen(tournamentBracketScreen);
-      tournamentView.renderBracket(tournament, myId);
+      tournamentView.renderBracket(tournament, myId, network.clientId, savedPlayerName);
     }
   });
 
   network.on('tournament_updated', (tournament) => {
     activeTournament = tournament;
     if (tournament.status === 'lobby') {
-      tournamentView.renderLobby(tournament, myUserId);
+      tournamentView.renderLobby(tournament, myUserId, undefined, network.clientId, savedPlayerName);
     } else {
-      tournamentView.renderBracket(tournament, myUserId);
+      tournamentView.renderBracket(tournament, myUserId, network.clientId, savedPlayerName);
     }
   });
 
   network.on('tournament_started', (tournament) => {
     activeTournament = tournament;
     showScreen(tournamentBracketScreen);
-    tournamentView.renderBracket(tournament, myUserId);
+    tournamentView.renderBracket(tournament, myUserId, network.clientId, savedPlayerName);
     showToast('⚽ ¡El torneo ha comenzado! Revisa tu emparejamiento.');
   });
 
   network.on('tournament_match_finished', ({ tournament, matchId, winner, scores, tournamentCompleted }) => {
     activeTournament = tournament;
-    tournamentView.renderBracket(tournament, myUserId);
+    tournamentView.renderBracket(tournament, myUserId, network.clientId, savedPlayerName);
   });
 
   network.on('tournament_error', ({ message }) => {
-    alert(message || 'Error al unirse al torneo');
+    if (tournamentView && tournamentView.startBtn) {
+      tournamentView.startBtn.removeAttribute('disabled');
+      tournamentView.startBtn.innerHTML = `
+        <span class="btn-icon">⚡</span>
+        <span class="btn-text">¡Empezar Torneo Ahora! (Rellenar huecos con IA)</span>
+      `;
+    }
+    alert(message || 'Error en el torneo');
   });
 
   // --- COMENTARISTA ESTILO CARRUSEL / PC FÚTBOL ---
@@ -2212,9 +2233,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Botón para volver al cuadro del torneo
   returnBracketBtn.addEventListener('click', () => {
     gameOverModal.classList.add('hidden');
+    network.activeTournamentMatch = null;
     showScreen(tournamentBracketScreen);
     if (activeTournament) {
-      tournamentView.renderBracket(activeTournament, myUserId);
+      tournamentView.renderBracket(activeTournament, myUserId, network.clientId, savedPlayerName);
     }
   });
 

@@ -52,10 +52,11 @@ class TournamentManager {
     return code;
   }
 
-  createTournament({ id, hostSocketId, hostName, size = 8, name = 'Copa Penaltazo', penaltiesPerPlayer = 5 }) {
+  createTournament({ id, hostSocketId, hostName, clientId, size = 8, name = 'Copa Penaltazo', penaltiesPerPlayer = 5 }) {
     const tournamentId = id || this.generateTournamentId();
     const tournamentSize = [4, 8, 16].includes(Number(size)) ? Number(size) : 8;
     const basePenalties = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
+    const hostEffectiveClientId = clientId || hostSocketId;
 
     const tournament = {
       id: tournamentId,
@@ -64,10 +65,12 @@ class TournamentManager {
       penaltiesPerPlayer: basePenalties,
       status: 'lobby', // 'lobby' | 'in_progress' | 'completed'
       hostSocketId,
+      hostClientId: hostEffectiveClientId,
       participants: [
         {
           id: hostSocketId,
           socketId: hostSocketId,
+          clientId: hostEffectiveClientId,
           name: (hostName && hostName.trim()) || 'Anfitrión',
           isBot: false,
           isHost: true,
@@ -88,36 +91,67 @@ class TournamentManager {
     return this.tournaments.get(id);
   }
 
-  joinTournament({ tournamentId, socketId, playerName }) {
+  joinTournament({ tournamentId, socketId, playerName, clientId }) {
     const tournament = this.tournaments.get(tournamentId);
     if (!tournament) return { success: false, error: 'Torneo no encontrado' };
 
     const cleanName = (playerName || '').trim();
+    const effectiveClientId = clientId || null;
 
-    // Comprobar si ya estaba dentro por socketId o por nombre (permite reconectar aunque el torneo ya esté en marcha)
-    const existing = tournament.participants.find(p =>
-      !p.isBot && (p.socketId === socketId || (cleanName && p.name.toLowerCase() === cleanName.toLowerCase()))
-    );
+    // 1. Comprobar si ya estaba dentro por clientId, por socketId o por nombre personalizado no genérico
+    const isGenericName = !cleanName || /^jugador\s*\d*$/i.test(cleanName);
+    const existing = tournament.participants.find(p => {
+      if (p.isBot) return false;
+      // Si ambos tienen clientId asignado, la comparación por clientId es unívoca y definitiva
+      if (effectiveClientId && p.clientId) {
+        return p.clientId === effectiveClientId;
+      }
+      if (p.socketId === socketId) return true;
+      if (!isGenericName && cleanName && p.name && p.name.toLowerCase() === cleanName.toLowerCase()) return true;
+      return false;
+    });
+
     if (existing) {
       const oldId = existing.id;
       existing.id = socketId;
       existing.socketId = socketId;
-      if (cleanName) existing.name = cleanName;
+      if (effectiveClientId) existing.clientId = effectiveClientId;
+      if (cleanName && (!existing.name || existing.name.startsWith('Jugador '))) {
+        existing.name = cleanName;
+      }
       existing.connected = true;
+
+      // Si el anfitrión reconectó, actualizar hostSocketId para que pueda iniciar el torneo sin trabas
+      if (existing.isHost) {
+        tournament.hostSocketId = socketId;
+        if (effectiveClientId) tournament.hostClientId = effectiveClientId;
+      }
 
       // Actualizar también las referencias dentro del cuadro (bracket) si el torneo ya ha empezado
       if (tournament.bracket) {
         for (const round of tournament.bracket) {
           for (const match of round.matches) {
-            if (match.p1 && (match.p1.id === oldId || match.p1.name.toLowerCase() === existing.name.toLowerCase())) {
-              match.p1.id = socketId;
-              match.p1.socketId = socketId;
-              match.p1.connected = true;
+            if (match.p1 && !match.p1.isBot) {
+              const matchP1ClientId = match.p1.clientId && effectiveClientId && match.p1.clientId === effectiveClientId;
+              const matchP1OldId = match.p1.id === oldId;
+              const matchP1Name = !isGenericName && match.p1.name && match.p1.name.toLowerCase() === existing.name.toLowerCase();
+              if (matchP1ClientId || matchP1OldId || matchP1Name) {
+                match.p1.id = socketId;
+                match.p1.socketId = socketId;
+                if (effectiveClientId) match.p1.clientId = effectiveClientId;
+                match.p1.connected = true;
+              }
             }
-            if (match.p2 && (match.p2.id === oldId || match.p2.name.toLowerCase() === existing.name.toLowerCase())) {
-              match.p2.id = socketId;
-              match.p2.socketId = socketId;
-              match.p2.connected = true;
+            if (match.p2 && !match.p2.isBot) {
+              const matchP2ClientId = match.p2.clientId && effectiveClientId && match.p2.clientId === effectiveClientId;
+              const matchP2OldId = match.p2.id === oldId;
+              const matchP2Name = !isGenericName && match.p2.name && match.p2.name.toLowerCase() === existing.name.toLowerCase();
+              if (matchP2ClientId || matchP2OldId || matchP2Name) {
+                match.p2.id = socketId;
+                match.p2.socketId = socketId;
+                if (effectiveClientId) match.p2.clientId = effectiveClientId;
+                match.p2.connected = true;
+              }
             }
           }
         }
@@ -134,15 +168,61 @@ class TournamentManager {
       return { success: false, error: 'El torneo ya está completo' };
     }
 
-    const name = cleanName || `Jugador ${tournament.participants.length + 1}`;
+    // Asegurar que el nombre no colisione con otro jugador humano ya presente
+    let assignedName = cleanName || `Jugador ${tournament.participants.length + 1}`;
+    let nameCollisionCount = 1;
+    let uniqueCandidate = assignedName;
+    while (tournament.participants.some(p => p.name.toLowerCase() === uniqueCandidate.toLowerCase())) {
+      nameCollisionCount++;
+      uniqueCandidate = `${assignedName} (${nameCollisionCount})`;
+    }
+    assignedName = uniqueCandidate;
+
     tournament.participants.push({
       id: socketId,
       socketId,
-      name,
+      clientId: effectiveClientId || socketId,
+      name: assignedName,
       isBot: false,
       isHost: false,
       connected: true
     });
+
+    return { success: true, tournament };
+  }
+
+  leaveTournament({ tournamentId, socketId, clientId }) {
+    const tournament = this.tournaments.get(tournamentId);
+    if (!tournament) return { success: false, error: 'Torneo no encontrado' };
+
+    if (tournament.status === 'lobby') {
+      const idx = tournament.participants.findIndex(p =>
+        !p.isBot && ((clientId && p.clientId === clientId) || p.socketId === socketId)
+      );
+
+      if (idx !== -1) {
+        const wasHost = tournament.participants[idx].isHost;
+        tournament.participants.splice(idx, 1);
+
+        if (wasHost) {
+          const nextHuman = tournament.participants.find(p => !p.isBot);
+          if (nextHuman) {
+            nextHuman.isHost = true;
+            tournament.hostSocketId = nextHuman.socketId;
+            tournament.hostClientId = nextHuman.clientId;
+          }
+        }
+
+        // Si ya no queda ningún humano en la sala de espera, eliminar torneo para no acumular basura en memoria
+        const remainingHumans = tournament.participants.filter(p => !p.isBot);
+        if (remainingHumans.length === 0) {
+          this.tournaments.delete(tournamentId);
+          return { success: true, tournamentDeleted: true };
+        }
+
+        return { success: true, tournament, removed: true };
+      }
+    }
 
     return { success: true, tournament };
   }
@@ -291,6 +371,14 @@ class TournamentManager {
     const allMatchesFinished = round.matches.every(m => m.status === 'finished');
     if (allMatchesFinished) {
       tournament.currentRoundIndex = nextRoundIndex;
+      const nextRound = tournament.bracket[nextRoundIndex];
+      if (nextRound && nextRound.matches) {
+        for (const nm of nextRound.matches) {
+          if (nm.p1 && nm.p2 && nm.status === 'pending') {
+            nm.status = 'ready';
+          }
+        }
+      }
     }
 
     return {
@@ -344,8 +432,11 @@ class TournamentManager {
       penaltiesPerPlayer: tournament.penaltiesPerPlayer !== undefined ? tournament.penaltiesPerPlayer : 5,
       status: tournament.status,
       hostSocketId: tournament.hostSocketId,
+      hostClientId: tournament.hostClientId || tournament.hostSocketId,
       participants: tournament.participants.map(p => ({
         id: p.id,
+        socketId: p.socketId,
+        clientId: p.clientId || p.id,
         name: p.name,
         isBot: p.isBot,
         isHost: p.isHost,

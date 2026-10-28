@@ -427,10 +427,11 @@ io.on('connection', (socket) => {
   });
 
   // --- GESTIÓN DE TORNEOS ELIMINATORIOS ---
-  socket.on('create_tournament', ({ size, name, playerName, penaltiesPerPlayer }) => {
+  socket.on('create_tournament', ({ size, name, playerName, penaltiesPerPlayer, clientId }) => {
     const tournament = tournamentManager.createTournament({
       hostSocketId: socket.id,
       hostName: playerName,
+      clientId,
       size,
       name,
       penaltiesPerPlayer
@@ -442,16 +443,18 @@ io.on('connection', (socket) => {
     socket.emit('tournament_joined', {
       tournament: tournamentManager.sanitizeTournament(tournament),
       myId: socket.id,
+      myClientId: clientId || socket.id,
       isHost: true
     });
   });
 
-  socket.on('join_tournament', ({ tournamentId, playerName }) => {
+  socket.on('join_tournament', ({ tournamentId, playerName, clientId }) => {
     const cleanId = (tournamentId || '').trim().toUpperCase();
     const result = tournamentManager.joinTournament({
       tournamentId: cleanId,
       socketId: socket.id,
-      playerName
+      playerName,
+      clientId
     });
 
     if (!result.success) {
@@ -462,19 +465,48 @@ io.on('connection', (socket) => {
     currentTournamentId = cleanId;
     socket.join(cleanId);
 
-    const isHost = (result.tournament.hostSocketId === socket.id);
+    const isHost = (result.tournament.hostSocketId === socket.id) ||
+      (clientId && result.tournament.hostClientId === clientId);
+
     socket.emit('tournament_joined', {
       tournament: tournamentManager.sanitizeTournament(result.tournament),
       myId: socket.id,
+      myClientId: clientId || socket.id,
       isHost
     });
 
     io.to(cleanId).emit('tournament_updated', tournamentManager.sanitizeTournament(result.tournament));
   });
 
-  socket.on('start_tournament', ({ tournamentId }) => {
+  socket.on('leave_tournament', ({ tournamentId, clientId }) => {
+    const cleanId = (tournamentId || '').trim().toUpperCase();
+    const result = tournamentManager.leaveTournament({
+      tournamentId: cleanId,
+      socketId: socket.id,
+      clientId
+    });
+
+    if (result && result.success) {
+      socket.leave(cleanId);
+      if (currentTournamentId === cleanId) {
+        currentTournamentId = null;
+      }
+      if (!result.tournamentDeleted && result.tournament) {
+        io.to(cleanId).emit('tournament_updated', tournamentManager.sanitizeTournament(result.tournament));
+      }
+    }
+  });
+
+  socket.on('start_tournament', ({ tournamentId, clientId }) => {
     const tournament = tournamentManager.getTournament(tournamentId);
-    if (!tournament || tournament.hostSocketId !== socket.id) return;
+    if (!tournament) return;
+
+    // Permitir iniciar si coincide el hostSocketId, o el hostClientId, o si el socket está marcado como isHost
+    const isAuthorizedHost = (tournament.hostSocketId === socket.id) ||
+      (clientId && tournament.hostClientId === clientId) ||
+      tournament.participants.some(p => p.isHost && (p.socketId === socket.id || (clientId && p.clientId === clientId)));
+
+    if (!isAuthorizedHost) return;
 
     const startedTournament = tournamentManager.startTournament(tournamentId);
     if (!startedTournament) return;
@@ -485,7 +517,7 @@ io.on('connection', (socket) => {
     runBotMatchesSimulation(startedTournament);
   });
 
-  socket.on('enter_tournament_match', ({ tournamentId, roundIndex, matchIndex }) => {
+  socket.on('enter_tournament_match', ({ tournamentId, roundIndex, matchIndex, clientId, playerName }) => {
     const tournament = tournamentManager.getTournament(tournamentId);
     if (!tournament || tournament.status !== 'in_progress') return;
 
@@ -511,11 +543,24 @@ io.on('connection', (socket) => {
       rooms.set(matchRoomId, room);
     }
 
-    // Configurar jugadores según quién es humano y quién es bot (o P1 vs P2 humanos)
+    // Configurar rol asignado utilizando clientId unívoco primero, socket.id, o nombre de participante
     let myRoleAssigned = 'spectator';
-    if (match.p1 && (match.p1.id === socket.id || match.p1.socketId === socket.id)) {
+    const isP1 = match.p1 && !match.p1.isBot && (
+      (clientId && match.p1.clientId && match.p1.clientId === clientId) ||
+      match.p1.id === socket.id ||
+      match.p1.socketId === socket.id ||
+      (playerName && match.p1.name && match.p1.name.toLowerCase() === playerName.trim().toLowerCase())
+    );
+    const isP2 = match.p2 && !match.p2.isBot && (
+      (clientId && match.p2.clientId && match.p2.clientId === clientId) ||
+      match.p2.id === socket.id ||
+      match.p2.socketId === socket.id ||
+      (playerName && match.p2.name && match.p2.name.toLowerCase() === playerName.trim().toLowerCase())
+    );
+
+    if (isP1) {
       myRoleAssigned = 'P1';
-    } else if (match.p2 && (match.p2.id === socket.id || match.p2.socketId === socket.id)) {
+    } else if (isP2) {
       myRoleAssigned = 'P2';
     } else if (match.p1 && !match.p1.isBot && match.p2 && match.p2.isBot) {
       myRoleAssigned = 'P1';
@@ -530,6 +575,7 @@ io.on('connection', (socket) => {
     if (match.p1 && match.p1.isBot && !room.players.some(p => p.role === 'P1')) {
       room.players.push({
         id: match.p1.id,
+        clientId: match.p1.clientId || match.p1.id,
         role: 'P1',
         name: match.p1.name,
         connected: true,
@@ -541,6 +587,7 @@ io.on('connection', (socket) => {
     if (match.p2 && match.p2.isBot && !room.players.some(p => p.role === 'P2')) {
       room.players.push({
         id: match.p2.id,
+        clientId: match.p2.clientId || match.p2.id,
         role: 'P2',
         name: match.p2.name,
         connected: true,
@@ -548,25 +595,27 @@ io.on('connection', (socket) => {
       });
     }
 
-    // Registrar al jugador humano en la sala con su rol real
+    // Registrar o re-sincronizar al jugador humano en la sala con su rol real
     if (myRoleAssigned === 'P1' || myRoleAssigned === 'P2') {
       const humanData = myRoleAssigned === 'P1' ? match.p1 : match.p2;
       const existingHuman = room.players.find(p => p.role === myRoleAssigned);
       if (!existingHuman) {
         room.players.push({
           id: socket.id,
+          clientId: clientId || socket.id,
           role: myRoleAssigned,
-          name: humanData ? humanData.name : 'Jugador',
+          name: humanData ? humanData.name : (playerName || 'Jugador'),
           connected: true,
           isBot: false
         });
       } else {
         existingHuman.id = socket.id;
+        if (clientId) existingHuman.clientId = clientId;
         existingHuman.connected = true;
       }
     }
 
-    match.status = 'playing';
+    match.status = (room.state === 'playing' || room.state === 'resolving') ? 'playing' : match.status;
     io.to(tournamentId).emit('tournament_updated', tournamentManager.sanitizeTournament(tournament));
 
     socket.emit('joined_room', {
@@ -576,11 +625,32 @@ io.on('connection', (socket) => {
       tournamentContext: room.tournamentContext
     });
 
-    // Si ambos participantes están listos (o uno es bot), arrancar partido
+    // Si ambos participantes están listos (o uno es bot) y el partido aún no arrancó, arrancar
     const hasP1 = room.players.some(p => p.role === 'P1');
     const hasP2 = room.players.some(p => p.role === 'P2');
     if (hasP1 && hasP2 && room.state === 'waiting') {
+      match.status = 'playing';
+      io.to(tournamentId).emit('tournament_updated', tournamentManager.sanitizeTournament(tournament));
       startNewGame(room);
+    } else if (hasP1 && hasP2 && (room.state === 'playing' || room.state === 'resolving')) {
+      // Sincronizar inmediatamente para el jugador reconectado en medio del partido
+      const { shooterRole, keeperRole } = getTurnRoles(room.turnIndex);
+      socket.emit('game_started', {
+        turnIndex: room.turnIndex,
+        shooterRole,
+        keeperRole,
+        isSuddenDeath: room.isSuddenDeath,
+        suddenDeathRound: room.suddenDeathRound,
+        penaltiesPerPlayer: room.penaltiesPerPlayer,
+        turnTimeLimit: TURN_TIME_LIMIT_SEC,
+        roomState: sanitizeRoomForClient(room)
+      });
+      if (room.choices.P1 !== null) {
+        socket.emit('choice_confirmed', { role: 'P1' });
+      }
+      if (room.choices.P2 !== null) {
+        socket.emit('choice_confirmed', { role: 'P2' });
+      }
     }
   });
 

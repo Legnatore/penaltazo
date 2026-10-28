@@ -11,6 +11,8 @@ class TournamentView {
 
     this.currentTournament = null;
     this.myId = null;
+    this.myClientId = null;
+    this.myName = null;
     this.isHost = false;
 
     // Elementos del DOM
@@ -88,17 +90,27 @@ class TournamentView {
     }
   }
 
-  setTournamentData(tournament, myId, isHost) {
+  setTournamentData(tournament, myId, isHost, myClientId, myName) {
     this.currentTournament = tournament;
     if (myId) this.myId = myId;
     if (typeof isHost === 'boolean') this.isHost = isHost;
+    if (myClientId) this.myClientId = myClientId;
+    if (myName) this.myName = myName;
+  }
+
+  isParticipantMe(p) {
+    if (!p || p.isBot) return false;
+    if (this.myClientId && p.clientId && p.clientId === this.myClientId) return true;
+    if (this.myId && (p.id === this.myId || p.socketId === this.myId)) return true;
+    if (this.myName && p.name && p.name.trim().toLowerCase() === this.myName.trim().toLowerCase()) return true;
+    return false;
   }
 
   /**
    * Renderiza la sala de espera con las plazas y participantes actuales
    */
-  renderLobby(tournament, myId, isHost) {
-    this.setTournamentData(tournament, myId, isHost);
+  renderLobby(tournament, myId, isHost, myClientId, myName) {
+    this.setTournamentData(tournament, myId, isHost, myClientId, myName);
 
     if (this.titleEl) this.titleEl.textContent = tournament.name;
     if (this.codeEl) this.codeEl.textContent = tournament.id;
@@ -172,7 +184,7 @@ class TournamentView {
 
         if (i < tournament.participants.length) {
           const p = tournament.participants[i];
-          const isMe = (p.id === this.myId || p.socketId === this.myId);
+          const isMe = this.isParticipantMe(p);
           slotEl.classList.add('slot-filled');
           if (isMe) slotEl.classList.add('slot-is-me');
 
@@ -188,6 +200,16 @@ class TournamentView {
           slotEl.classList.add('slot-empty');
           slotEl.innerHTML = `
             <div class="participant-avatar empty-avatar">🤖</div>
+            <div class="participant-info">
+              <span class="participant-name empty-name">Plaza libre #${i + 1}</span>
+              <span class="participant-tag empty-tag">Se cubrirá con IA de jugador famoso</span>
+            </div>
+          `;
+        }
+
+        this.participantsGridEl.appendChild(slotEl);
+      }
+    }
             <div class="participant-info">
               <span class="participant-name empty-name">Plaza libre #${i + 1}</span>
               <span class="participant-tag empty-tag">Se cubrirá con IA de jugador famoso</span>
@@ -225,8 +247,8 @@ class TournamentView {
   /**
    * Renderiza el cuadro eliminatorio completo (Bracket)
    */
-  renderBracket(tournament, myId) {
-    this.setTournamentData(tournament, myId);
+  renderBracket(tournament, myId, myClientId, myName) {
+    this.setTournamentData(tournament, myId, undefined, myClientId, myName);
 
     if (this.bracketTitleEl) this.bracketTitleEl.textContent = `🏆 ${tournament.name}`;
 
@@ -283,15 +305,14 @@ class TournamentView {
     const p1 = match.p1;
     const p2 = match.p2;
 
-    const isMeInMatch = (p1 && (p1.id === this.myId || p1.socketId === this.myId)) ||
-                        (p2 && (p2.id === this.myId || p2.socketId === this.myId));
+    const isMeInMatch = this.isParticipantMe(p1) || this.isParticipantMe(p2);
 
     if (isMeInMatch) {
       card.classList.add('match-is-mine');
     }
 
-    const p1IsWinner = match.winner && p1 && match.winner.id === p1.id;
-    const p2IsWinner = match.winner && p2 && match.winner.id === p2.id;
+    const p1IsWinner = match.winner && p1 && (match.winner.id === p1.id || (p1.clientId && match.winner.clientId === p1.clientId));
+    const p2IsWinner = match.winner && p2 && (match.winner.id === p2.id || (p2.clientId && match.winner.clientId === p2.clientId));
 
     // Etiqueta de estado
     let statusLabel = '';
@@ -311,7 +332,7 @@ class TournamentView {
             <span class="p-avatar">${p1 ? (p1.isBot ? '🤖' : '⚽') : '⚪'}</span>
             <span class="p-name">${p1 ? p1.name : 'Por definir'}</span>
           </div>
-          <span class="match-p-score">${match.score.p1 !== null ? match.score.p1 : '-'}</span>
+          <span class="match-p-score">${match.score && match.score.p1 !== null ? match.score.p1 : '-'}</span>
         </div>
 
         <div class="match-row ${p2IsWinner ? 'is-winner' : ''} ${match.winner && !p2IsWinner ? 'is-loser' : ''}">
@@ -319,7 +340,7 @@ class TournamentView {
             <span class="p-avatar">${p2 ? (p2.isBot ? '🤖' : '⚽') : '⚪'}</span>
             <span class="p-name">${p2 ? p2.name : 'Por definir'}</span>
           </div>
-          <span class="match-p-score">${match.score.p2 !== null ? match.score.p2 : '-'}</span>
+          <span class="match-p-score">${match.score && match.score.p2 !== null ? match.score.p2 : '-'}</span>
         </div>
       </div>
     `;
@@ -348,29 +369,28 @@ class TournamentView {
       return;
     }
 
-    const currentRound = tournament.bracket[tournament.currentRoundIndex];
-    if (!currentRound) return;
-
+    // 1. Buscar si el usuario tiene un partido listo para jugar en cualquier ronda disponible
     let myReadyMatch = null;
-    let rIdx = tournament.currentRoundIndex;
-    let mIdx = 0;
+    let matchRound = null;
 
-    for (let i = 0; i < currentRound.matches.length; i++) {
-      const m = currentRound.matches[i];
-      const isP1Me = m.p1 && (m.p1.id === this.myId || m.p1.socketId === this.myId);
-      const isP2Me = m.p2 && (m.p2.id === this.myId || m.p2.socketId === this.myId);
-
-      if ((isP1Me || isP2Me) && (m.status === 'ready' || m.status === 'playing')) {
-        myReadyMatch = m;
-        mIdx = i;
-        break;
+    for (let r = 0; r < tournament.bracket.length; r++) {
+      const round = tournament.bracket[r];
+      for (let i = 0; i < round.matches.length; i++) {
+        const m = round.matches[i];
+        const isMe = this.isParticipantMe(m.p1) || this.isParticipantMe(m.p2);
+        if (isMe && (m.status === 'ready' || m.status === 'playing')) {
+          myReadyMatch = m;
+          matchRound = round;
+          break;
+        }
       }
+      if (myReadyMatch) break;
     }
 
-    if (myReadyMatch) {
-      const opponent = (myReadyMatch.p1.id === this.myId || myReadyMatch.p1.socketId === this.myId)
-        ? myReadyMatch.p2
-        : myReadyMatch.p1;
+    if (myReadyMatch && matchRound) {
+      const isP1Me = this.isParticipantMe(myReadyMatch.p1);
+      const opponent = isP1Me ? myReadyMatch.p2 : myReadyMatch.p1;
+      const opponentName = opponent ? opponent.name : 'Rival';
 
       this.myMatchAlertEl.classList.remove('hidden');
       this.myMatchAlertEl.innerHTML = `
@@ -378,49 +398,53 @@ class TournamentView {
           <div class="alert-icon">⚡</div>
           <div class="alert-texts">
             <strong>¡ES TU TURNO DE SALIR AL CAMPO!</strong>
-            <span>Te enfrentas a <strong>${opponent.name}</strong> en ${currentRound.name}. Pulsa en tu partido del cuadro para jugar.</span>
+            <span>Te enfrentas a <strong>${opponentName}</strong> en ${matchRound.name}. Pulsa en tu partido del cuadro para jugar.</span>
           </div>
         </div>
       `;
-    } else {
-      // Comprobar si el usuario ha sido eliminado
-      let hasBeenEliminated = false;
-      for (const round of tournament.bracket) {
-        for (const m of round.matches) {
-          if (m.status === 'finished') {
-            const wasP1 = m.p1 && (m.p1.id === this.myId || m.p1.socketId === this.myId);
-            const wasP2 = m.p2 && (m.p2.id === this.myId || m.p2.socketId === this.myId);
-            if ((wasP1 || wasP2) && m.winner && m.winner.id !== this.myId && m.winner.socketId !== this.myId) {
-              hasBeenEliminated = true;
-            }
+      return;
+    }
+
+    // 2. Comprobar si el usuario ha sido eliminado
+    let hasBeenEliminated = false;
+    for (const round of tournament.bracket) {
+      for (const m of round.matches) {
+        if (m.status === 'finished') {
+          const wasInMatch = this.isParticipantMe(m.p1) || this.isParticipantMe(m.p2);
+          if (wasInMatch && m.winner && !this.isParticipantMe(m.winner)) {
+            hasBeenEliminated = true;
           }
         }
       }
-
-      if (hasBeenEliminated) {
-        this.myMatchAlertEl.classList.remove('hidden');
-        this.myMatchAlertEl.innerHTML = `
-          <div class="alert-content">
-            <div class="alert-icon">🍿</div>
-            <div class="alert-texts">
-              <strong>Modo Espectador</strong>
-              <span>Has caído con honor. Disfruta de la emoción del resto de eliminatorias del torneo en vivo.</span>
-            </div>
-          </div>
-        `;
-      } else {
-        this.myMatchAlertEl.classList.remove('hidden');
-        this.myMatchAlertEl.innerHTML = `
-          <div class="alert-content">
-            <div class="alert-icon">⏳</div>
-            <div class="alert-texts">
-              <strong>Esperando a tus rivales...</strong>
-              <span>Los otros partidos de la ronda se están disputando. En cuanto acaben, se generará tu siguiente cruce.</span>
-            </div>
-          </div>
-        `;
-      }
     }
+
+    if (hasBeenEliminated) {
+      this.myMatchAlertEl.classList.remove('hidden');
+      this.myMatchAlertEl.innerHTML = `
+        <div class="alert-content">
+          <div class="alert-icon">🍿</div>
+          <div class="alert-texts">
+            <strong>Modo Espectador</strong>
+            <span>Has caído con honor. Disfruta de la emoción del resto de eliminatorias del torneo en vivo.</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // 3. Si no está eliminado y no tiene partido listo aún, está esperando que terminen otros cruces
+    const currentRound = tournament.bracket[tournament.currentRoundIndex];
+    const roundName = currentRound ? currentRound.name : 'la ronda';
+    this.myMatchAlertEl.classList.remove('hidden');
+    this.myMatchAlertEl.innerHTML = `
+      <div class="alert-content">
+        <div class="alert-icon">⏳</div>
+        <div class="alert-texts">
+          <strong>Esperando a tus rivales...</strong>
+          <span>Los demás partidos de ${roundName} se están disputando. En cuanto acaben, se generará tu siguiente cruce.</span>
+        </div>
+      </div>
+    `;
   }
 
   showChampionModal(tournament) {

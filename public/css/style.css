@@ -8344,3 +8344,65 @@ body[data-theme="sensible"] .btn-async-challenge {
 
 
 
+
+
+/* =========================================================
+   DETALLES DE COLOR Y ACABADO PARA LOS 7 NUEVOS TEMAS
+   ========================================================= */
+
+/* 1. Super Fútbol 16-bit */
+body[data-theme="supersoccer"] .modal-title { color: #1a2350 !important; }
+body[data-theme="supersoccer"] .meta-pill { background: #d8dce8; color: #1a2350; border: 2px solid #1a2350; box-shadow: 2px 2px 0 #0b112c; }
+body[data-theme="supersoccer"] .timer-pill { background: #ffcc00; color: #1a2350; border: 2px solid #1a2350; }
+body[data-theme="supersoccer"] .turn-timer-bar-fill { background: #ffcc00 !important; border-radius: 4px; }
+body[data-theme="supersoccer"] #commentator-ticker { background: #1a2350; color: #ffcc00; border: 2px solid #ffcc00; }
+body[data-theme="supersoccer"] .legal-modal-content { color: #1a2350; }
+
+/* 2. Campeones del Anime */
+body[data-theme="campeones"] .modal-title { color: #ea580c !important; text-shadow: 2px 2px 0 #0f172a; }
+body[data-theme="campeones"] .meta-pill { background: #ffffff; color: #0f172a; border: 3px solid #0f172a; box-shadow: 3px 3px 0 #0f172a; font-weight: 800; }
+body[data-theme="campeones"] .timer-pill { background: #facc15; color: #0f172a; border: 3px solid #0f172a; }
+body[data-theme="campeones"] .turn-timer-bar-fill { background: linear-gradient(90deg, #ea580c, #f97316, #facc15) !important; border-radius: 6px; }
+body[data-theme="campeones"] #commentator-ticker { background: #0f172a; color: #facc15; border: 3px solid #0f172a; font-weight: 800; }
+body[data-theme="campeones"] .legal-modal-content { color: #1e293b; }
+
+/* 3. Copa Mundial de Selecciones */
+body[data-theme="mundial"] .modal-title { color: #facc15 !important; text-shadow: 0 2px 10px rgba(250, 204, 21, 0.4); }
+body[data-theme="mundial"] .meta-pill { background: #082d1c; color: #fef08a; border: 1.5px solid #ca8a04; }
+body[data-theme="mundial"] .timer-pill { background: #ca8a04; color: #042013; border: 1.5px solid #fef08a; font-weight: 800; }
+body[data-theme="mundial"] .turn-timer-bar-fill { background: linear-gradient(90deg, #ca8a04, #facc15) !important; }
+body[data-theme="mundial"] #commentator-ticker { background: #051e13; color: #facc15; border: 1.5px solid #ca8a04; }
+body[data-theme="mundial"] .legal-modal-content { color: #e2e8f0; }
+
+/* 4. Noches de Estrellas Europeas */
+body[data-theme="champions"] .modal-title { color: #38bdf8 !important; text-shadow: 0 0 15px rgba(56, 189, 248, 0.8); }
+body[data-theme="champions"] .meta-pill { background: rgba(8, 20, 56, 0.95); color: #38bdf8; border: 1.5px solid rgba(56, 189, 248, 0.5); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+body[data-theme="champions"] .timer-pill { background: #0284c7; color: #ffffff; border: 1.5px solid #38bdf8; }
+body[data-theme="champions"] .turn-timer-bar-fill { background: linear-gradient(90deg, #0284c7, #38bdf8) !important; box-shadow: 0 0 10px rgba(56, 189, 248, 0.6); }
+body[data-theme="champions"] #commentator-ticker { background: rgba(8, 20, 56, 0.95); color: #38bdf8; border: 1.5px solid #0284c7; }
+body[data-theme="champions"] .legal-modal-content { color: #cbd5e1; }
+
+/* 5. Liga Española de las Estrellas */
+body[data-theme="liga"] .modal-title { color: #facc15 !important; text-shadow: 2px 2px 0 #991b1b; }
+body[data-theme="liga"] .meta-pill { background: #1e293b; color: #ffffff; border: 1.5px solid #dc2626; }
+body[data-theme="liga"] .timer-pill { background: #dc2626; color: #ffffff; border: 1.5px solid #facc15; font-weight: 800; }
+body[data-theme="liga"] .turn-timer-bar-fill { background: linear-gradient(90deg, #dc2626, #ea580c, #facc15) !important; }
+body[data-theme="liga"] #commentator-ticker { background: #1e293b; color: #facc15; border: 1.5px solid #dc2626; }
+body[data-theme="liga"] .legal-modal-content { color: #e2e8f0; }
+
+/* 6. PC Fútbol 5.0 (Edición Oro) */
+body[data-theme="pcfutbol5"] .modal-title { color: #ffd700 !important; text-shadow: 2px 2px 0 #b8860b; }
+body[data-theme="pcfutbol5"] .meta-pill { background: #08281a; color: #ffd700; border: 2px outset #d4af37; border-radius: 0 !important; }
+body[data-theme="pcfutbol5"] .timer-pill { background: #b8860b; color: #1a0f00; border: 2px outset #ffd700; border-radius: 0 !important; font-weight: 800; }
+body[data-theme="pcfutbol5"] .turn-timer-bar-track { border-radius: 0 !important; border: 2px outset #d4af37; background: #01140c; }
+body[data-theme="pcfutbol5"] .turn-timer-bar-fill { background: linear-gradient(90deg, #b8860b, #ffd700) !important; border-radius: 0 !important; }
+body[data-theme="pcfutbol5"] #commentator-ticker { background: #01140c; color: #ffd700; border: 2px inset #d4af37; font-family: 'VT323', monospace; font-size: 1.25rem; border-radius: 0 !important; }
+body[data-theme="pcfutbol5"] .legal-modal-content { color: #fff8dc; }
+
+/* 7. Mánager Táctico (Modo Banquillo) */
+body[data-theme="manager"] .modal-title { color: #10b981 !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+body[data-theme="manager"] .meta-pill { background: #1c0e30; color: #10b981; border: 1.5px solid #a855f7; border-radius: 6px !important; }
+body[data-theme="manager"] .timer-pill { background: #10b981; color: #022c22; border: 1.5px solid #34d399; font-weight: 800; }
+body[data-theme="manager"] .turn-timer-bar-fill { background: linear-gradient(90deg, #10b981, #34d399) !important; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+body[data-theme="manager"] #commentator-ticker { background: #0d0617; color: #10b981; border: 1.5px solid #4c2882; }
+body[data-theme="manager"] .legal-modal-content { color: #e9d5ff; }

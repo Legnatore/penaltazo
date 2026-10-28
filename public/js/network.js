@@ -439,18 +439,19 @@ class NetworkManager {
       const totalRegularTurns = basePenalties * 2;
 
       if (!this.localState.isSuddenDeath) {
-        const p1Remaining = Math.max(0, basePenalties - this.localState.history.P1.length);
-        const p2Remaining = Math.max(0, basePenalties - this.localState.history.P2.length);
-
-        if (this.localState.scores.P1 > this.localState.scores.P2 + p2Remaining) {
-          gameOver = true;
-          winner = 'P1';
-        } else if (this.localState.scores.P2 > this.localState.scores.P1 + p1Remaining) {
-          gameOver = true;
-          winner = 'P2';
-        } else if (nextTurnIndex >= totalRegularTurns) {
-          nextIsSuddenDeath = true;
-          nextSuddenDeathRound = 1;
+        // En tanda reglamentaria, ambos jugadores tiran TODOS sus penaltis completos (ej. los 5 cada uno)
+        if (nextTurnIndex >= totalRegularTurns) {
+          if (this.localState.scores.P1 > this.localState.scores.P2) {
+            gameOver = true;
+            winner = 'P1';
+          } else if (this.localState.scores.P2 > this.localState.scores.P1) {
+            gameOver = true;
+            winner = 'P2';
+          } else {
+            // Empate tras los 5 tiros de cada jugador -> Muerte Súbita
+            nextIsSuddenDeath = true;
+            nextSuddenDeathRound = 1;
+          }
         }
       } else {
         if (nextTurnIndex % 2 === 0) {
@@ -722,16 +723,7 @@ class NetworkManager {
       let gameOver = false;
       let winner = null;
 
-      const p1Remaining = Math.max(0, 5 - this.localState.history.P1.length);
-      const p2Remaining = Math.max(0, 5 - this.localState.history.P2.length);
-
-      if (this.localState.scores.P1 > this.localState.scores.P2 + p2Remaining) {
-        gameOver = true;
-        winner = 'P1';
-      } else if (this.localState.scores.P2 > this.localState.scores.P1 + p1Remaining) {
-        gameOver = true;
-        winner = 'P2';
-      } else if (nextTurnIndex >= 10) {
+      if (nextTurnIndex >= 10) {
         gameOver = true;
         if (this.localState.scores.P1 > this.localState.scores.P2) winner = 'P1';
         else if (this.localState.scores.P2 > this.localState.scores.P1) winner = 'P2';

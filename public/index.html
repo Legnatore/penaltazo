@@ -82,8 +82,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Montserrat:ital,wght@0,500;0,700;0,800;0,900;1,800&family=Press+Start+2P&family=Teko:wght@600;700&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4.4">
-  <link rel="stylesheet" href="css/animations.css?v=4.4">
+  <link rel="stylesheet" href="css/style.css?v=4.5">
+  <link rel="stylesheet" href="css/animations.css?v=4.5">
 </head>
 <body>
   <!-- Encabezado de la aplicación -->
@@ -517,10 +517,33 @@
           <div id="cheer-banner-right" class="stadium-cheer-banner banner-side">🎺 ¡A POR TODAS!</div>
         </div>
 
-        <!-- Campo de césped en perspectiva -->
+        <!-- Campo de césped en perspectiva con trazado reglamentario oficial de fútbol -->
         <div class="pitch-turf">
-          <div class="penalty-box-line"></div>
-          <div class="penalty-arc"></div>
+          <svg id="pitch-turf-svg" class="pitch-turf-svg" aria-hidden="true">
+            <defs>
+              <filter id="chalk-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="rgba(15,23,42,0.4)" />
+              </filter>
+            </defs>
+
+            <!-- 1. Franjas profesionales de corte de césped del terreno de juego -->
+            <g id="turf-stripes-group"></g>
+
+            <!-- 2. Línea de Meta / Gol (Goal Line) que une los postes -->
+            <line id="pitch-goal-line" x1="0" y1="0" x2="1000" y2="0" stroke="var(--chalk-line, #ffffff)" stroke-width="5" filter="url(#chalk-glow)" />
+
+            <!-- 3. Área Pequeña / Área de Meta (5.5m reglamentarios) -->
+            <polygon id="pitch-goal-area" points="" fill="rgba(255,255,255,0.03)" stroke="var(--chalk-line, #ffffff)" stroke-width="4" stroke-linejoin="round" filter="url(#chalk-glow)" />
+
+            <!-- 4. Área Grande / Área de Penalti (16.5m reglamentarios) -->
+            <polygon id="pitch-penalty-area" points="" fill="rgba(255,255,255,0.02)" stroke="var(--chalk-line, #ffffff)" stroke-width="5" stroke-linejoin="round" filter="url(#chalk-glow)" />
+
+            <!-- 5. Semicírculo del Área / Medialuna (Radio reglamentario de 9.15m desde el punto de penalti) -->
+            <path id="pitch-penalty-arc" d="" fill="none" stroke="var(--chalk-line, #ffffff)" stroke-width="4.5" filter="url(#chalk-glow)" />
+
+            <!-- 6. Punto de Penalti oficial (11m) - Exactamente donde reposa el balón -->
+            <circle id="pitch-penalty-spot" cx="500" cy="300" r="7.5" fill="var(--chalk-line, #ffffff)" stroke="rgba(0,0,0,0.18)" stroke-width="1.5" filter="url(#chalk-glow)" />
+          </svg>
           <div class="penalty-spot" id="penalty-spot"></div>
         </div>
 
@@ -1081,13 +1104,13 @@
 
   <!-- Scripts: Socket.io primero, luego módulos -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="js/audio.js?v=4.4"></script>
-  <script src="js/ai-opponent.js?v=4.4"></script>
-  <script src="js/goal-grid.js?v=4.4"></script>
-  <script src="js/animation.js?v=4.4"></script>
-  <script src="js/scoreboard.js?v=4.4"></script>
-  <script src="js/tournament.js?v=4.4"></script>
-  <script src="js/network.js?v=4.4"></script>
-  <script src="js/main.js?v=4.4"></script>
+  <script src="js/audio.js?v=4.5"></script>
+  <script src="js/ai-opponent.js?v=4.5"></script>
+  <script src="js/goal-grid.js?v=4.5"></script>
+  <script src="js/animation.js?v=4.5"></script>
+  <script src="js/scoreboard.js?v=4.5"></script>
+  <script src="js/tournament.js?v=4.5"></script>
+  <script src="js/network.js?v=4.5"></script>
+  <script src="js/main.js?v=4.5"></script>
 </body>
 </html>

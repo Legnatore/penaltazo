@@ -1635,63 +1635,36 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   display: none !important;
 }
 
-/* Césped vibrante recién cortado en perspectiva 3D */
+/* Terreno de juego con área reglamentaria oficial de fútbol en perspectiva */
 .pitch-turf {
   position: absolute;
+  top: 57%;
   bottom: 0;
-  left: -20%;
-  right: -20%;
-  height: 56%;
-  background: repeating-linear-gradient(
-    180deg,
-    #22c55e 0px,
-    #22c55e 26px,
-    #16a34a 26px,
-    #16a34a 52px
-  );
-  transform: rotateX(50deg);
-  transform-origin: bottom center;
-  border-top: 5px solid var(--chalk-line);
-  box-shadow: inset 0 12px 25px rgba(0, 0, 0, 0.22);
+  left: 0;
+  right: 0;
+  background: #16a34a;
+  overflow: hidden;
+  box-shadow: inset 0 10px 24px rgba(0, 0, 0, 0.35);
   pointer-events: none;
+  z-index: 4;
 }
 
-.penalty-box-line {
-  position: absolute;
-  left: 20%;
-  right: 20%;
-  top: 0;
-  height: 80%;
-  border-left: 4px solid var(--chalk-line);
-  border-right: 4px solid var(--chalk-line);
-  border-bottom: 4px solid var(--chalk-line);
-  pointer-events: none;
-}
-
-.penalty-arc {
-  position: absolute;
-  left: 50%;
-  top: 80%;
-  transform: translate(-50%, -50%);
-  width: 140px;
-  height: 80px;
-  border: 4px solid var(--chalk-line);
-  border-top: none;
-  border-radius: 0 0 100px 100px;
-  pointer-events: none;
+.pitch-turf-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .penalty-spot {
   position: absolute;
   left: 50%;
-  top: 42%;
+  top: 72%;
   transform: translate(-50%, -50%);
-  width: 16px;
-  height: 16px;
-  background: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
+  width: 15px;
+  height: 15px;
+  background: transparent;
   pointer-events: none;
+  z-index: 6;
 }
 
 /* Estructura física de la portería (Proporción reglamentaria oficial Fútbol 11: 7.32m x 2.44m -> 3:1) */
@@ -1704,7 +1677,7 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   aspect-ratio: 3 / 1;
   height: clamp(120px, 48%, 215px);
   width: calc(3 * clamp(120px, 48%, 215px));
-  max-width: min(92%, 645px);
+  max-width: min(84%, 590px);
   z-index: 10;
 }
 
@@ -4024,7 +3997,7 @@ body:has(#game-screen:not(.hidden)) .app-footer {
     aspect-ratio: 3 / 1;
     height: clamp(95px, 46%, 165px);
     width: calc(3 * clamp(95px, 46%, 165px));
-    max-width: 94%;
+    max-width: 82%;
   }
 
   .goal-crossbar {

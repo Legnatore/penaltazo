@@ -459,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (screen === gameScreen) {
       document.body.classList.add('game-active');
       initStadiumCrowd();
+      setTimeout(updatePitchMarkings, 50);
     } else {
       document.body.classList.remove('game-active');
     }
@@ -566,11 +567,127 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- TRAZADO REGLAMENTARIO OFICIAL DEL ÁREA DE FÚTBOL ---
+  function updatePitchMarkings() {
+    const turfEl = document.querySelector('.pitch-turf');
+    const svgEl = document.getElementById('pitch-turf-svg');
+    const postLeft = document.querySelector('.post-left');
+    const postRight = document.querySelector('.post-right');
+    const ball = document.getElementById('animated-ball');
+    if (!turfEl || !svgEl || !postLeft || !postRight) return;
+
+    const turfRect = turfEl.getBoundingClientRect();
+    const W = turfRect.width;
+    const H = turfRect.height;
+    if (W <= 0 || H <= 0) return;
+
+    svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    // Franjas de corte de césped
+    const stripesGroup = document.getElementById('turf-stripes-group');
+    if (stripesGroup) {
+      stripesGroup.innerHTML = `
+        <rect x="0" y="0" width="${W}" height="${H * 0.16}" fill="rgba(0, 0, 0, 0.28)" />
+        <rect x="0" y="${H * 0.16}" width="${W}" height="${H * 0.16}" fill="rgba(0, 0, 0, 0.12)" />
+        <rect x="0" y="${H * 0.32}" width="${W}" height="${H * 0.17}" fill="rgba(255, 255, 255, 0.08)" />
+        <rect x="0" y="${H * 0.49}" width="${W}" height="${H * 0.17}" fill="rgba(0, 0, 0, 0.10)" />
+        <rect x="0" y="${H * 0.66}" width="${W}" height="${H * 0.17}" fill="rgba(255, 255, 255, 0.08)" />
+        <rect x="0" y="${H * 0.83}" width="${W}" height="${H * 0.17}" fill="rgba(0, 0, 0, 0.08)" />
+      `;
+    }
+
+    const postLRect = postLeft.getBoundingClientRect();
+    const postRRect = postRight.getBoundingClientRect();
+
+    const xPostL = postLRect.left + postLRect.width / 2 - turfRect.left;
+    const xPostR = postRRect.left + postRRect.width / 2 - turfRect.left;
+    const yGoalLine = Math.max(0, postLRect.bottom - turfRect.top);
+    const goalW = Math.max(80, xPostR - xPostL);
+
+    // 1. Línea de Meta / Gol (Goal Line)
+    const goalLineEl = document.getElementById('pitch-goal-line');
+    if (goalLineEl) {
+      goalLineEl.setAttribute('x1', '0');
+      goalLineEl.setAttribute('y1', yGoalLine);
+      goalLineEl.setAttribute('x2', W);
+      goalLineEl.setAttribute('y2', yGoalLine);
+    }
+
+    // Coordenadas del Punto de Penalti (donde reposa el balón)
+    let xSpot = W / 2;
+    let ySpot = H * 0.73;
+    if (ball) {
+      const ballRect = ball.getBoundingClientRect();
+      if (ballRect.width > 0) {
+        xSpot = ballRect.left + ballRect.width / 2 - turfRect.left;
+        ySpot = ballRect.top + ballRect.height / 2 - turfRect.top;
+      }
+    }
+
+    // 2. Área Pequeña / Área de Meta (5.5m): sobresale por fuera de ambos postes
+    const offset5 = Math.min(goalW * 0.22, Math.max(20, (W - goalW) * 0.25));
+    const x5L_top = Math.max(4, xPostL - offset5);
+    const x5R_top = Math.min(W - 4, xPostR + offset5);
+    const y5 = yGoalLine + (ySpot - yGoalLine) * 0.44;
+    const persp5 = 1 + ((y5 - yGoalLine) / H) * 0.28;
+    const halfGoalW = (x5R_top - x5L_top) / 2;
+    const x5Center = (x5L_top + x5R_top) / 2;
+    const x5L_bottom = Math.max(2, x5Center - halfGoalW * persp5);
+    const x5R_bottom = Math.min(W - 2, x5Center + halfGoalW * persp5);
+
+    const goalAreaEl = document.getElementById('pitch-goal-area');
+    if (goalAreaEl) {
+      goalAreaEl.setAttribute('points', `${x5L_top},${yGoalLine} ${x5L_bottom},${y5} ${x5R_bottom},${y5} ${x5R_top},${yGoalLine}`);
+    }
+
+    // 3. Área Grande / Área de Penalti (16.5m): delimitación reglamentaria amplia
+    const offset16 = Math.max(offset5 * 2.5, (W - goalW) * 0.44);
+    const x16L_top = Math.max(6, xPostL - offset16);
+    const x16R_top = Math.min(W - 6, xPostR + offset16);
+    const y16 = Math.min(H - 6, ySpot + (ySpot - yGoalLine) * 0.24);
+    const persp16 = 1 + ((y16 - yGoalLine) / H) * 0.45;
+    const half16W = (x16R_top - x16L_top) / 2;
+    const x16Center = (x16L_top + x16R_top) / 2;
+    const x16L_bottom = Math.max(2, x16Center - half16W * persp16);
+    const x16R_bottom = Math.min(W - 2, x16Center + half16W * persp16);
+
+    const penaltyAreaEl = document.getElementById('pitch-penalty-area');
+    if (penaltyAreaEl) {
+      penaltyAreaEl.setAttribute('points', `${x16L_top},${yGoalLine} ${x16L_bottom},${y16} ${x16R_bottom},${y16} ${x16R_top},${yGoalLine}`);
+    }
+
+    // 4. Punto de Penalti oficial
+    const penaltySpotEl = document.getElementById('pitch-penalty-spot');
+    if (penaltySpotEl) {
+      penaltySpotEl.setAttribute('cx', xSpot);
+      penaltySpotEl.setAttribute('cy', ySpot);
+    }
+
+    // 5. Semicírculo del Área (Penalty Arc): trazado exterior al área grande
+    const penaltyArcEl = document.getElementById('pitch-penalty-arc');
+    if (penaltyArcEl) {
+      const rArcX = Math.min(130, Math.max(65, goalW * 0.35));
+      const rArcY = rArcX * 0.48;
+      const dy = y16 - ySpot;
+      if (dy > 0 && dy < rArcY) {
+        const ratio = dy / rArcY;
+        const dx = rArcX * Math.sqrt(Math.max(0, 1 - ratio * ratio));
+        const xArcL = Math.max(2, xSpot - dx);
+        const xArcR = Math.min(W - 2, xSpot + dx);
+        penaltyArcEl.setAttribute('d', `M ${xArcL} ${y16} A ${rArcX} ${rArcY} 0 0 0 ${xArcR} ${y16}`);
+        penaltyArcEl.style.display = '';
+      } else {
+        penaltyArcEl.style.display = 'none';
+      }
+    }
+  }
+
   window.addEventListener('resize', () => {
     clearTimeout(crowdResizeTimer);
     crowdResizeTimer = setTimeout(() => {
       if (document.body.classList.contains('game-active')) {
         initStadiumCrowd();
+        updatePitchMarkings();
       }
     }, 250);
   });
@@ -1569,6 +1686,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetTurnDecisionVanish();
     animator.setPerspective('shooter');
     goalGrid.clearSelection();
+    updatePitchMarkings();
 
     const turnRoleCartel = document.getElementById('turn-role-cartel');
     if (amIShooter) {

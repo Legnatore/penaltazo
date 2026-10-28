@@ -759,10 +759,26 @@ function resolveTurn(room) {
   let nextSuddenDeathRound = room.suddenDeathRound;
   const basePenalties = room.penaltiesPerPlayer || 0;
   const totalRegularTurns = basePenalties * 2;
+  let isMathematicalVictory = false;
 
   if (!room.isSuddenDeath) {
-    // En tanda reglamentaria, ambos jugadores tiran TODOS sus penaltis completos (ej. los 5 cada uno)
-    if (nextTurnIndex >= totalRegularTurns) {
+    const rem1 = Math.max(0, basePenalties - room.history.P1.length);
+    const rem2 = Math.max(0, basePenalties - room.history.P2.length);
+
+    // Si P2 ya no tiene tiros suficientes para al menos empatar a P1
+    if (room.scores.P1 > room.scores.P2 + rem2) {
+      gameOver = true;
+      winner = 'P1';
+      isMathematicalVictory = (nextTurnIndex < totalRegularTurns);
+    }
+    // Si P1 ya no tiene tiros suficientes para al menos empatar a P2
+    else if (room.scores.P2 > room.scores.P1 + rem1) {
+      gameOver = true;
+      winner = 'P2';
+      isMathematicalVictory = (nextTurnIndex < totalRegularTurns);
+    }
+    // Si se completaron todos los lanzamientos regulares
+    else if (nextTurnIndex >= totalRegularTurns) {
       if (room.scores.P1 > room.scores.P2) {
         gameOver = true;
         winner = 'P1';
@@ -770,12 +786,13 @@ function resolveTurn(room) {
         gameOver = true;
         winner = 'P2';
       } else {
-        // Empate tras los 5 tiros de cada jugador -> Muerte Súbita
+        // Empate al terminar la tanda -> Muerte Súbita
         nextIsSuddenDeath = true;
         nextSuddenDeathRound = 1;
       }
     }
   } else {
+    // En Muerte Súbita, la tanda se decide tras tiros en parejas iguales
     if (nextTurnIndex % 2 === 0) {
       if (room.scores.P1 > room.scores.P2) {
         gameOver = true;
@@ -824,6 +841,7 @@ function resolveTurn(room) {
     },
     gameOver,
     winner,
+    isMathematicalVictory,
     nextIsSuddenDeath,
     nextSuddenDeathRound,
     nextTurnIndex,

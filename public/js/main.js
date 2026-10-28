@@ -2196,12 +2196,24 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (iWon) {
         gameOverTitle.innerHTML = '🏆 ¡¡HAS GANADO LA TANDA!!';
         gameOverTitle.className = 'game-over-title victory';
-        gameOverSubtitle.textContent = isInTournament ? '¡Avanzas a la siguiente ronda del torneo!' : '¡Precisión milimétrica y reflejos felinos!';
+        if (data.isMathematicalVictory) {
+          gameOverSubtitle.textContent = isInTournament
+            ? '¡Victoria matemática! El rival ya no podía empatar. ¡Avanzas a la siguiente ronda!'
+            : '¡Victoria matemática conseguida! El rival ya no tenía tiros suficientes para empatar.';
+        } else {
+          gameOverSubtitle.textContent = isInTournament ? '¡Avanzas a la siguiente ronda del torneo!' : '¡Precisión milimétrica y reflejos felinos!';
+        }
         if (window.soundEngine) window.soundEngine.playCrowdCheer(true);
       } else {
         gameOverTitle.innerHTML = '💔 DERROTA EN LOS PENALTIS';
         gameOverTitle.className = 'game-over-title defeat';
-        gameOverSubtitle.textContent = isInTournament ? 'Has quedado apeado del torneo, pero puedes seguir como espectador.' : 'Esta vez la suerte cayó del lado del rival.';
+        if (data.isMathematicalVictory) {
+          gameOverSubtitle.textContent = isInTournament
+            ? 'Victoria matemática del rival al no quedar tiros para empatar. Puedes seguir como espectador.'
+            : 'Victoria matemática del rival: ya no quedaban tiros suficientes para empatar el marcador.';
+        } else {
+          gameOverSubtitle.textContent = isInTournament ? 'Has quedado apeado del torneo, pero puedes seguir como espectador.' : 'Esta vez la suerte cayó del lado del rival.';
+        }
       }
 
       gameOverScores.innerHTML = `

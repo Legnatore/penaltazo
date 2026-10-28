@@ -394,11 +394,23 @@ class TournamentManager {
   simulateBotMatch(match, penaltiesPerPlayer = 5) {
     let s1 = 0;
     let s2 = 0;
+    const base = [0, 3, 5].includes(Number(penaltiesPerPlayer)) ? Number(penaltiesPerPlayer) : 5;
 
-    // Simular todos los tiros reglamentarios de cada participante
-    for (let i = 0; i < penaltiesPerPlayer; i++) {
-      if (Math.random() < 0.72) s1++;
-      if (Math.random() < 0.72) s2++;
+    // Simular los tiros reglamentarios comprobando victoria matemática anticipada
+    if (base > 0) {
+      for (let i = 0; i < base; i++) {
+        // Tira P1
+        if (Math.random() < 0.72) s1++;
+        const rem1AfterP1 = base - (i + 1);
+        const rem2AfterP1 = base - i;
+        if (s1 > s2 + rem2AfterP1 || s2 > s1 + rem1AfterP1) break;
+
+        // Tira P2
+        if (Math.random() < 0.72) s2++;
+        const rem1AfterP2 = base - (i + 1);
+        const rem2AfterP2 = base - (i + 1);
+        if (s1 > s2 + rem2AfterP2 || s2 > s1 + rem1AfterP2) break;
+      }
     }
 
     // Si empatan (o si empezó en muerte súbita directa), decidir en rondas de muerte súbita

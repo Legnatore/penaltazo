@@ -437,10 +437,26 @@ class NetworkManager {
       let nextSuddenDeathRound = this.localState.suddenDeathRound;
       const basePenalties = this.localState.penaltiesPerPlayer || 0;
       const totalRegularTurns = basePenalties * 2;
+      let isMathematicalVictory = false;
 
       if (!this.localState.isSuddenDeath) {
-        // En tanda reglamentaria, ambos jugadores tiran TODOS sus penaltis completos (ej. los 5 cada uno)
-        if (nextTurnIndex >= totalRegularTurns) {
+        const rem1 = Math.max(0, basePenalties - this.localState.history.P1.length);
+        const rem2 = Math.max(0, basePenalties - this.localState.history.P2.length);
+
+        // Si P2 ya no puede matemáticamente ni empatar a P1
+        if (this.localState.scores.P1 > this.localState.scores.P2 + rem2) {
+          gameOver = true;
+          winner = 'P1';
+          isMathematicalVictory = (nextTurnIndex < totalRegularTurns);
+        }
+        // Si P1 ya no puede matemáticamente ni empatar a P2
+        else if (this.localState.scores.P2 > this.localState.scores.P1 + rem1) {
+          gameOver = true;
+          winner = 'P2';
+          isMathematicalVictory = (nextTurnIndex < totalRegularTurns);
+        }
+        // Si se completaron todos los lanzamientos regulares
+        else if (nextTurnIndex >= totalRegularTurns) {
           if (this.localState.scores.P1 > this.localState.scores.P2) {
             gameOver = true;
             winner = 'P1';
@@ -448,7 +464,7 @@ class NetworkManager {
             gameOver = true;
             winner = 'P2';
           } else {
-            // Empate tras los 5 tiros de cada jugador -> Muerte Súbita
+            // Empate -> Muerte Súbita
             nextIsSuddenDeath = true;
             nextSuddenDeathRound = 1;
           }
@@ -498,6 +514,7 @@ class NetworkManager {
         },
         gameOver,
         winner,
+        isMathematicalVictory,
         nextIsSuddenDeath,
         nextSuddenDeathRound,
         nextTurnIndex,
@@ -722,8 +739,20 @@ class NetworkManager {
       const nextTurnIndex = turnIdx + 1;
       let gameOver = false;
       let winner = null;
+      let isMathematicalVictory = false;
 
-      if (nextTurnIndex >= 10) {
+      const rem1 = Math.max(0, 5 - this.localState.history.P1.length);
+      const rem2 = Math.max(0, 5 - this.localState.history.P2.length);
+
+      if (this.localState.scores.P1 > this.localState.scores.P2 + rem2) {
+        gameOver = true;
+        winner = 'P1';
+        isMathematicalVictory = (nextTurnIndex < 10);
+      } else if (this.localState.scores.P2 > this.localState.scores.P1 + rem1) {
+        gameOver = true;
+        winner = 'P2';
+        isMathematicalVictory = (nextTurnIndex < 10);
+      } else if (nextTurnIndex >= 10) {
         gameOver = true;
         if (this.localState.scores.P1 > this.localState.scores.P2) winner = 'P1';
         else if (this.localState.scores.P2 > this.localState.scores.P1) winner = 'P2';
@@ -744,6 +773,7 @@ class NetworkManager {
         isSuddenDeath: false,
         suddenDeathRound: 0,
         isAsyncChallenge: true,
+        isMathematicalVictory,
         scores: { ...this.localState.scores },
         history: {
           P1: [...this.localState.history.P1],

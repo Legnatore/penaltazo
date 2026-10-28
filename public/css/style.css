@@ -1315,16 +1315,16 @@ body {
   pointer-events: none;
 }
 
-/* Estructura física de la portería (Proporción reglamentaria Fútbol 11: 7.32m x 2.44m -> 3:1) */
+/* Estructura física de la portería (Proporción reglamentaria oficial Fútbol 11: 7.32m x 2.44m -> 3:1) */
 .goal-structure {
   position: absolute;
-  top: 13%;
+  top: 10%;
   left: 50%;
   transform: translateX(-50%);
-  aspect-ratio: 7.32 / 2.44; /* Proporción oficial FIFA Fútbol 11 (3:1) */
-  width: min(92%, 660px);
-  height: auto;
-  max-height: 54%;
+  aspect-ratio: 3 / 1;
+  height: clamp(120px, 48%, 215px);
+  width: calc(3 * clamp(120px, 48%, 215px));
+  max-width: min(92%, 645px);
   z-index: 10;
 }
 
@@ -3012,11 +3012,11 @@ body {
   }
 
   .goal-structure {
-    top: 10%;
-    aspect-ratio: 7.32 / 2.44; /* Proporción oficial Fútbol 11 (3:1) */
-    width: 94%;
-    height: auto;
-    max-height: 52%;
+    top: 9%;
+    aspect-ratio: 3 / 1;
+    height: clamp(95px, 46%, 165px);
+    width: calc(3 * clamp(95px, 46%, 165px));
+    max-width: 94%;
   }
 
   .goal-crossbar {
@@ -3173,10 +3173,10 @@ body {
   }
 
   .goal-structure {
-    top: 8%;
-    aspect-ratio: 7.32 / 2.44; /* Proporción oficial Fútbol 11 (3:1) */
-    height: 58%;
-    width: auto;
+    top: 7%;
+    aspect-ratio: 3 / 1;
+    height: clamp(110px, 52%, 180px);
+    width: calc(3 * clamp(110px, 52%, 180px));
     max-width: 90%;
   }
 
@@ -5992,11 +5992,11 @@ html[data-theme="sensible"] .turn-timer-bar-fill {
   }
 
   .goal-structure {
-    top: 10%;
-    aspect-ratio: 7.32 / 2.44; /* Proporción oficial Fútbol 11 (3:1) */
-    width: min(86%, 660px);
-    height: auto;
-    max-height: 54%;
+    top: 9%;
+    aspect-ratio: 3 / 1;
+    height: clamp(120px, 47%, 210px);
+    width: calc(3 * clamp(120px, 47%, 210px));
+    max-width: min(88%, 630px);
   }
 
   .animated-keeper {

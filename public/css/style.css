@@ -4288,6 +4288,1185 @@ body[data-theme="sensible"] .selected-zone-label {
   line-height: 1.4;
 }
 
+
+/* =========================================================
+   TEMA 6: SUPER FÚTBOL 16-BIT (ARCADE CONSOLA 90S)
+   ========================================================= */
+body[data-theme="supersoccer"] {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #0b4f24;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.22) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.22) 2px, transparent 2px);
+  background-size: 16px 16px;
+  color: #111827;
+}
+
+body[data-theme="supersoccer"] .app-header {
+  background: linear-gradient(90deg, #1b265b 0%, #2b3b8f 50%, #1b265b 100%);
+  border-bottom: 3px solid #ffcc00;
+  box-shadow: 0 4px 0 #0f172a;
+}
+
+body[data-theme="supersoccer"] .header-logo {
+  color: #ffcc00;
+  text-shadow: 3px 3px 0 #e60039;
+  letter-spacing: 2px;
+}
+
+body[data-theme="supersoccer"] .logo-text span {
+  color: #ffffff;
+}
+
+body[data-theme="supersoccer"] .theme-select,
+body[data-theme="supersoccer"] .icon-btn,
+body[data-theme="supersoccer"] .header-room-badge {
+  background: #d8dce8;
+  color: #1a2350;
+  border: 2px solid #1a2350;
+  border-radius: 6px !important;
+  box-shadow: 2px 2px 0 #0b112c;
+  font-weight: 700;
+}
+
+body[data-theme="supersoccer"] .lobby-card,
+body[data-theme="supersoccer"] .waiting-card,
+body[data-theme="supersoccer"] .tourney-lobby-card,
+body[data-theme="supersoccer"] .modal-card,
+body[data-theme="supersoccer"] .scoreboard-bar,
+body[data-theme="supersoccer"] .instruction-banner,
+body[data-theme="supersoccer"] .bracket-top-bar,
+body[data-theme="supersoccer"] .bracket-scroll-container,
+body[data-theme="supersoccer"] .bracket-match-card,
+body[data-theme="supersoccer"] .room-share-modal-card,
+body[data-theme="supersoccer"] .seo-guide-card {
+  background: #d8dce8;
+  color: #1a2350;
+  border: 3px solid #1a2350;
+  border-radius: 8px !important;
+  box-shadow: 6px 6px 0 #0b112c, inset 1px 1px 0 #ffffff;
+}
+
+body[data-theme="supersoccer"] .lobby-card::before {
+  height: 6px;
+  background: repeating-linear-gradient(90deg, #ffcc00 0px, #ffcc00 20px, #e60039 20px, #e60039 40px, #2b4bf2 40px, #2b4bf2 60px);
+}
+
+body[data-theme="supersoccer"] .lobby-hero {
+  background: linear-gradient(135deg, #25337a 0%, #161e47 100%);
+  border: 3px solid #ffcc00;
+  box-shadow: 3px 3px 0 #0b112c;
+  border-radius: 6px !important;
+  color: #ffffff;
+}
+
+body[data-theme="supersoccer"] .lobby-hero h1 {
+  color: #ffcc00;
+  text-shadow: 3px 3px 0 #e60039;
+}
+
+body[data-theme="supersoccer"] .hero-subtitle {
+  color: #7dd3fc;
+  font-weight: 700;
+}
+
+body[data-theme="supersoccer"] .input-group input,
+body[data-theme="supersoccer"] .join-box input,
+body[data-theme="supersoccer"] .link-copy-row input,
+body[data-theme="supersoccer"] .ai-personality-select {
+  background: #ffffff;
+  color: #1a2350;
+  border: 2px solid #1a2350;
+  border-radius: 6px !important;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+}
+
+body[data-theme="supersoccer"] .size-card,
+body[data-theme="supersoccer"] .meta-box,
+body[data-theme="supersoccer"] .rules-card,
+body[data-theme="supersoccer"] .ai-practice-box {
+  background: #c3c8dc;
+  border: 2px solid #1a2350;
+  border-radius: 6px !important;
+  box-shadow: 2px 2px 0 #0b112c;
+  color: #1a2350;
+}
+
+body[data-theme="supersoccer"] .size-option input:checked + .size-card {
+  background: #ffcc00;
+  border-color: #1a2350;
+  box-shadow: 3px 3px 0 #1a2350;
+}
+
+body[data-theme="supersoccer"] .btn-primary {
+  background: #ffcc00;
+  color: #1a2350;
+  border: 3px solid #1a2350;
+  box-shadow: 3px 3px 0 #1a2350;
+  font-weight: 800;
+}
+
+body[data-theme="supersoccer"] .btn-tournament {
+  background: #e60039;
+  color: #ffffff;
+  border: 3px solid #1a2350;
+  box-shadow: 3px 3px 0 #1a2350;
+}
+
+body[data-theme="supersoccer"] .btn-async-challenge {
+  background: #2b4bf2;
+  color: #ffffff;
+  border: 3px solid #1a2350;
+  box-shadow: 3px 3px 0 #1a2350;
+}
+
+body[data-theme="supersoccer"] .btn-secondary,
+body[data-theme="supersoccer"] #play-ai-btn {
+  background: #1a2350;
+  color: #ffcc00;
+  border: 2px solid #ffcc00;
+  box-shadow: 2px 2px 0 #0b112c;
+  font-weight: 800;
+}
+
+body[data-theme="supersoccer"] .stadium-arena {
+  background: #063818;
+  border: 3px solid #1a2350;
+  box-shadow: 0 6px 0 #0b112c;
+  border-radius: 12px;
+}
+
+body[data-theme="supersoccer"] .pitch-turf {
+  background: repeating-linear-gradient(180deg, #097d30 0px, #097d30 24px, #0ba03e 24px, #0ba03e 48px);
+}
+
+body[data-theme="supersoccer"] .goal-frame {
+  border-color: #ffffff;
+  filter: drop-shadow(0 4px 0 #1a2350);
+}
+
+body[data-theme="supersoccer"] .selected-zone-label {
+  background: #ffcc00;
+  color: #1a2350;
+  border: 2px solid #1a2350;
+  box-shadow: 3px 3px 0 #1a2350;
+  font-weight: 800;
+}
+
+body[data-theme="supersoccer"] .footer-social-pill {
+  background: #1a2350;
+  color: #ffcc00;
+  border-color: #ffcc00;
+}
+
+
+/* =========================================================
+   TEMA 7: CAMPEONES DEL ANIME (SHONEN MANGA DE FÚTBOL)
+   ========================================================= */
+body[data-theme="campeones"] {
+  font-family: 'Fredoka', 'Montserrat', sans-serif;
+  background-color: #0284c7;
+  background-image:
+    radial-gradient(circle at 50% 15%, #38bdf8 0%, #0284c7 55%, #0369a1 100%),
+    repeating-radial-gradient(circle at 50% 15%, transparent 0, transparent 40px, rgba(255, 255, 255, 0.05) 40px, rgba(255, 255, 255, 0.05) 80px);
+  color: #0f172a;
+}
+
+body[data-theme="campeones"] .app-header {
+  background: linear-gradient(90deg, #0369a1 0%, #0284c7 50%, #38bdf8 100%);
+  border-bottom: 4px solid #0f172a;
+  box-shadow: 0 4px 0 #0f172a;
+}
+
+body[data-theme="campeones"] .header-logo {
+  color: #ffffff;
+  text-shadow: 3px 3px 0 #ea580c, 5px 5px 0 #0f172a;
+  letter-spacing: 2px;
+}
+
+body[data-theme="campeones"] .logo-text span {
+  color: #facc15;
+  text-shadow: 3px 3px 0 #0f172a;
+}
+
+body[data-theme="campeones"] .theme-select,
+body[data-theme="campeones"] .icon-btn,
+body[data-theme="campeones"] .header-room-badge {
+  background: #ffffff;
+  color: #0f172a;
+  border: 3px solid #0f172a;
+  border-radius: 12px !important;
+  box-shadow: 3px 3px 0 #0f172a;
+  font-weight: 800;
+}
+
+body[data-theme="campeones"] .lobby-card,
+body[data-theme="campeones"] .waiting-card,
+body[data-theme="campeones"] .tourney-lobby-card,
+body[data-theme="campeones"] .modal-card,
+body[data-theme="campeones"] .scoreboard-bar,
+body[data-theme="campeones"] .instruction-banner,
+body[data-theme="campeones"] .bracket-top-bar,
+body[data-theme="campeones"] .bracket-scroll-container,
+body[data-theme="campeones"] .bracket-match-card,
+body[data-theme="campeones"] .room-share-modal-card,
+body[data-theme="campeones"] .seo-guide-card {
+  background: #ffffff;
+  color: #0f172a;
+  border: 4px solid #0f172a;
+  border-radius: 18px !important;
+  box-shadow: 6px 6px 0 #0f172a;
+}
+
+body[data-theme="campeones"] .lobby-card::before {
+  height: 8px;
+  background: repeating-linear-gradient(90deg, #ea580c 0px, #ea580c 25px, #facc15 25px, #facc15 50px, #0284c7 50px, #0284c7 75px);
+}
+
+body[data-theme="campeones"] .lobby-hero {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 45%, #facc15 100%);
+  border: 3px solid #0f172a;
+  box-shadow: 4px 4px 0 #0f172a;
+  border-radius: 14px !important;
+  color: #ffffff;
+}
+
+body[data-theme="campeones"] .lobby-hero h1 {
+  color: #ffffff;
+  text-shadow: 3px 3px 0 #0f172a, -2px -2px 0 #ea580c;
+  letter-spacing: 3px;
+}
+
+body[data-theme="campeones"] .hero-subtitle {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 1px 1px 0 #0f172a;
+}
+
+body[data-theme="campeones"] .input-group input,
+body[data-theme="campeones"] .join-box input,
+body[data-theme="campeones"] .link-copy-row input,
+body[data-theme="campeones"] .ai-personality-select {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 3px solid #0f172a;
+  border-radius: 10px !important;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+
+body[data-theme="campeones"] .size-card,
+body[data-theme="campeones"] .meta-box,
+body[data-theme="campeones"] .rules-card,
+body[data-theme="campeones"] .ai-practice-box {
+  background: #f0f9ff;
+  border: 3px solid #0f172a;
+  border-radius: 12px !important;
+  box-shadow: 3px 3px 0 #0f172a;
+  color: #0f172a;
+}
+
+body[data-theme="campeones"] .size-option input:checked + .size-card {
+  background: #facc15;
+  border-color: #0f172a;
+  box-shadow: 4px 4px 0 #0f172a;
+}
+
+body[data-theme="campeones"] .btn-primary {
+  background: #f97316;
+  color: #ffffff;
+  border: 3px solid #0f172a;
+  box-shadow: 4px 4px 0 #0f172a;
+  font-weight: 800;
+}
+
+body[data-theme="campeones"] .btn-tournament {
+  background: #facc15;
+  color: #0f172a;
+  border: 3px solid #0f172a;
+  box-shadow: 4px 4px 0 #0f172a;
+  font-weight: 800;
+}
+
+body[data-theme="campeones"] .btn-async-challenge {
+  background: #0284c7;
+  color: #ffffff;
+  border: 3px solid #0f172a;
+  box-shadow: 4px 4px 0 #0f172a;
+  font-weight: 800;
+}
+
+body[data-theme="campeones"] .btn-secondary,
+body[data-theme="campeones"] #play-ai-btn {
+  background: #0f172a;
+  color: #facc15;
+  border: 3px solid #0f172a;
+  box-shadow: 3px 3px 0 #0f172a;
+  font-weight: 800;
+}
+
+body[data-theme="campeones"] .stadium-arena {
+  background: radial-gradient(circle at 50% 20%, #38bdf8 0%, #0284c7 70%);
+  border: 4px solid #0f172a;
+  box-shadow: 0 8px 0 #0f172a;
+  border-radius: 20px;
+}
+
+body[data-theme="campeones"] .pitch-turf {
+  background: repeating-linear-gradient(175deg, #16a34a 0px, #16a34a 28px, #22c55e 28px, #22c55e 56px);
+}
+
+body[data-theme="campeones"] .goal-frame {
+  border-color: #ffffff;
+  filter: drop-shadow(0 5px 0 #0f172a);
+}
+
+body[data-theme="campeones"] .selected-zone-label {
+  background: #facc15;
+  color: #0f172a;
+  border: 3px solid #0f172a;
+  box-shadow: 4px 4px 0 #0f172a;
+  font-weight: 900;
+}
+
+body[data-theme="campeones"] .footer-social-pill {
+  background: #0f172a;
+  color: #facc15;
+  border-color: #0f172a;
+}
+
+
+/* =========================================================
+   TEMA 8: COPA MUNDIAL DE SELECCIONES (GRAN CITA INTERNACIONAL)
+   ========================================================= */
+body[data-theme="mundial"] {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #062315;
+  background-image:
+    radial-gradient(circle at 50% 12%, #0e4d2d 0%, #062315 70%),
+    linear-gradient(rgba(234, 179, 8, 0.04) 1px, transparent 1px);
+  color: #f8fafc;
+}
+
+body[data-theme="mundial"] .app-header {
+  background: linear-gradient(90deg, #04190f 0%, #0d3822 50%, #04190f 100%);
+  border-bottom: 3px solid #eab308;
+  box-shadow: 0 4px 20px rgba(234, 179, 8, 0.25);
+}
+
+body[data-theme="mundial"] .header-logo {
+  color: #facc15;
+  text-shadow: 0 2px 10px rgba(250, 204, 21, 0.5);
+  letter-spacing: 2px;
+}
+
+body[data-theme="mundial"] .logo-text span {
+  color: #ffffff;
+}
+
+body[data-theme="mundial"] .theme-select,
+body[data-theme="mundial"] .icon-btn,
+body[data-theme="mundial"] .header-room-badge {
+  background: #092e1d;
+  color: #facc15;
+  border: 2px solid #ca8a04;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 0 #02120a;
+}
+
+body[data-theme="mundial"] .lobby-card,
+body[data-theme="mundial"] .waiting-card,
+body[data-theme="mundial"] .tourney-lobby-card,
+body[data-theme="mundial"] .modal-card,
+body[data-theme="mundial"] .scoreboard-bar,
+body[data-theme="mundial"] .instruction-banner,
+body[data-theme="mundial"] .bracket-top-bar,
+body[data-theme="mundial"] .bracket-scroll-container,
+body[data-theme="mundial"] .bracket-match-card,
+body[data-theme="mundial"] .room-share-modal-card,
+body[data-theme="mundial"] .seo-guide-card {
+  background: #082d1c;
+  color: #f8fafc;
+  border: 2px solid #ca8a04;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(254, 240, 138, 0.2);
+}
+
+body[data-theme="mundial"] .lobby-card::before {
+  height: 6px;
+  background: linear-gradient(90deg, #ca8a04 0%, #facc15 50%, #ca8a04 100%);
+}
+
+body[data-theme="mundial"] .lobby-hero {
+  background: linear-gradient(135deg, #713f12 0%, #a16207 45%, #ca8a04 80%, #eab308 100%);
+  border: 2px solid #fef08a;
+  box-shadow: 0 4px 15px rgba(202, 138, 4, 0.4);
+  border-radius: 12px !important;
+  color: #042013;
+}
+
+body[data-theme="mundial"] .lobby-hero h1 {
+  color: #052617;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+body[data-theme="mundial"] .hero-subtitle {
+  color: #021a0f;
+  font-weight: 700;
+}
+
+body[data-theme="mundial"] .input-group input,
+body[data-theme="mundial"] .join-box input,
+body[data-theme="mundial"] .link-copy-row input,
+body[data-theme="mundial"] .ai-personality-select {
+  background: #04190f;
+  color: #fef08a;
+  border: 2px solid #ca8a04;
+  border-radius: 9px !important;
+  font-weight: 600;
+}
+
+body[data-theme="mundial"] .size-card,
+body[data-theme="mundial"] .meta-box,
+body[data-theme="mundial"] .rules-card,
+body[data-theme="mundial"] .ai-practice-box {
+  background: #051e13;
+  border: 2px solid #a16207;
+  border-radius: 10px !important;
+  color: #f8fafc;
+}
+
+body[data-theme="mundial"] .size-option input:checked + .size-card {
+  background: #a16207;
+  border-color: #facc15;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+}
+
+body[data-theme="mundial"] .btn-primary {
+  background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%);
+  color: #042013;
+  border: 2px solid #fef08a;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(202, 138, 4, 0.4);
+}
+
+body[data-theme="mundial"] .btn-tournament {
+  background: linear-gradient(180deg, #9f1239 0%, #881337 100%);
+  color: #fef08a;
+  border: 2px solid #f43f5e;
+}
+
+body[data-theme="mundial"] .btn-async-challenge {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border: 2px solid #34d399;
+}
+
+body[data-theme="mundial"] .btn-secondary,
+body[data-theme="mundial"] #play-ai-btn {
+  background: #04190f;
+  color: #facc15;
+  border: 2px solid #eab308;
+}
+
+body[data-theme="mundial"] .stadium-arena {
+  background: radial-gradient(circle at 50% 25%, #0f4528 0%, #041a0e 75%);
+  border: 3px solid #ca8a04;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+}
+
+body[data-theme="mundial"] .pitch-turf {
+  background: repeating-linear-gradient(180deg, #0d5c32 0px, #0d5c32 26px, #0f6c3a 26px, #0f6c3a 52px);
+}
+
+body[data-theme="mundial"] .goal-frame {
+  border-color: #fef08a;
+  filter: drop-shadow(0 4px 10px rgba(234, 179, 8, 0.4));
+}
+
+body[data-theme="mundial"] .selected-zone-label {
+  background: #eab308;
+  color: #042013;
+  border: 2px solid #fef08a;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+  font-weight: 900;
+}
+
+body[data-theme="mundial"] .footer-social-pill {
+  background: #092e1d;
+  color: #facc15;
+  border-color: #ca8a04;
+}
+
+
+/* =========================================================
+   TEMA 9: NOCHES DE ESTRELLAS EUROPEAS (GALA NOCTURNA)
+   ========================================================= */
+body[data-theme="champions"] {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #020719;
+  background-image:
+    radial-gradient(circle at 50% 20%, #0d1e57 0%, #040a24 60%, #010412 100%),
+    radial-gradient(1px 1px at 20% 30%, #ffffff 100%, transparent),
+    radial-gradient(1px 1px at 80% 40%, #ffffff 100%, transparent),
+    radial-gradient(1px 1px at 40% 70%, #ffffff 100%, transparent);
+  background-size: 100% 100%, 120px 120px, 160px 160px, 200px 200px;
+  color: #f1f5f9;
+}
+
+body[data-theme="champions"] .app-header {
+  background: linear-gradient(90deg, #020617 0%, #0a1b4d 50%, #020617 100%);
+  border-bottom: 2px solid #38bdf8;
+  box-shadow: 0 4px 25px rgba(56, 189, 248, 0.25);
+}
+
+body[data-theme="champions"] .header-logo {
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(56, 189, 248, 0.9);
+  letter-spacing: 2px;
+}
+
+body[data-theme="champions"] .logo-text span {
+  color: #38bdf8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+}
+
+body[data-theme="champions"] .theme-select,
+body[data-theme="champions"] .icon-btn,
+body[data-theme="champions"] .header-room-badge {
+  background: #08173d;
+  color: #38bdf8;
+  border: 1.5px solid #38bdf8;
+  border-radius: 10px !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+body[data-theme="champions"] .lobby-card,
+body[data-theme="champions"] .waiting-card,
+body[data-theme="champions"] .tourney-lobby-card,
+body[data-theme="champions"] .modal-card,
+body[data-theme="champions"] .scoreboard-bar,
+body[data-theme="champions"] .instruction-banner,
+body[data-theme="champions"] .bracket-top-bar,
+body[data-theme="champions"] .bracket-scroll-container,
+body[data-theme="champions"] .bracket-match-card,
+body[data-theme="champions"] .room-share-modal-card,
+body[data-theme="champions"] .seo-guide-card {
+  background: rgba(8, 20, 56, 0.92);
+  color: #f1f5f9;
+  border: 2px solid rgba(56, 189, 248, 0.45);
+  border-radius: 16px !important;
+  box-shadow: 0 12px 35px rgba(2, 6, 23, 0.8), 0 0 18px rgba(14, 165, 233, 0.15);
+}
+
+body[data-theme="champions"] .lobby-card::before {
+  height: 6px;
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #e0f2fe 100%);
+}
+
+body[data-theme="champions"] .lobby-hero {
+  background: linear-gradient(135deg, #071747 0%, #0c2b7a 50%, #0284c7 100%);
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+  border-radius: 12px !important;
+  color: #ffffff;
+}
+
+body[data-theme="champions"] .lobby-hero h1 {
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+}
+
+body[data-theme="champions"] .hero-subtitle {
+  color: #bae6fd;
+}
+
+body[data-theme="champions"] .input-group input,
+body[data-theme="champions"] .join-box input,
+body[data-theme="champions"] .link-copy-row input,
+body[data-theme="champions"] .ai-personality-select {
+  background: #030a21;
+  color: #38bdf8;
+  border: 1.5px solid #0284c7;
+  border-radius: 8px !important;
+}
+
+body[data-theme="champions"] .size-card,
+body[data-theme="champions"] .meta-box,
+body[data-theme="champions"] .rules-card,
+body[data-theme="champions"] .ai-practice-box {
+  background: #051333;
+  border: 1.5px solid #1e3a8a;
+  border-radius: 10px !important;
+  color: #f1f5f9;
+}
+
+body[data-theme="champions"] .size-option input:checked + .size-card {
+  background: #0c2b7a;
+  border-color: #38bdf8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+body[data-theme="champions"] .btn-primary {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+  font-weight: 800;
+}
+
+body[data-theme="champions"] .btn-tournament {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #38bdf8;
+  border: 2px solid #64748b;
+}
+
+body[data-theme="champions"] .btn-async-challenge {
+  background: linear-gradient(180deg, #0f766e 0%, #115e59 100%);
+  color: #5eead4;
+  border: 2px solid #2dd4bf;
+}
+
+body[data-theme="champions"] .btn-secondary,
+body[data-theme="champions"] #play-ai-btn {
+  background: #030c26;
+  color: #38bdf8;
+  border: 2px solid #38bdf8;
+}
+
+body[data-theme="champions"] .stadium-arena {
+  background: radial-gradient(circle at 50% 20%, #0b1f5c 0%, #02071a 75%);
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+}
+
+body[data-theme="champions"] .pitch-turf {
+  background: repeating-linear-gradient(180deg, #063d27 0px, #063d27 26px, #0a4f33 26px, #0a4f33 52px);
+}
+
+body[data-theme="champions"] .goal-frame {
+  border-color: #ffffff;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6));
+}
+
+body[data-theme="champions"] .selected-zone-label {
+  background: #0284c7;
+  color: #ffffff;
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+  font-weight: 800;
+}
+
+body[data-theme="champions"] .footer-social-pill {
+  background: #08173d;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+
+/* =========================================================
+   TEMA 10: LIGA ESPAÑOLA DE LAS ESTRELLAS (RETRANSMISIÓN TV)
+   ========================================================= */
+body[data-theme="liga"] {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #0b1120;
+  background-image:
+    radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0b1120 70%),
+    linear-gradient(45deg, rgba(220, 38, 38, 0.05) 25%, transparent 25%);
+  color: #ffffff;
+}
+
+body[data-theme="liga"] .app-header {
+  background: linear-gradient(90deg, #991b1b 0%, #dc2626 40%, #ea580c 100%);
+  border-bottom: 3px solid #facc15;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.35);
+}
+
+body[data-theme="liga"] .header-logo {
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #7f1d1d;
+  letter-spacing: 2px;
+}
+
+body[data-theme="liga"] .logo-text span {
+  color: #facc15;
+}
+
+body[data-theme="liga"] .theme-select,
+body[data-theme="liga"] .icon-btn,
+body[data-theme="liga"] .header-room-badge {
+  background: #1e293b;
+  color: #ffffff;
+  border: 2px solid #dc2626;
+  border-radius: 9px !important;
+  box-shadow: 0 2px 0 #0f172a;
+}
+
+body[data-theme="liga"] .lobby-card,
+body[data-theme="liga"] .waiting-card,
+body[data-theme="liga"] .tourney-lobby-card,
+body[data-theme="liga"] .modal-card,
+body[data-theme="liga"] .scoreboard-bar,
+body[data-theme="liga"] .instruction-banner,
+body[data-theme="liga"] .bracket-top-bar,
+body[data-theme="liga"] .bracket-scroll-container,
+body[data-theme="liga"] .bracket-match-card,
+body[data-theme="liga"] .room-share-modal-card,
+body[data-theme="liga"] .seo-guide-card {
+  background: #1e293b;
+  color: #ffffff;
+  border: 2px solid #dc2626;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body[data-theme="liga"] .lobby-card::before {
+  height: 6px;
+  background: linear-gradient(90deg, #dc2626 0%, #ea580c 50%, #facc15 100%);
+}
+
+body[data-theme="liga"] .lobby-hero {
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  border: 2px solid #facc15;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  border-radius: 12px !important;
+  color: #ffffff;
+}
+
+body[data-theme="liga"] .lobby-hero h1 {
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #7f1d1d;
+}
+
+body[data-theme="liga"] .hero-subtitle {
+  color: #fef08a;
+}
+
+body[data-theme="liga"] .input-group input,
+body[data-theme="liga"] .join-box input,
+body[data-theme="liga"] .link-copy-row input,
+body[data-theme="liga"] .ai-personality-select {
+  background: #0f172a;
+  color: #ffffff;
+  border: 2px solid #475569;
+  border-radius: 8px !important;
+}
+
+body[data-theme="liga"] .size-card,
+body[data-theme="liga"] .meta-box,
+body[data-theme="liga"] .rules-card,
+body[data-theme="liga"] .ai-practice-box {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px !important;
+  color: #ffffff;
+}
+
+body[data-theme="liga"] .size-option input:checked + .size-card {
+  background: #dc2626;
+  border-color: #facc15;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
+}
+
+body[data-theme="liga"] .btn-primary {
+  background: #dc2626;
+  color: #ffffff;
+  border: 2px solid #f87171;
+  box-shadow: 0 3px 0 #991b1b;
+  font-weight: 800;
+}
+
+body[data-theme="liga"] .btn-tournament {
+  background: #ea580c;
+  color: #ffffff;
+  border: 2px solid #fb923c;
+  box-shadow: 0 3px 0 #9a3412;
+}
+
+body[data-theme="liga"] .btn-async-challenge {
+  background: #0284c7;
+  color: #ffffff;
+  border: 2px solid #38bdf8;
+  box-shadow: 0 3px 0 #0369a1;
+}
+
+body[data-theme="liga"] .btn-secondary,
+body[data-theme="liga"] #play-ai-btn {
+  background: #0f172a;
+  color: #facc15;
+  border: 2px solid #dc2626;
+}
+
+body[data-theme="liga"] .stadium-arena {
+  background: radial-gradient(circle at 50% 25%, #1e293b 0%, #0f172a 75%);
+  border: 3px solid #dc2626;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+}
+
+body[data-theme="liga"] .pitch-turf {
+  background: repeating-linear-gradient(180deg, #15803d 0px, #15803d 26px, #16a34a 26px, #16a34a 52px);
+}
+
+body[data-theme="liga"] .goal-frame {
+  border-color: #ffffff;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+body[data-theme="liga"] .selected-zone-label {
+  background: #dc2626;
+  color: #ffffff;
+  border: 2px solid #facc15;
+  box-shadow: 0 3px 0 #991b1b;
+  font-weight: 800;
+}
+
+body[data-theme="liga"] .footer-social-pill {
+  background: #1e293b;
+  color: #facc15;
+  border-color: #dc2626;
+}
+
+
+/* =========================================================
+   TEMA 11: PC FÚTBOL 5.0 EDICIÓN ORO (DINAMIC 96/97)
+   ========================================================= */
+body[data-theme="pcfutbol5"] {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #022013;
+  background-image:
+    linear-gradient(rgba(212, 175, 55, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 175, 55, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: #ffffff;
+}
+
+body[data-theme="pcfutbol5"] .app-header {
+  background: linear-gradient(90deg, #051636 0%, #0d285c 50%, #051636 100%);
+  border-bottom: 3px solid #d4af37;
+  box-shadow: 0 4px 0 #000000;
+}
+
+body[data-theme="pcfutbol5"] .header-logo {
+  color: #ffd700;
+  text-shadow: 2px 2px 0 #b8860b, 3px 3px 0 #000000;
+  letter-spacing: 2px;
+}
+
+body[data-theme="pcfutbol5"] .logo-text span {
+  color: #ffffff;
+}
+
+body[data-theme="pcfutbol5"] .theme-select,
+body[data-theme="pcfutbol5"] .icon-btn,
+body[data-theme="pcfutbol5"] .header-room-badge {
+  background: #0a3320;
+  color: #ffd700;
+  border: 2px outset #d4af37;
+  border-radius: 0 !important;
+  box-shadow: 2px 2px 0 #000000;
+  font-weight: 700;
+}
+
+body[data-theme="pcfutbol5"] .lobby-card,
+body[data-theme="pcfutbol5"] .waiting-card,
+body[data-theme="pcfutbol5"] .tourney-lobby-card,
+body[data-theme="pcfutbol5"] .modal-card,
+body[data-theme="pcfutbol5"] .scoreboard-bar,
+body[data-theme="pcfutbol5"] .instruction-banner,
+body[data-theme="pcfutbol5"] .bracket-top-bar,
+body[data-theme="pcfutbol5"] .bracket-scroll-container,
+body[data-theme="pcfutbol5"] .bracket-match-card,
+body[data-theme="pcfutbol5"] .room-share-modal-card,
+body[data-theme="pcfutbol5"] .seo-guide-card {
+  background: #08281a;
+  color: #ffffff;
+  border: 3px outset #d4af37;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 #000000;
+}
+
+body[data-theme="pcfutbol5"] .lobby-card::before {
+  height: 6px;
+  background: linear-gradient(90deg, #ffd700 0%, #b8860b 50%, #ffd700 100%);
+}
+
+body[data-theme="pcfutbol5"] .lobby-hero {
+  background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+  border: 3px solid #fff8dc;
+  box-shadow: 3px 3px 0 #000000;
+  border-radius: 0 !important;
+  color: #1a0f00;
+}
+
+body[data-theme="pcfutbol5"] .lobby-hero h1 {
+  color: #1a0f00;
+  text-shadow: 1px 1px 0 #fff8dc;
+}
+
+body[data-theme="pcfutbol5"] .hero-subtitle {
+  color: #2b1400;
+  font-weight: 800;
+}
+
+body[data-theme="pcfutbol5"] .input-group input,
+body[data-theme="pcfutbol5"] .join-box input,
+body[data-theme="pcfutbol5"] .link-copy-row input,
+body[data-theme="pcfutbol5"] .ai-personality-select {
+  background: #01140c;
+  color: #ffd700;
+  border: 2px inset #d4af37;
+  border-radius: 0 !important;
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;
+}
+
+body[data-theme="pcfutbol5"] .size-card,
+body[data-theme="pcfutbol5"] .meta-box,
+body[data-theme="pcfutbol5"] .rules-card,
+body[data-theme="pcfutbol5"] .ai-practice-box {
+  background: #0b3d27;
+  border: 2px outset #d4af37;
+  border-radius: 0 !important;
+  color: #ffffff;
+}
+
+body[data-theme="pcfutbol5"] .size-option input:checked + .size-card {
+  background: #b8860b;
+  border-color: #ffd700;
+  color: #1a0f00;
+}
+
+body[data-theme="pcfutbol5"] .btn-primary {
+  background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+  color: #1a0f00;
+  border: 2px outset #fff8dc;
+  font-weight: 800;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+body[data-theme="pcfutbol5"] .btn-tournament {
+  background: linear-gradient(180deg, #0e3770 0%, #061e40 100%);
+  color: #ffd700;
+  border: 2px outset #d4af37;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+body[data-theme="pcfutbol5"] .btn-async-challenge {
+  background: linear-gradient(180deg, #0b4f2c 0%, #042614 100%);
+  color: #fef08a;
+  border: 2px outset #52b788;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+body[data-theme="pcfutbol5"] .btn-secondary,
+body[data-theme="pcfutbol5"] #play-ai-btn {
+  background: #01140c;
+  color: #ffd700;
+  border: 2px outset #d4af37;
+  border-radius: 0 !important;
+}
+
+body[data-theme="pcfutbol5"] .stadium-arena {
+  background: #022013;
+  border: 3px outset #d4af37;
+  box-shadow: 5px 5px 0 #000000;
+  border-radius: 0 !important;
+}
+
+body[data-theme="pcfutbol5"] .pitch-turf {
+  background: repeating-linear-gradient(180deg, #064022 0px, #064022 28px, #09542d 28px, #09542d 56px);
+}
+
+body[data-theme="pcfutbol5"] .goal-frame {
+  border-color: #ffffff;
+}
+
+body[data-theme="pcfutbol5"] .selected-zone-label {
+  background: #b8860b;
+  color: #1a0f00;
+  border: 2px outset #ffd700;
+  font-weight: 900;
+  border-radius: 0 !important;
+}
+
+body[data-theme="pcfutbol5"] .footer-social-pill {
+  background: #08281a;
+  color: #ffd700;
+  border-color: #d4af37;
+  border-radius: 0 !important;
+}
+
+
+/* =========================================================
+   TEMA 12: MÁNAGER TÁCTICO (MODO BANQUILLO & PIZARRA)
+   ========================================================= */
+body[data-theme="manager"] {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #12091f;
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: #e9d5ff;
+}
+
+body[data-theme="manager"] .app-header {
+  background: linear-gradient(90deg, #180b2c 0%, #29124a 50%, #180b2c 100%);
+  border-bottom: 2px solid #a855f7;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+}
+
+body[data-theme="manager"] .header-logo {
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  letter-spacing: 2px;
+}
+
+body[data-theme="manager"] .logo-text span {
+  color: #c084fc;
+}
+
+body[data-theme="manager"] .theme-select,
+body[data-theme="manager"] .icon-btn,
+body[data-theme="manager"] .header-room-badge {
+  background: #24133d;
+  color: #10b981;
+  border: 1.5px solid #a855f7;
+  border-radius: 8px !important;
+}
+
+body[data-theme="manager"] .lobby-card,
+body[data-theme="manager"] .waiting-card,
+body[data-theme="manager"] .tourney-lobby-card,
+body[data-theme="manager"] .modal-card,
+body[data-theme="manager"] .scoreboard-bar,
+body[data-theme="manager"] .instruction-banner,
+body[data-theme="manager"] .bracket-top-bar,
+body[data-theme="manager"] .bracket-scroll-container,
+body[data-theme="manager"] .bracket-match-card,
+body[data-theme="manager"] .room-share-modal-card,
+body[data-theme="manager"] .seo-guide-card {
+  background: #1c0e30;
+  color: #f3e8ff;
+  border: 1.5px solid #4c2882;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+body[data-theme="manager"] .lobby-card::before {
+  height: 5px;
+  background: linear-gradient(90deg, #10b981 0%, #a855f7 50%, #06b6d4 100%);
+}
+
+body[data-theme="manager"] .lobby-hero {
+  background: linear-gradient(135deg, #2b134d 0%, #3e1b6f 100%);
+  border: 1.5px solid #a855f7;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2);
+  border-radius: 12px !important;
+  color: #ffffff;
+}
+
+body[data-theme="manager"] .lobby-hero h1 {
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+body[data-theme="manager"] .hero-subtitle {
+  color: #d8b4fe;
+}
+
+body[data-theme="manager"] .input-group input,
+body[data-theme="manager"] .join-box input,
+body[data-theme="manager"] .link-copy-row input,
+body[data-theme="manager"] .ai-personality-select {
+  background: #0d0617;
+  color: #10b981;
+  border: 1.5px solid #4c2882;
+  border-radius: 7px !important;
+}
+
+body[data-theme="manager"] .size-card,
+body[data-theme="manager"] .meta-box,
+body[data-theme="manager"] .rules-card,
+body[data-theme="manager"] .ai-practice-box {
+  background: #150a24;
+  border: 1.5px solid #3b1d66;
+  border-radius: 9px !important;
+  color: #e9d5ff;
+}
+
+body[data-theme="manager"] .size-option input:checked + .size-card {
+  background: #3b1d66;
+  border-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+body[data-theme="manager"] .btn-primary {
+  background: #10b981;
+  color: #022c22;
+  border: 1.5px solid #34d399;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+body[data-theme="manager"] .btn-tournament {
+  background: #9333ea;
+  color: #ffffff;
+  border: 1.5px solid #c084fc;
+  box-shadow: 0 0 12px rgba(147, 51, 234, 0.3);
+}
+
+body[data-theme="manager"] .btn-async-challenge {
+  background: #0284c7;
+  color: #ffffff;
+  border: 1.5px solid #38bdf8;
+}
+
+body[data-theme="manager"] .btn-secondary,
+body[data-theme="manager"] #play-ai-btn {
+  background: #0d0617;
+  color: #10b981;
+  border: 1.5px solid #10b981;
+}
+
+body[data-theme="manager"] .stadium-arena {
+  background: radial-gradient(circle at 50% 25%, #180b2c 0%, #0a0412 75%);
+  border: 2px solid #a855f7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-radius: 14px;
+}
+
+body[data-theme="manager"] .pitch-turf {
+  background: repeating-linear-gradient(180deg, #07382c 0px, #07382c 26px, #0a4738 26px, #0a4738 52px);
+}
+
+body[data-theme="manager"] .goal-frame {
+  border-color: #ffffff;
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
+}
+
+body[data-theme="manager"] .selected-zone-label {
+  background: #10b981;
+  color: #022c22;
+  border: 1.5px solid #34d399;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  font-weight: 900;
+}
+
+body[data-theme="manager"] .footer-social-pill {
+  background: #24133d;
+  color: #10b981;
+  border-color: #a855f7;
+}
+
+
 /* =========================================================
    CRÉDITOS DE AUTORÍA: VALLAS PUBLICITARIAS Y PIE DE PÁGINA
    ========================================================= */

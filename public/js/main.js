@@ -972,12 +972,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const themeSelect = document.getElementById('theme-select');
-  const savedTheme = localStorage.getItem('penaltazo_theme') || 'festivo';
+  const VALID_THEMES = ['pcfutbol', 'sensible', 'claro', 'oscuro'];
+  let savedTheme = localStorage.getItem('penaltazo_theme');
+  if (!VALID_THEMES.includes(savedTheme)) {
+    savedTheme = 'pcfutbol';
+    localStorage.setItem('penaltazo_theme', savedTheme);
+  }
   document.body.setAttribute('data-theme', savedTheme);
   if (themeSelect) {
     themeSelect.value = savedTheme;
     themeSelect.addEventListener('change', () => {
-      const selectedTheme = themeSelect.value || 'festivo';
+      const selectedTheme = VALID_THEMES.includes(themeSelect.value) ? themeSelect.value : 'pcfutbol';
       document.body.setAttribute('data-theme', selectedTheme);
       localStorage.setItem('penaltazo_theme', selectedTheme);
     });

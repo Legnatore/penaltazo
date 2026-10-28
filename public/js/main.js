@@ -179,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   animator = new PenaltyAnimator(stadiumArena, goalGrid);
+  window.animator = animator;
 
   goalGrid.onCellHover = (row, col) => {
     if (hasConfirmedChoice || isResolvingTurn) return;

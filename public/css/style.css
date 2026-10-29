@@ -9644,3 +9644,37 @@ body[data-theme="oscuro"] .modal-win-close-btn:hover {
   color: #ffffff !important;
   border-color: #e81123 !important;
 }
+
+/* Iconos oficiales de marca ¡PENALTAZO! */
+.header-logo-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.hero-logo-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.3s ease;
+}
+.hero-logo-img:hover {
+  transform: scale(1.06) rotate(-3deg);
+}
+@media (max-width: 600px) {
+  .hero-logo-img {
+    width: 72px;
+    height: 72px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-logo-img {
+    width: 36px;
+    height: 36px;
+  }
+}

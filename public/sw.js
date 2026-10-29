@@ -1,11 +1,16 @@
 /**
  * Service Worker de ¡PENALTAZO! (PWA Offline-First para modo práctica vs IA)
  */
-const CACHE_NAME = 'penaltazo-pwa-v6.0';
+const CACHE_NAME = 'penaltazo-pwa-v6.1';
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/favicon.ico',
+  '/assets/icons/favicon-32x32.png',
+  '/assets/icons/apple-touch-icon.png',
+  '/assets/icons/icon-192.png',
+  '/assets/icons/icon-512.png',
   '/css/style.css',
   '/css/animations.css',
   '/js/audio.js',

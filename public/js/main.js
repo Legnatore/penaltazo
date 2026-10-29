@@ -978,7 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const themeSelect = document.getElementById('theme-select');
-  const VALID_THEMES = ['pcfutbol', 'sensible', 'claro', 'oscuro'];
+  const VALID_THEMES = ['pcfutbol', 'sensible', 'claro', 'oscuro', 'oficina'];
   let savedTheme = localStorage.getItem('penaltazo_theme');
   if (!VALID_THEMES.includes(savedTheme)) {
     savedTheme = 'pcfutbol';

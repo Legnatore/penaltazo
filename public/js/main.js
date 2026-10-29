@@ -180,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   animator = new PenaltyAnimator(stadiumArena, goalGrid);
   window.animator = animator;
+  window.goalGrid = goalGrid;
 
   goalGrid.onCellHover = (row, col) => {
     if (hasConfirmedChoice || isResolvingTurn) return;
@@ -2267,7 +2268,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       updateRematchUI(pendingRematchVotes);
-    }, 1200);
+    }, 250);
   }
 
   // Botón para volver al cuadro del torneo

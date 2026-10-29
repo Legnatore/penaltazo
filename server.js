@@ -903,7 +903,7 @@ function resolveTurn(room) {
           roomState: sanitizeRoomForClient(room)
         });
       }
-    }, 4200);
+    }, 2200);
   }
 }
 

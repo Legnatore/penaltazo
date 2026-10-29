@@ -2645,6 +2645,7 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 }
 
 .modal-card {
+  position: relative;
   background: var(--bg-card);
   border: 4px solid #0f172a;
   border-radius: 28px;
@@ -2655,6 +2656,52 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   box-shadow: var(--shadow-main);
   max-height: 92vh;
   overflow-y: auto;
+}
+
+/* =========================================================
+   BOTÓN DE CIERRE ESTILO WINDOWS EN MODALES Y POPUPS
+   ========================================================= */
+
+.modal-win-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.22);
+  background: rgba(255, 255, 255, 0.25);
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 50;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.modal-win-close-btn:hover {
+  background-color: #e81123 !important; /* Rojo Windows clásico al pasar el ratón */
+  color: #ffffff !important;
+  border-color: #c40e1d !important;
+}
+
+.modal-win-close-btn:active {
+  background-color: #f1707a !important; /* Click feedback */
+  color: #ffffff !important;
+  transform: scale(0.92);
+}
+
+.modal-win-close-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .game-over-title {
@@ -9491,3 +9538,63 @@ body[data-theme="manager"] .timer-pill { background: #10b981; color: #022c22; bo
 body[data-theme="manager"] .turn-timer-bar-fill { background: linear-gradient(90deg, #10b981, #34d399) !important; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
 body[data-theme="manager"] #commentator-ticker { background: #0d0617; color: #10b981; border: 1.5px solid #4c2882; }
 body[data-theme="manager"] .legal-modal-content { color: #e9d5ff; }
+
+/* =========================================================
+   ADAPTACIONES DE BOTÓN CERRAR VENTANA WINDOWS POR TEMA
+   ========================================================= */
+
+/* PC Penaltazo 4.0 */
+body[data-theme="pcfutbol"] .modal-win-close-btn {
+  border: 2px outset #d4af37;
+  background: #022013;
+  color: #ffd700;
+  border-radius: 0 !important;
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;
+}
+body[data-theme="pcfutbol"] .modal-win-close-btn:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 2px inset #991b1b !important;
+}
+
+/* Sensible Penaltazo */
+body[data-theme="sensible"] .modal-win-close-btn {
+  border: 2px solid #000000;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 0 !important;
+  font-family: 'VT323', monospace;
+  font-size: 1.35rem;
+  box-shadow: 2px 2px 0 #000000;
+}
+body[data-theme="sensible"] .modal-win-close-btn:hover {
+  background-color: #ff0000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  box-shadow: 1px 1px 0 #000000;
+}
+
+/* Claro */
+body[data-theme="claro"] .modal-win-close-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+body[data-theme="claro"] .modal-win-close-btn:hover {
+  background-color: #e81123 !important;
+  color: #ffffff !important;
+  border-color: #e81123 !important;
+}
+
+/* Oscuro */
+body[data-theme="oscuro"] .modal-win-close-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+}
+body[data-theme="oscuro"] .modal-win-close-btn:hover {
+  background-color: #e81123 !important;
+  color: #ffffff !important;
+  border-color: #e81123 !important;
+}

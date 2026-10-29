@@ -2302,6 +2302,86 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function handleGameOverClose() {
+    if (isInTournament && activeTournament && activeTournament.status !== 'completed') {
+      gameOverModal.classList.add('hidden');
+      network.activeTournamentMatch = null;
+      showScreen(tournamentBracketScreen);
+      if (activeTournament) {
+        tournamentView.renderBracket(activeTournament, myUserId, network.clientId, savedPlayerName);
+      }
+    } else {
+      window.location.href = window.location.pathname;
+    }
+  }
+
+  const closeGameOverTopBtn = document.getElementById('close-game-over-top-btn');
+  if (closeGameOverTopBtn) {
+    closeGameOverTopBtn.addEventListener('click', handleGameOverClose);
+  }
+
+  const closeTourneyModalTopBtn = document.getElementById('close-tourney-modal-top-btn');
+  if (closeTourneyModalTopBtn) {
+    closeTourneyModalTopBtn.addEventListener('click', () => {
+      tourneyCreateModal.classList.add('hidden');
+    });
+  }
+
+  const closeChampModalTopBtn = document.getElementById('close-champ-modal-top-btn');
+  if (closeChampModalTopBtn) {
+    closeChampModalTopBtn.addEventListener('click', () => {
+      window.location.href = window.location.pathname;
+    });
+  }
+
+  const closeLegalModalTopBtn = document.getElementById('close-legal-modal-top-btn');
+  if (closeLegalModalTopBtn) {
+    closeLegalModalTopBtn.addEventListener('click', () => {
+      legalModal.classList.add('hidden');
+    });
+  }
+
+  const closeRulesFaqTopBtn = document.getElementById('close-rules-faq-top-btn');
+  if (closeRulesFaqTopBtn) {
+    closeRulesFaqTopBtn.addEventListener('click', () => {
+      rulesFaqModal.classList.add('hidden');
+    });
+  }
+
+  const closeRoomShareTopBtn = document.getElementById('close-room-share-top-btn');
+  if (closeRoomShareTopBtn) {
+    closeRoomShareTopBtn.addEventListener('click', () => {
+      roomShareModal.classList.add('hidden');
+    });
+  }
+
+  const closeAsyncShareTopBtn = document.getElementById('close-async-share-top-btn');
+  if (closeAsyncShareTopBtn) {
+    closeAsyncShareTopBtn.addEventListener('click', () => {
+      window.location.href = window.location.pathname;
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (gameOverModal && !gameOverModal.classList.contains('hidden')) {
+        handleGameOverClose();
+      } else if (tourneyCreateModal && !tourneyCreateModal.classList.contains('hidden')) {
+        tourneyCreateModal.classList.add('hidden');
+      } else if (roomShareModal && !roomShareModal.classList.contains('hidden')) {
+        roomShareModal.classList.add('hidden');
+      } else if (rulesFaqModal && !rulesFaqModal.classList.contains('hidden')) {
+        rulesFaqModal.classList.add('hidden');
+      } else if (legalModal && !legalModal.classList.contains('hidden')) {
+        legalModal.classList.add('hidden');
+      } else if (tournamentChampionModal && !tournamentChampionModal.classList.contains('hidden')) {
+        window.location.href = window.location.pathname;
+      } else if (asyncShareModal && !asyncShareModal.classList.contains('hidden')) {
+        window.location.href = window.location.pathname;
+      }
+    }
+  });
+
   backToLobbyBtn.addEventListener('click', () => {
     window.location.href = window.location.pathname;
   });

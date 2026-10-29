@@ -616,6 +616,9 @@ io.on('connection', (socket) => {
     }
 
     match.status = (room.state === 'playing' || room.state === 'resolving') ? 'playing' : match.status;
+    if (match.status === 'playing' && (!match.score || match.score.p1 === null)) {
+      match.score = { p1: room.scores.P1 || 0, p2: room.scores.P2 || 0 };
+    }
     io.to(tournamentId).emit('tournament_updated', tournamentManager.sanitizeTournament(tournament));
 
     socket.emit('joined_room', {
@@ -630,6 +633,7 @@ io.on('connection', (socket) => {
     const hasP2 = room.players.some(p => p.role === 'P2');
     if (hasP1 && hasP2 && room.state === 'waiting') {
       match.status = 'playing';
+      match.score = { p1: 0, p2: 0 };
       io.to(tournamentId).emit('tournament_updated', tournamentManager.sanitizeTournament(tournament));
       startNewGame(room);
     } else if (hasP1 && hasP2 && (room.state === 'playing' || room.state === 'resolving')) {
@@ -860,6 +864,18 @@ function resolveTurn(room) {
   room.isSuddenDeath = nextIsSuddenDeath;
   room.suddenDeathRound = nextSuddenDeathRound;
 
+  // Actualizar marcador del partido en tiempo real en el cuadro del torneo tras cada penalti
+  if (room.tournamentContext) {
+    const { tournamentId, roundIndex, matchIndex } = room.tournamentContext;
+    const tournament = tournamentManager.getTournament(tournamentId);
+    if (tournament && tournament.bracket[roundIndex]?.matches[matchIndex]) {
+      const match = tournament.bracket[roundIndex].matches[matchIndex];
+      match.status = gameOver ? 'finished' : 'playing';
+      match.score = { p1: room.scores.P1, p2: room.scores.P2 };
+      io.to(tournamentId).emit('tournament_updated', tournamentManager.sanitizeTournament(tournament));
+    }
+  }
+
   if (gameOver) {
     room.state = 'game_over';
 
@@ -949,7 +965,7 @@ function sanitizeRoomForClient(room) {
   };
 }
 
-// Simula progresivamente partidos entre dos bots con pausas realistas
+// Simula progresivamente partidos entre dos bots en tiempo real con marcadores penalti a penalti
 function runBotMatchesSimulation(tournament) {
   if (!tournament || tournament.status !== 'in_progress') return;
 
@@ -958,37 +974,121 @@ function runBotMatchesSimulation(tournament) {
 
   currentRound.matches.forEach((match, idx) => {
     if (match.status === 'ready' && match.p1 && match.p2 && match.p1.isBot && match.p2.isBot) {
-      match.status = 'playing';
-      // Simular con una breve pausa de tensión (1.2 a 2.5s)
-      const delay = 1200 + idx * 800;
-      setTimeout(() => {
-        const simResult = tournamentManager.simulateBotMatch(match, tournament.penaltiesPerPlayer);
-        const outcome = tournamentManager.recordMatchResult(
-          tournament.id,
-          match.roundIndex,
-          match.matchIndex,
-          simResult.winner,
-          simResult.score
-        );
-
-        if (outcome) {
-          io.to(tournament.id).emit('tournament_match_finished', {
-            tournament: tournamentManager.sanitizeTournament(outcome.tournament),
-            matchId: match.id,
-            winner: simResult.winner,
-            scores: simResult.score,
-            tournamentCompleted: outcome.tournamentCompleted
-          });
-          io.to(tournament.id).emit('tournament_updated', tournamentManager.sanitizeTournament(outcome.tournament));
-
-          // Si la ronda se completó con este partido, revisar si la siguiente tiene bots
-          if (outcome.roundCompleted && !outcome.tournamentCompleted) {
-            runBotMatchesSimulation(outcome.tournament);
-          }
-        }
-      }, delay);
+      simulateBotVsBotMatchLive(tournament, match, idx);
     }
   });
+}
+
+function simulateBotVsBotMatchLive(tournament, match, idx) {
+  match.status = 'playing';
+  match.score = { p1: 0, p2: 0 };
+  io.to(tournament.id).emit('tournament_updated', tournamentManager.sanitizeTournament(tournament));
+
+  const basePenalties = [0, 3, 5].includes(Number(tournament.penaltiesPerPlayer)) ? Number(tournament.penaltiesPerPlayer) : 5;
+  let isSuddenDeath = (basePenalties === 0);
+  let turnIndex = 0;
+  let s1 = 0;
+  let s2 = 0;
+
+  // Intervalo ágil entre penaltis de los bots (1.25s) y desfase entre partidos
+  const stepInterval = 1250;
+  const initialDelay = 900 + (idx % 4) * 450;
+
+  function nextShot() {
+    const currentTourney = tournamentManager.getTournament(tournament.id);
+    if (!currentTourney || currentTourney.status !== 'in_progress') return;
+
+    // Verificar si el partido sigue existiendo y en estado playing
+    const r = currentTourney.bracket[match.roundIndex];
+    const m = r ? r.matches[match.matchIndex] : null;
+    if (!m || m.status !== 'playing') return;
+
+    const shooterIsP1 = (turnIndex % 2 === 0);
+    // Probabilidad realista de gol de penalti (~72%)
+    const goalScored = Math.random() < 0.72;
+
+    if (shooterIsP1) {
+      if (goalScored) s1++;
+    } else {
+      if (goalScored) s2++;
+    }
+
+    m.score = { p1: s1, p2: s2 };
+    const nextTurn = turnIndex + 1;
+
+    let gameOver = false;
+    let winner = null;
+
+    if (!isSuddenDeath) {
+      const shotsP1 = Math.floor((nextTurn + 1) / 2);
+      const shotsP2 = Math.floor(nextTurn / 2);
+      const rem1 = Math.max(0, basePenalties - shotsP1);
+      const rem2 = Math.max(0, basePenalties - shotsP2);
+
+      if (s1 > s2 + rem2) {
+        gameOver = true;
+        winner = m.p1;
+      } else if (s2 > s1 + rem1) {
+        gameOver = true;
+        winner = m.p2;
+      } else if (nextTurn >= basePenalties * 2) {
+        if (s1 > s2) {
+          gameOver = true;
+          winner = m.p1;
+        } else if (s2 > s1) {
+          gameOver = true;
+          winner = m.p2;
+        } else {
+          isSuddenDeath = true;
+        }
+      }
+    } else {
+      if (nextTurn % 2 === 0) {
+        if (s1 > s2) {
+          gameOver = true;
+          winner = m.p1;
+        } else if (s2 > s1) {
+          gameOver = true;
+          winner = m.p2;
+        }
+      }
+    }
+
+    turnIndex = nextTurn;
+
+    // Emitir actualización de marcador en tiempo real al cuadro del torneo
+    io.to(tournament.id).emit('tournament_updated', tournamentManager.sanitizeTournament(currentTourney));
+
+    if (gameOver && winner) {
+      const outcome = tournamentManager.recordMatchResult(
+        tournament.id,
+        match.roundIndex,
+        match.matchIndex,
+        winner,
+        { p1: s1, p2: s2 }
+      );
+
+      if (outcome) {
+        io.to(tournament.id).emit('tournament_match_finished', {
+          tournament: tournamentManager.sanitizeTournament(outcome.tournament),
+          matchId: m.id,
+          winner,
+          scores: { p1: s1, p2: s2 },
+          tournamentCompleted: outcome.tournamentCompleted
+        });
+        io.to(tournament.id).emit('tournament_updated', tournamentManager.sanitizeTournament(outcome.tournament));
+
+        // Si la ronda se completó con este partido, revisar si la siguiente tiene bots listos
+        if (outcome.roundCompleted && !outcome.tournamentCompleted) {
+          runBotMatchesSimulation(outcome.tournament);
+        }
+      }
+    } else {
+      setTimeout(nextShot, stepInterval);
+    }
+  }
+
+  setTimeout(nextShot, initialDelay);
 }
 
 server.listen(PORT, '0.0.0.0', () => {

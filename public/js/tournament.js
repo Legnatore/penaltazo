@@ -235,7 +235,7 @@ class TournamentView {
   }
 
   /**
-   * Renderiza el cuadro eliminatorio completo (Bracket)
+   * Renderiza el cuadro eliminatorio completo (Bracket) con actualización en tiempo real de marcadores
    */
   renderBracket(tournament, myId, myClientId, myName) {
     this.setTournamentData(tournament, myId, undefined, myClientId, myName);
@@ -251,36 +251,58 @@ class TournamentView {
     this.checkMyUpcomingMatch(tournament);
 
     if (!this.bracketContainerEl) return;
-    this.bracketContainerEl.innerHTML = '';
 
-    const bracketWrapper = document.createElement('div');
-    bracketWrapper.className = `bracket-tree bracket-size-${tournament.size}`;
+    const existingTree = this.bracketContainerEl.querySelector(`.bracket-tree.bracket-size-${tournament.size}`);
 
-    tournament.bracket.forEach((round, rIndex) => {
-      const roundCol = document.createElement('div');
-      roundCol.className = `bracket-round-col round-${rIndex}`;
-      if (rIndex === tournament.currentRoundIndex) {
-        roundCol.classList.add('active-round');
-      }
+    if (existingTree) {
+      // Actualización en tiempo real sin destruir el DOM para no resetear scroll ni provocar parpadeos
+      tournament.bracket.forEach((round, rIndex) => {
+        const roundCol = existingTree.querySelector(`.bracket-round-col.round-${rIndex}`);
+        if (roundCol) {
+          if (rIndex === tournament.currentRoundIndex) {
+            roundCol.classList.add('active-round');
+          } else {
+            roundCol.classList.remove('active-round');
+          }
+        }
 
-      const roundHeader = document.createElement('div');
-      roundHeader.className = 'bracket-round-header';
-      roundHeader.innerHTML = `<span>${round.name}</span>`;
-      roundCol.appendChild(roundHeader);
+        round.matches.forEach((match, mIndex) => {
+          this.updateMatchCardInPlace(match, rIndex, mIndex, tournament);
+        });
+      });
+    } else {
+      // Primera construcción o cambio de tamaño del torneo
+      this.bracketContainerEl.innerHTML = '';
 
-      const matchesList = document.createElement('div');
-      matchesList.className = 'bracket-matches-list';
+      const bracketWrapper = document.createElement('div');
+      bracketWrapper.className = `bracket-tree bracket-size-${tournament.size}`;
 
-      round.matches.forEach((match, mIndex) => {
-        const matchCard = this.createMatchCard(match, rIndex, mIndex, tournament);
-        matchesList.appendChild(matchCard);
+      tournament.bracket.forEach((round, rIndex) => {
+        const roundCol = document.createElement('div');
+        roundCol.className = `bracket-round-col round-${rIndex}`;
+        if (rIndex === tournament.currentRoundIndex) {
+          roundCol.classList.add('active-round');
+        }
+
+        const roundHeader = document.createElement('div');
+        roundHeader.className = 'bracket-round-header';
+        roundHeader.innerHTML = `<span>${round.name}</span>`;
+        roundCol.appendChild(roundHeader);
+
+        const matchesList = document.createElement('div');
+        matchesList.className = 'bracket-matches-list';
+
+        round.matches.forEach((match, mIndex) => {
+          const matchCard = this.createMatchCard(match, rIndex, mIndex, tournament);
+          matchesList.appendChild(matchCard);
+        });
+
+        roundCol.appendChild(matchesList);
+        bracketWrapper.appendChild(roundCol);
       });
 
-      roundCol.appendChild(matchesList);
-      bracketWrapper.appendChild(roundCol);
-    });
-
-    this.bracketContainerEl.appendChild(bracketWrapper);
+      this.bracketContainerEl.appendChild(bracketWrapper);
+    }
 
     // Si el torneo ha terminado, mostrar modal de campeón
     if (tournament.status === 'completed' && tournament.champion) {
@@ -290,26 +312,38 @@ class TournamentView {
 
   createMatchCard(match, roundIndex, matchIndex, tournament) {
     const card = document.createElement('div');
-    card.className = `bracket-match-card status-${match.status}`;
+    const isMeInMatch = this.isParticipantMe(match.p1) || this.isParticipantMe(match.p2);
+    card.className = `bracket-match-card status-${match.status}${isMeInMatch ? ' match-is-mine' : ''}`;
+    card.dataset.matchId = match.id;
+    card.dataset.roundIndex = roundIndex;
+    card.dataset.matchIndex = matchIndex;
 
     const p1 = match.p1;
     const p2 = match.p2;
-
-    const isMeInMatch = this.isParticipantMe(p1) || this.isParticipantMe(p2);
-
-    if (isMeInMatch) {
-      card.classList.add('match-is-mine');
-    }
+    const isPlaying = (match.status === 'playing');
 
     const p1IsWinner = match.winner && p1 && (match.winner.id === p1.id || (p1.clientId && match.winner.clientId === p1.clientId));
     const p2IsWinner = match.winner && p2 && (match.winner.id === p2.id || (p2.clientId && match.winner.clientId === p2.clientId));
 
-    // Etiqueta de estado
+    // Etiqueta de estado en directo o finalizado
     let statusLabel = '';
-    if (match.status === 'finished') statusLabel = '<span class="match-badge finished">Finalizado</span>';
-    else if (match.status === 'playing') statusLabel = '<span class="match-badge playing">⚽ En juego</span>';
-    else if (match.status === 'ready') statusLabel = '<span class="match-badge ready">Listo</span>';
-    else statusLabel = '<span class="match-badge pending">Pendiente</span>';
+    if (match.status === 'finished') {
+      statusLabel = '<span class="match-badge finished">Finalizado</span>';
+    } else if (isPlaying) {
+      statusLabel = '<span class="match-badge playing live-pulse"><span class="live-dot"></span> EN VIVO</span>';
+    } else if (match.status === 'ready') {
+      statusLabel = '<span class="match-badge ready">Listo</span>';
+    } else {
+      statusLabel = '<span class="match-badge pending">Pendiente</span>';
+    }
+
+    const p1ScoreText = (match.score && match.score.p1 !== null)
+      ? match.score.p1
+      : (isPlaying ? '0' : '-');
+
+    const p2ScoreText = (match.score && match.score.p2 !== null)
+      ? match.score.p2
+      : (isPlaying ? '0' : '-');
 
     card.innerHTML = `
       <div class="match-card-header">
@@ -322,7 +356,7 @@ class TournamentView {
             <span class="p-avatar">${p1 ? (p1.isBot ? '🤖' : '⚽') : '⚪'}</span>
             <span class="p-name">${p1 ? p1.name : 'Por definir'}</span>
           </div>
-          <span class="match-p-score">${match.score && match.score.p1 !== null ? match.score.p1 : '-'}</span>
+          <span class="match-p-score ${isPlaying ? 'live-score' : ''}" data-score-for="p1">${p1ScoreText}</span>
         </div>
 
         <div class="match-row ${p2IsWinner ? 'is-winner' : ''} ${match.winner && !p2IsWinner ? 'is-loser' : ''}">
@@ -330,7 +364,7 @@ class TournamentView {
             <span class="p-avatar">${p2 ? (p2.isBot ? '🤖' : '⚽') : '⚪'}</span>
             <span class="p-name">${p2 ? p2.name : 'Por definir'}</span>
           </div>
-          <span class="match-p-score">${match.score && match.score.p2 !== null ? match.score.p2 : '-'}</span>
+          <span class="match-p-score ${isPlaying ? 'live-score' : ''}" data-score-for="p2">${p2ScoreText}</span>
         </div>
       </div>
     `;
@@ -349,6 +383,115 @@ class TournamentView {
     }
 
     return card;
+  }
+
+  updateMatchCardInPlace(match, roundIndex, matchIndex, tournament) {
+    const card = this.bracketContainerEl.querySelector(`[data-match-id="${match.id}"]`);
+    if (!card) return;
+
+    const p1 = match.p1;
+    const p2 = match.p2;
+    const isMeInMatch = this.isParticipantMe(p1) || this.isParticipantMe(p2);
+    const isPlaying = (match.status === 'playing');
+
+    card.className = `bracket-match-card status-${match.status}${isMeInMatch ? ' match-is-mine' : ''}`;
+
+    const p1IsWinner = match.winner && p1 && (match.winner.id === p1.id || (p1.clientId && match.winner.clientId === p1.clientId));
+    const p2IsWinner = match.winner && p2 && (match.winner.id === p2.id || (p2.clientId && match.winner.clientId === p2.clientId));
+
+    // 1. Actualizar cabecera y etiqueta de estado (badge)
+    const headerEl = card.querySelector('.match-card-header');
+    if (headerEl) {
+      let statusLabel = '';
+      if (match.status === 'finished') {
+        statusLabel = '<span class="match-badge finished">Finalizado</span>';
+      } else if (isPlaying) {
+        statusLabel = '<span class="match-badge playing live-pulse"><span class="live-dot"></span> EN VIVO</span>';
+      } else if (match.status === 'ready') {
+        statusLabel = '<span class="match-badge ready">Listo</span>';
+      } else {
+        statusLabel = '<span class="match-badge pending">Pendiente</span>';
+      }
+
+      headerEl.innerHTML = `
+        <span class="match-num">P${matchIndex + 1}</span>
+        ${statusLabel}
+      `;
+    }
+
+    // 2. Actualizar participantes y marcadores en tiempo real
+    const p1Row = card.querySelector('.match-row:nth-child(1)');
+    const p2Row = card.querySelector('.match-row:nth-child(2)');
+
+    if (p1Row) {
+      p1Row.className = `match-row ${p1IsWinner ? 'is-winner' : ''} ${match.winner && !p1IsWinner ? 'is-loser' : ''}`;
+      const nameEl = p1Row.querySelector('.p-name');
+      if (nameEl) nameEl.textContent = p1 ? p1.name : 'Por definir';
+      const avatarEl = p1Row.querySelector('.p-avatar');
+      if (avatarEl) avatarEl.textContent = p1 ? (p1.isBot ? '🤖' : '⚽') : '⚪';
+
+      const scoreEl = p1Row.querySelector('[data-score-for="p1"]') || p1Row.querySelector('.match-p-score');
+      if (scoreEl) {
+        scoreEl.dataset.scoreFor = 'p1';
+        const newScoreText = (match.score && match.score.p1 !== null)
+          ? String(match.score.p1)
+          : (isPlaying ? '0' : '-');
+        const oldScoreText = scoreEl.textContent.trim();
+
+        if (oldScoreText !== newScoreText && oldScoreText !== '-' && newScoreText !== '-') {
+          scoreEl.classList.remove('score-bump');
+          void scoreEl.offsetWidth; // forzar reflujo CSS para reiniciar animación
+          scoreEl.classList.add('score-bump');
+        }
+
+        scoreEl.textContent = newScoreText;
+        scoreEl.className = `match-p-score ${isPlaying ? 'live-score' : ''}`;
+      }
+    }
+
+    if (p2Row) {
+      p2Row.className = `match-row ${p2IsWinner ? 'is-winner' : ''} ${match.winner && !p2IsWinner ? 'is-loser' : ''}`;
+      const nameEl = p2Row.querySelector('.p-name');
+      if (nameEl) nameEl.textContent = p2 ? p2.name : 'Por definir';
+      const avatarEl = p2Row.querySelector('.p-avatar');
+      if (avatarEl) avatarEl.textContent = p2 ? (p2.isBot ? '🤖' : '⚽') : '⚪';
+
+      const scoreEl = p2Row.querySelector('[data-score-for="p2"]') || p2Row.querySelector('.match-p-score');
+      if (scoreEl) {
+        scoreEl.dataset.scoreFor = 'p2';
+        const newScoreText = (match.score && match.score.p2 !== null)
+          ? String(match.score.p2)
+          : (isPlaying ? '0' : '-');
+        const oldScoreText = scoreEl.textContent.trim();
+
+        if (oldScoreText !== newScoreText && oldScoreText !== '-' && newScoreText !== '-') {
+          scoreEl.classList.remove('score-bump');
+          void scoreEl.offsetWidth;
+          scoreEl.classList.add('score-bump');
+        }
+
+        scoreEl.textContent = newScoreText;
+        scoreEl.className = `match-p-score ${isPlaying ? 'live-score' : ''}`;
+      }
+    }
+
+    // 3. Botón para jugar si corresponde
+    let playBtn = card.querySelector('.btn-play-match');
+    if (isMeInMatch && (match.status === 'ready' || match.status === 'playing')) {
+      if (!playBtn) {
+        playBtn = document.createElement('button');
+        playBtn.className = 'btn btn-primary btn-play-match';
+        playBtn.innerHTML = `⚽ JUGAR PARTIDO AHORA`;
+        playBtn.addEventListener('click', () => {
+          if (typeof this.onEnterMatch === 'function') {
+            this.onEnterMatch(tournament.id, roundIndex, matchIndex);
+          }
+        });
+        card.appendChild(playBtn);
+      }
+    } else if (playBtn) {
+      playBtn.remove();
+    }
   }
 
   checkMyUpcomingMatch(tournament) {

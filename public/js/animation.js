@@ -81,7 +81,7 @@ class PenaltyAnimator {
       this.goalkeeper.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
       this.goalkeeper.style.left = '50%';
       this.goalkeeper.style.top = '70%';
-      this.goalkeeper.classList.remove('diving', 'jumping', 'diving-left', 'diving-right', 'diving-top', 'diving-bottom', 'saving', 'missed');
+      this.goalkeeper.classList.remove('diving', 'jumping', 'crouching', 'diving-left', 'diving-right', 'diving-top', 'diving-bottom', 'saving', 'missed');
     }
 
     if (this.impactOverlay) {
@@ -95,7 +95,7 @@ class PenaltyAnimator {
     }
 
     if (this.arena) {
-      this.arena.classList.remove('crowd-celebrating', 'cinematic-zoom');
+      this.arena.classList.remove('crowd-celebrating');
     }
   }
 
@@ -190,110 +190,49 @@ class PenaltyAnimator {
     const rotation = (shooterChoice.col === 0 ? -720 : (shooterChoice.col === 2 ? 720 : 540));
     const finalScale = isKeeperPOV ? 1.65 : 0.72;
 
-    // FASE 2: Tensión y Micro-Ralentí (a ~70% de la trayectoria)
-    if (isTensionMoment) {
-      // 1º tramo: El balón sale a gran velocidad hacia el 70% del recorrido (320ms)
-      const mid70X = startX + (targetBallX - startX) * 0.70;
-      const mid70Y = startY + (targetBallY - startY) * 0.70;
-      const midScale = isKeeperPOV ? 1.35 : 0.82;
-      const midRot = rotation * 0.65;
+    // FASE 2: Trayectoria fluida y estirada sincronizada del portero (~520ms)
+    const flightDuration = 520;
+    this.ball.style.transition = `left ${flightDuration}ms cubic-bezier(0.22, 0.61, 0.36, 1), top ${flightDuration}ms cubic-bezier(0.22, 0.61, 0.36, 1), transform ${flightDuration}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+    this.ball.style.left = `${targetBallX}%`;
+    this.ball.style.top = `${targetBallY}%`;
+    this.ball.style.transform = `translate(-50%, -50%) scale(${finalScale}) rotate(${rotation}deg)`;
 
-      const p1Duration = 320;
-      this.ball.style.transition = `left ${p1Duration}ms cubic-bezier(0.22, 0.61, 0.36, 1), top ${p1Duration}ms cubic-bezier(0.22, 0.61, 0.36, 1), transform ${p1Duration}ms linear`;
-      this.ball.style.left = `${mid70X}%`;
-      this.ball.style.top = `${mid70Y}%`;
-      this.ball.style.transform = `translate(-50%, -50%) scale(${midScale}) rotate(${midRot}deg)`;
-
-      if (this.ballShadow) {
-        this.ballShadow.style.transition = `left ${p1Duration}ms linear, top ${p1Duration}ms linear, opacity ${p1Duration}ms linear`;
-        this.ballShadow.style.left = `${mid70X}%`;
-        this.ballShadow.style.top = `${Math.min(mid70Y + 6, isKeeperPOV ? 76 : 58)}%`;
-      }
-
-      // El portero se lanza hacia la coordenada seleccionada
-      if (isKeeperPOV) {
-        this.setPovGlovesDive(keeperChoice.row, keeperChoice.col);
-      } else if (this.goalkeeper) {
-        let diveAngle = 0;
-        if (keeperChoice.col === 0) {
-          diveAngle = keeperChoice.row === 0 ? -62 : -76;
-          this.goalkeeper.classList.add('diving');
-        } else if (keeperChoice.col === 2) {
-          diveAngle = keeperChoice.row === 0 ? 62 : 76;
-          this.goalkeeper.classList.add('diving');
-        } else if (keeperChoice.row === 0 && keeperChoice.col === 1) {
-          diveAngle = 0;
-          this.goalkeeper.classList.add('jumping');
-        }
-        const kDur = 400;
-        this.goalkeeper.style.transition = `left ${kDur}ms cubic-bezier(0.16, 1, 0.3, 1), top ${kDur}ms cubic-bezier(0.16, 1, 0.3, 1), transform ${kDur}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-        this.goalkeeper.style.left = `${targetKeeperX}%`;
-        this.goalkeeper.style.top = `${targetKeeperY}%`;
-        this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.95) rotate(${diveAngle}deg)`;
-      }
-
-      await this.wait(p1Duration - 20);
-
-      // Micro-Ralentí: Zoom dinámico a portería + desaceleración del 80% durante 180ms
-      this.arena.classList.add('cinematic-zoom');
-
-      const slowMoDur = 180;
-      const slowX = mid70X + (targetBallX - mid70X) * 0.28;
-      const slowY = mid70Y + (targetBallY - mid70Y) * 0.28;
-
-      this.ball.style.transition = `left ${slowMoDur}ms linear, top ${slowMoDur}ms linear, transform ${slowMoDur}ms linear`;
-      this.ball.style.left = `${slowX}%`;
-      this.ball.style.top = `${slowY}%`;
-      this.ball.style.transform = `translate(-50%, -50%) scale(${midScale + (finalScale - midScale) * 0.28}) rotate(${midRot + 60}deg)`;
-
-      await this.wait(slowMoDur);
-
-      // 3º tramo: Aceleración explosiva en el último 30% hasta el impacto (140ms)
-      const pFinalDur = 140;
-      this.ball.style.transition = `left ${pFinalDur}ms cubic-bezier(0.12, 0, 0.39, 0), top ${pFinalDur}ms cubic-bezier(0.12, 0, 0.39, 0), transform ${pFinalDur}ms cubic-bezier(0.12, 0, 0.39, 0)`;
-      this.ball.style.left = `${targetBallX}%`;
-      this.ball.style.top = `${targetBallY}%`;
-      this.ball.style.transform = `translate(-50%, -50%) scale(${finalScale}) rotate(${rotation}deg)`;
-
-      await this.wait(pFinalDur - 10);
-    } else {
-      // Trayectoria fluida estándar si el tiro no roza al portero ni al poste (~560ms)
-      const flightDuration = 560;
-      this.ball.style.transition = `left ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${flightDuration}ms cubic-bezier(0.33, 1, 0.68, 1), transform ${flightDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-      this.ball.style.left = `${targetBallX}%`;
-      this.ball.style.top = `${targetBallY}%`;
-      this.ball.style.transform = `translate(-50%, -50%) scale(${finalScale}) rotate(${rotation}deg)`;
-
-      if (this.ballShadow) {
-        this.ballShadow.style.transition = `left ${flightDuration}ms linear, top ${flightDuration}ms linear, transform ${flightDuration}ms linear, opacity ${flightDuration}ms linear`;
-        this.ballShadow.style.left = `${targetBallX}%`;
-        this.ballShadow.style.top = `${Math.min(targetBallY + (isKeeperPOV ? 8 : 5), isKeeperPOV ? 76 : 58)}%`;
-        this.ballShadow.style.transform = `translate(-50%, -50%) scale(${isKeeperPOV ? 1.1 : 0.4})`;
-      }
-
-      if (isKeeperPOV) {
-        this.setPovGlovesDive(keeperChoice.row, keeperChoice.col);
-      } else if (this.goalkeeper) {
-        let diveAngle = 0;
-        if (keeperChoice.col === 0) {
-          diveAngle = keeperChoice.row === 0 ? -62 : -76;
-          this.goalkeeper.classList.add('diving');
-        } else if (keeperChoice.col === 2) {
-          diveAngle = keeperChoice.row === 0 ? 62 : 76;
-          this.goalkeeper.classList.add('diving');
-        } else if (keeperChoice.row === 0 && keeperChoice.col === 1) {
-          diveAngle = 0;
-          this.goalkeeper.classList.add('jumping');
-        }
-        const kDur = 560;
-        this.goalkeeper.style.transition = `left ${kDur}ms cubic-bezier(0.22, 1, 0.36, 1), top ${kDur}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${kDur}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-        this.goalkeeper.style.left = `${targetKeeperX}%`;
-        this.goalkeeper.style.top = `${targetKeeperY}%`;
-        this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.95) rotate(${diveAngle}deg)`;
-      }
-
-      await this.wait(flightDuration - 20);
+    if (this.ballShadow) {
+      this.ballShadow.style.transition = `left ${flightDuration}ms linear, top ${flightDuration}ms linear, transform ${flightDuration}ms linear, opacity ${flightDuration}ms linear`;
+      this.ballShadow.style.left = `${targetBallX}%`;
+      this.ballShadow.style.top = `${Math.min(targetBallY + (isKeeperPOV ? 8 : 5), isKeeperPOV ? 76 : 58)}%`;
+      this.ballShadow.style.transform = `translate(-50%, -50%) scale(${isKeeperPOV ? 1.1 : 0.4})`;
     }
+
+    // Estirada sincronizada del portero hacia su casilla designada
+    if (isKeeperPOV) {
+      this.setPovGlovesDive(keeperChoice.row, keeperChoice.col);
+    } else if (this.goalkeeper) {
+      let diveAngle = 0;
+      this.goalkeeper.classList.remove('diving', 'jumping', 'crouching');
+
+      if (keeperChoice.col === 0) {
+        diveAngle = keeperChoice.row === 0 ? -48 : -68;
+        this.goalkeeper.classList.add('diving');
+      } else if (keeperChoice.col === 2) {
+        diveAngle = keeperChoice.row === 0 ? 48 : 68;
+        this.goalkeeper.classList.add('diving');
+      } else if (keeperChoice.row === 0 && keeperChoice.col === 1) {
+        diveAngle = 0;
+        this.goalkeeper.classList.add('jumping');
+      } else {
+        diveAngle = 0;
+        this.goalkeeper.classList.add('crouching');
+      }
+
+      const kDur = flightDuration;
+      this.goalkeeper.style.transition = `left ${kDur}ms cubic-bezier(0.22, 1, 0.36, 1), top ${kDur}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${kDur}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+      this.goalkeeper.style.left = `${targetKeeperX}%`;
+      this.goalkeeper.style.top = `${targetKeeperY}%`;
+      this.goalkeeper.style.transform = `translate(-50%, -50%) scale(0.92) rotate(${diveAngle}deg)`;
+    }
+
+    await this.wait(flightDuration - 20);
 
     // FASE 3: Impacto, Clímax y Feedback Háptico
     // Feedback háptico en móviles compatibles
@@ -308,9 +247,6 @@ class PenaltyAnimator {
         }
       } catch (e) {}
     }
-
-    // Restaurar suavemente el zoom de cámara del estadio
-    this.arena.classList.remove('cinematic-zoom');
 
     if (isKeeperPOV) {
       if (isGoal) {

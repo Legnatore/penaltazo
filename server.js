@@ -727,13 +727,19 @@ function resolveTurn(room) {
   const shooterChoice = room.choices[shooterRole];
   const keeperChoice = room.choices[keeperRole];
 
+  const sRow = Number(shooterChoice.row);
+  const sCol = Number(shooterChoice.col);
+  const kRow = Number(keeperChoice.row);
+  const kCol = Number(keeperChoice.col);
+
   // Cualquier disparo que NO sea raso al centro (row: 1, col: 1) tiene una pequeña probabilidad (14%) de ir al palo (7%) o fuera (7%)
-  const isLowCenter = (shooterChoice.row === 1 && shooterChoice.col === 1);
+  const isLowCenter = (sRow === 1 && sCol === 1);
   const missRoll = !isLowCenter ? Math.random() : 1;
   const isPost = missRoll < 0.07;
   const isOut = !isPost && missRoll < 0.14;
 
-  const isGoal = !isOut && !isPost && (shooterChoice.row !== keeperChoice.row || shooterChoice.col !== keeperChoice.col);
+  const isSameCell = (sRow === kRow && sCol === kCol);
+  const isGoal = !isOut && !isPost && !isSameCell;
 
   if (isGoal) {
     room.scores[shooterRole] += 1;

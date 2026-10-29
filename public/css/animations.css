@@ -256,16 +256,15 @@
 }
 
 /* =========================================================
-   CINEMÁTICA GAME FEEL: ZOOM DINÁMICO, SCREEN SHAKE Y DEFORMACIÓN
+   CINEMÁTICA GAME FEEL: SCREEN SHAKE, IMPACTOS Y DEFORMACIÓN
    ========================================================= */
 
-.stadium-arena {
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: 50% 36%;
+/* Postura baja al blocar raso al centro */
+.animated-keeper.crouching .keeper-torso {
+  transform: scaleY(0.88) translateY(5px);
 }
-
-.stadium-arena.cinematic-zoom {
-  transform: scale(1.05) translateZ(0);
+.animated-keeper.crouching .keeper-arm {
+  transform: translateY(8px);
 }
 
 /* Screen Shake al golpear poste o larguero */

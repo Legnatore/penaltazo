@@ -9645,36 +9645,134 @@ body[data-theme="oscuro"] .modal-win-close-btn:hover {
   border-color: #e81123 !important;
 }
 
-/* Iconos oficiales de marca ¡PENALTAZO! */
-.header-logo-icon {
-  width: 32px;
-  height: 32px;
+/* =========================================================
+   PANCARTAS DE LA AFICIÓN EN EL PÚBLICO (PARTIDOS)
+   ========================================================= */
+.crowd-pancarta {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: top center;
+  animation: pancartaWave 4s ease-in-out infinite alternate;
+}
+
+.crowd-pancarta-left {
+  top: 6%;
+  left: clamp(8px, 3.2vw, 24px);
+  animation-delay: 0s;
+}
+
+.crowd-pancarta-right {
+  top: 6%;
+  right: clamp(8px, 3.2vw, 24px);
+  animation-delay: -2s;
+}
+
+.crowd-pancarta .pancarta-ropes {
+  width: 70%;
+  height: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.crowd-pancarta .pancarta-rope {
+  width: 2px;
+  height: 100%;
+  background: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.crowd-pancarta .pancarta-cloth {
+  background: #ffffff;
+  padding: 3px;
+  border-radius: 6px;
+  border: 2px solid #0f172a;
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.35),
+    0 8px 16px rgba(0, 0, 0, 0.25),
+    inset 0 0 5px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.crowd-pancarta .pancarta-cloth::before,
+.crowd-pancarta .pancarta-cloth::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #94a3b8;
+  border: 1px solid #475569;
+}
+.crowd-pancarta .pancarta-cloth::before { left: 4px; }
+.crowd-pancarta .pancarta-cloth::after { right: 4px; }
+
+.crowd-pancarta .pancarta-logo-img {
+  width: 62px;
+  height: 62px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
-  flex-shrink: 0;
-  vertical-align: middle;
+  display: block;
 }
-.hero-logo-img {
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
-  display: inline-block;
-  vertical-align: middle;
-  transition: transform 0.3s ease;
+
+@keyframes pancartaWave {
+  0% { transform: translateY(0) rotate(-1.2deg); }
+  50% { transform: translateY(2px) rotate(0.8deg); }
+  100% { transform: translateY(0) rotate(-1.2deg); }
 }
-.hero-logo-img:hover {
-  transform: scale(1.06) rotate(-3deg);
-}
+
 @media (max-width: 600px) {
-  .hero-logo-img {
-    width: 72px;
-    height: 72px;
+  .crowd-pancarta-left {
+    top: 4%;
+    left: 4px;
   }
-}
-@media (max-height: 500px) and (orientation: landscape) {
-  .hero-logo-img {
+  .crowd-pancarta-right {
+    top: 4%;
+    right: 4px;
+  }
+  .crowd-pancarta .pancarta-logo-img {
     width: 36px;
     height: 36px;
   }
+  .crowd-pancarta .pancarta-cloth {
+    padding: 2px;
+    border-width: 1.5px;
+    border-radius: 4px;
+  }
+  .crowd-pancarta .pancarta-ropes {
+    height: 4px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .crowd-pancarta {
+    top: 4%;
+  }
+  .crowd-pancarta .pancarta-logo-img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+#stadium-arena.view-keeper .crowd-pancarta {
+  z-index: 10;
+  opacity: 0.9;
+}
+
+body[data-theme="pcfutbol"] .crowd-pancarta .pancarta-cloth,
+body[data-theme="sensible"] .crowd-pancarta .pancarta-cloth {
+  border-radius: 0 !important;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+body[data-theme="oscuro"] .crowd-pancarta .pancarta-cloth {
+  background: #1e293b;
+  border-color: #475569;
 }

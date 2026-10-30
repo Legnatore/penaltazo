@@ -327,34 +327,11 @@
           </div>
         </div>
 
-        <div class="share-box">
-          <label for="tourney-share-link-input">Enlace de invitación para competidores:</label>
-          <div class="link-copy-row">
-            <input type="text" id="tourney-share-link-input" readonly>
-            <button id="tourney-copy-link-btn" class="btn btn-primary">Copiar 📋</button>
-          </div>
-        </div>
-
-        <div class="social-share-container tourney-social-share">
-          <p class="social-share-title">📲 Invita a tus amigos al torneo por:</p>
-          <div class="social-share-grid">
-            <a id="tourney-share-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-whatsapp">
-              <span>💬</span> WhatsApp
-            </a>
-            <a id="tourney-share-telegram-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-telegram">
-              <span>✈️</span> Telegram
-            </a>
-            <a id="tourney-share-twitter-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-twitter">
-              <span>🐦</span> X / Twitter
-            </a>
-            <a id="tourney-share-email-btn" href="#" class="btn social-btn btn-email">
-              <span>✉️</span> Correo
-            </a>
-            <button id="tourney-share-native-btn" type="button" class="btn social-btn btn-native-share">
-              <span>📤</span> Más apps...
-            </button>
-          </div>
-        </div>
+        <!-- Botón único para abrir el pop-up de opciones para compartir el torneo -->
+        <button id="open-tourney-share-modal-btn" type="button" class="btn btn-primary btn-large btn-invite-popup" title="Opciones para invitar a tus amigos al torneo">
+          <span class="btn-icon">📲</span>
+          <span class="btn-text">Invitar / Compartir Torneo</span>
+        </button>
 
         <!-- Lista de participantes y huecos libres para IA -->
         <div class="tourney-participants-section">
@@ -831,30 +808,11 @@
         <!-- Resumen visual estilo Wordle + Botones de compartir -->
         <div id="wordle-result-preview" class="wordle-result-preview"></div>
 
+        <!-- Botón único para abrir el pop-up de compartir resultado -->
         <div class="result-share-box">
-          <div class="share-box-heading">📲 Compartir resultado con amigos:</div>
-          <div class="result-share-grid">
-            <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp" title="Compartir en WhatsApp">
-              <span>💬</span> WhatsApp
-            </button>
-            <button type="button" id="share-result-x-btn" class="btn social-btn btn-x" title="Compartir en X (Twitter)">
-              <span>𝕏</span> X (Twitter)
-            </button>
-            <button type="button" id="share-result-tg-btn" class="btn social-btn btn-telegram" title="Compartir en Telegram">
-              <span>✈️</span> Telegram
-            </button>
-            <button type="button" id="share-result-insta-btn" class="btn social-btn btn-instagram" title="Subir a Stories de Instagram">
-              <span>📸</span> Stories
-            </button>
-            <button type="button" id="share-result-fb-btn" class="btn social-btn btn-facebook" title="Compartir en Facebook">
-              <span>📘</span> Facebook
-            </button>
-            <button type="button" id="share-result-copy-btn" class="btn social-btn btn-copy" title="Copiar resultado al portapapeles">
-              <span>📋</span> Copiar
-            </button>
-          </div>
-          <button type="button" id="download-result-card-btn" class="btn btn-secondary result-share-btn">
-            <span>🖼️</span> Descargar Tarjeta Oficial (Imagen)
+          <button type="button" id="open-result-share-modal-btn" class="btn btn-primary btn-large btn-invite-popup" title="Compartir resultado de la tanda">
+            <span class="btn-icon">📲</span>
+            <span class="btn-text">Compartir Resultado</span>
           </button>
         </div>
 
@@ -880,8 +838,12 @@
           <!-- Rellenado dinámicamente -->
         </div>
 
-        <div class="modal-actions">
-          <button id="tourney-champion-back-btn" class="btn btn-primary btn-large">
+        <div class="modal-actions" style="display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center;">
+          <button id="tourney-champion-share-btn" type="button" class="btn btn-primary btn-large btn-invite-popup" title="Compartir título de campeón con amigos">
+            <span class="btn-icon">📲</span>
+            <span class="btn-text">Compartir Campeón</span>
+          </button>
+          <button id="tourney-champion-back-btn" class="btn btn-outline btn-large">
             Volver al Menú Principal 🏠
           </button>
         </div>
@@ -1039,6 +1001,103 @@
 
         <div class="modal-actions" style="margin-top: 1rem;">
           <button type="button" id="close-share-modal-btn" class="btn btn-outline">
+            Cerrar ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10b. MODAL POP-UP PARA COMPARTIR INVITACIÓN DE TORNEO -->
+    <div id="tourney-share-modal" class="modal-overlay hidden">
+      <div class="modal-card tourney-share-modal-card room-share-modal-card">
+        <button type="button" id="close-tourney-share-top-btn" class="modal-win-close-btn" title="Cerrar ventana (Esc)" aria-label="Cerrar ventana">✕</button>
+        <div class="modal-header">
+          <div class="modal-icon" style="font-size: 2.2rem; margin-bottom: 0.35rem;">🏆</div>
+          <h2>Invitar Amigos al Torneo</h2>
+          <p>Comparte la invitación a tu campeonato por cualquier canal:</p>
+        </div>
+
+        <div class="share-box">
+          <label for="tourney-share-link-input">Enlace de invitación para competidores:</label>
+          <div class="link-copy-row">
+            <input type="text" id="tourney-share-link-input" readonly>
+            <button id="tourney-copy-link-btn" type="button" class="btn btn-primary">Copiar 📋</button>
+          </div>
+        </div>
+
+        <div class="social-share-container" style="margin-bottom: 0.8rem;">
+          <p class="social-share-title">Compartir directamente por:</p>
+          <div class="social-share-grid">
+            <a id="tourney-share-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-whatsapp">
+              <span>💬</span> WhatsApp
+            </a>
+            <a id="tourney-share-telegram-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-telegram">
+              <span>✈️</span> Telegram
+            </a>
+            <a id="tourney-share-twitter-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn social-btn btn-twitter">
+              <span>🐦</span> X / Twitter
+            </a>
+            <a id="tourney-share-email-btn" href="#" class="btn social-btn btn-email">
+              <span>✉️</span> Correo
+            </a>
+            <button id="tourney-share-native-btn" type="button" class="btn social-btn btn-native-share">
+              <span>📤</span> Más apps...
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 1rem;">
+          <button type="button" id="close-tourney-share-modal-btn" class="btn btn-outline">
+            Cerrar ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10c. MODAL POP-UP PARA COMPARTIR RESULTADO -->
+    <div id="result-share-modal" class="modal-overlay hidden">
+      <div class="modal-card result-share-modal-card room-share-modal-card">
+        <button type="button" id="close-result-share-top-btn" class="modal-win-close-btn" title="Cerrar ventana (Esc)" aria-label="Cerrar ventana">✕</button>
+        <div class="modal-header">
+          <div class="modal-icon" style="font-size: 2.2rem; margin-bottom: 0.35rem;">📊</div>
+          <h2 id="result-share-modal-title">Compartir Resultado</h2>
+          <p id="result-share-modal-subtitle">Elige la forma en que quieres compartir tu tanda con tus amigos:</p>
+        </div>
+
+        <div id="result-modal-preview" class="result-modal-preview"></div>
+
+        <div class="social-share-container" style="margin-bottom: 0.8rem;">
+          <p class="social-share-title">Compartir directamente por:</p>
+          <div class="result-share-grid">
+            <button type="button" id="share-result-wa-btn" class="btn social-btn btn-whatsapp" title="Compartir en WhatsApp">
+              <span>💬</span> WhatsApp
+            </button>
+            <button type="button" id="share-result-tg-btn" class="btn social-btn btn-telegram" title="Compartir en Telegram">
+              <span>✈️</span> Telegram
+            </button>
+            <button type="button" id="share-result-x-btn" class="btn social-btn btn-x" title="Compartir en X (Twitter)">
+              <span>𝕏</span> X (Twitter)
+            </button>
+            <button type="button" id="share-result-insta-btn" class="btn social-btn btn-instagram" title="Subir a Stories de Instagram">
+              <span>📸</span> Stories
+            </button>
+            <button type="button" id="share-result-fb-btn" class="btn social-btn btn-facebook" title="Compartir en Facebook">
+              <span>📘</span> Facebook
+            </button>
+            <button type="button" id="share-result-copy-btn" class="btn social-btn btn-copy" title="Copiar resultado al portapapeles">
+              <span>📋</span> Copiar Texto
+            </button>
+            <button type="button" id="download-result-card-btn" class="btn social-btn btn-download-card" title="Descargar Tarjeta en Imagen">
+              <span>🖼️</span> Guardar Imagen
+            </button>
+            <button type="button" id="share-result-native-btn" class="btn social-btn btn-native-share" title="Más aplicaciones">
+              <span>📤</span> Más apps...
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 1rem;">
+          <button type="button" id="close-result-share-modal-btn" class="btn btn-outline">
             Cerrar ✕
           </button>
         </div>

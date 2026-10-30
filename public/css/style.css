@@ -10281,3 +10281,60 @@ body[data-theme="oficina"] .footer-social-pill {
   color: #1f1f1f;
   border-radius: 4px;
 }
+
+/* =========================================================
+   POP-UPS DE COMPARTIR RESULTADO Y TORNEO UNIFICADOS
+   ========================================================= */
+.result-modal-preview {
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: 'Montserrat', monospace, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: pre-line;
+  line-height: 1.45;
+  padding: 0.75rem 0.95rem;
+  border-radius: 10px;
+  border: 1.5px solid #334155;
+  margin-bottom: 0.85rem;
+  text-align: center;
+  user-select: all;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.btn-download-card {
+  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border: 2px solid #3730a3;
+  box-shadow: 0 4px 0 #312e81;
+}
+
+.btn-download-card:hover {
+  background: linear-gradient(180deg, #818cf8 0%, #4338ca 100%);
+  transform: translateY(-2px);
+}
+
+body[data-theme="oficina"] .result-modal-preview {
+  background: #f8fafc;
+  color: #1f1f1f;
+  border-color: #e2e8f0;
+  box-shadow: none;
+}
+
+body[data-theme="pcfutbol"] .result-modal-preview {
+  background: #000080;
+  color: #ffff00;
+  border-radius: 0 !important;
+  border: 2px solid #ffffff;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+}
+
+body[data-theme="sensible"] .result-modal-preview {
+  background: #000000;
+  color: #ffcc00;
+  border-radius: 0 !important;
+  border: 2px solid #ffcc00;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+}

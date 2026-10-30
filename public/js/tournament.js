@@ -32,6 +32,10 @@ class TournamentView {
     this.shareTwitterBtn = document.getElementById('tourney-share-twitter-btn');
     this.shareEmailBtn = document.getElementById('tourney-share-email-btn');
     this.shareNativeBtn = document.getElementById('tourney-share-native-btn');
+    this.openShareModalBtn = document.getElementById('open-tourney-share-modal-btn');
+    this.shareModal = document.getElementById('tourney-share-modal');
+    this.closeShareTopBtn = document.getElementById('close-tourney-share-top-btn');
+    this.closeShareModalBtn = document.getElementById('close-tourney-share-modal-btn');
     this.startBtn = document.getElementById('tourney-start-btn');
     this.guestWaitingMsg = document.getElementById('tourney-guest-waiting-msg');
 
@@ -62,9 +66,36 @@ class TournamentView {
       });
     }
 
+    if (this.openShareModalBtn && this.shareModal) {
+      this.openShareModalBtn.addEventListener('click', () => {
+        this.shareModal.classList.remove('hidden');
+      });
+    }
+
+    if (this.closeShareTopBtn && this.shareModal) {
+      this.closeShareTopBtn.addEventListener('click', () => {
+        this.shareModal.classList.add('hidden');
+      });
+    }
+
+    if (this.closeShareModalBtn && this.shareModal) {
+      this.closeShareModalBtn.addEventListener('click', () => {
+        this.shareModal.classList.add('hidden');
+      });
+    }
+
+    if (this.shareModal) {
+      this.shareModal.addEventListener('click', (e) => {
+        if (e.target === this.shareModal) {
+          this.shareModal.classList.add('hidden');
+        }
+      });
+    }
+
     if (this.startBtn) {
       this.startBtn.addEventListener('click', () => {
         if (typeof this.onStartTournament === 'function' && this.currentTournament) {
+          if (this.shareModal) this.shareModal.classList.add('hidden');
           this.startBtn.setAttribute('disabled', 'true');
           this.startBtn.innerHTML = '⏳ Rellenando con IA y generando cuadro...';
           this.onStartTournament(this.currentTournament.id);

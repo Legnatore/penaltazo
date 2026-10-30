@@ -98,6 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadResultCardBtn = document.getElementById('download-result-card-btn');
   const wordleResultPreview = document.getElementById('wordle-result-preview');
   const revengeAsyncBtn = document.getElementById('revenge-async-btn');
+  const openResultShareModalBtn = document.getElementById('open-result-share-modal-btn');
+  const resultShareModal = document.getElementById('result-share-modal');
+  const closeResultShareTopBtn = document.getElementById('close-result-share-top-btn');
+  const closeResultShareModalBtn = document.getElementById('close-result-share-modal-btn');
+  const resultModalPreview = document.getElementById('result-modal-preview');
+  const shareResultNativeBtn = document.getElementById('share-result-native-btn');
+  const tourneyShareModal = document.getElementById('tourney-share-modal');
+  const tourneyChampionShareBtn = document.getElementById('tourney-champion-share-btn');
+  let customShareTextOverride = null;
 
   // Elementos del Modo Asíncrono («Desafío por Enlace»)
   const startAsyncChallengeBtn = document.getElementById('start-async-challenge-btn');
@@ -459,6 +468,10 @@ document.addEventListener('DOMContentLoaded', () => {
     gameOverModal.classList.add('hidden');
     if (asyncShareModal) asyncShareModal.classList.add('hidden');
     if (roomShareModal) roomShareModal.classList.add('hidden');
+    if (resultShareModal) resultShareModal.classList.add('hidden');
+    if (tourneyShareModal) tourneyShareModal.classList.add('hidden');
+    if (resultShareModal) resultShareModal.classList.add('hidden');
+    if (tourneyShareModal) tourneyShareModal.classList.add('hidden');
 
     screen.classList.remove('hidden');
 
@@ -2364,7 +2377,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (gameOverModal && !gameOverModal.classList.contains('hidden')) {
+      if (resultShareModal && !resultShareModal.classList.contains('hidden')) {
+        resultShareModal.classList.add('hidden');
+      } else if (tourneyShareModal && !tourneyShareModal.classList.contains('hidden')) {
+        tourneyShareModal.classList.add('hidden');
+      } else if (gameOverModal && !gameOverModal.classList.contains('hidden')) {
         handleGameOverClose();
       } else if (tourneyCreateModal && !tourneyCreateModal.classList.contains('hidden')) {
         tourneyCreateModal.classList.add('hidden');
@@ -2541,10 +2558,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 'image/png');
   }
 
+  // Controladores del Pop-up Modal de Compartir Resultado
+  if (openResultShareModalBtn && resultShareModal) {
+    openResultShareModalBtn.addEventListener('click', () => {
+      customShareTextOverride = null;
+      const resTitle = document.getElementById('result-share-modal-title');
+      const resSub = document.getElementById('result-share-modal-subtitle');
+      if (resTitle) resTitle.textContent = 'Compartir Resultado';
+      if (resSub) resSub.textContent = 'Elige la forma en que quieres compartir tu tanda con tus amigos:';
+      if (resultModalPreview) {
+        resultModalPreview.textContent = buildWordleShareText();
+      }
+      resultShareModal.classList.remove('hidden');
+    });
+  }
+
+  if (tourneyChampionShareBtn && resultShareModal) {
+    tourneyChampionShareBtn.addEventListener('click', () => {
+      const myName = (network && network.playerName) || 'Campeón';
+      customShareTextOverride = `🏆 ¡¡Me he coronado CAMPEÓN del torneo en ¡PENALTAZO!! ⚽🥇\n¡Ven a disputar tandas de penaltis online gratis!\nJuega aquí: ${window.location.origin}`;
+      const resTitle = document.getElementById('result-share-modal-title');
+      const resSub = document.getElementById('result-share-modal-subtitle');
+      if (resTitle) resTitle.textContent = 'Compartir Título de Campeón';
+      if (resSub) resSub.textContent = 'Presume de tu trofeo de campeón con tus amigos:';
+      if (resultModalPreview) {
+        resultModalPreview.textContent = customShareTextOverride;
+      }
+      resultShareModal.classList.remove('hidden');
+    });
+  }
+
+  if (closeResultShareTopBtn && resultShareModal) {
+    closeResultShareTopBtn.addEventListener('click', () => {
+      resultShareModal.classList.add('hidden');
+    });
+  }
+
+  if (closeResultShareModalBtn && resultShareModal) {
+    closeResultShareModalBtn.addEventListener('click', () => {
+      resultShareModal.classList.add('hidden');
+    });
+  }
+
+  if (resultShareModal) {
+    resultShareModal.addEventListener('click', (e) => {
+      if (e.target === resultShareModal) {
+        resultShareModal.classList.add('hidden');
+      }
+    });
+  }
+
   // 1. WhatsApp
   if (shareResultWaBtn) {
     shareResultWaBtn.addEventListener('click', () => {
-      const text = buildWordleShareText();
+      const text = customShareTextOverride || buildWordleShareText();
       const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
       window.open(waUrl, '_blank', 'noopener,noreferrer');
     });
@@ -2553,7 +2620,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. X (Twitter)
   if (shareResultXBtn) {
     shareResultXBtn.addEventListener('click', () => {
-      const text = buildWordleShareText();
+      const text = customShareTextOverride || buildWordleShareText();
       const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
       window.open(xUrl, '_blank', 'noopener,noreferrer');
     });
@@ -2562,7 +2629,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Telegram
   if (shareResultTgBtn) {
     shareResultTgBtn.addEventListener('click', () => {
-      const text = buildWordleShareText();
+      const text = customShareTextOverride || buildWordleShareText();
       const url = getShareTargetUrl();
       const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
       window.open(tgUrl, '_blank', 'noopener,noreferrer');
@@ -2572,7 +2639,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 4. Stories de Instagram
   if (shareResultInstaBtn) {
     shareResultInstaBtn.addEventListener('click', () => {
-      const text = buildWordleShareText();
+      const text = customShareTextOverride || buildWordleShareText();
       generateResultCardBlob(async (blob) => {
         if (!blob) {
           copyTextWithFallback(text, '📋 ¡Texto copiado! Pégalo en tus Stories de Instagram');
@@ -2617,7 +2684,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 6. Copiar para pegar en otra parte
   if (shareResultCopyBtn) {
     shareResultCopyBtn.addEventListener('click', () => {
-      const text = buildWordleShareText();
+      const text = customShareTextOverride || buildWordleShareText();
       copyTextWithFallback(text, '📋 ¡Resultado copiado al portapapeles! Pégalo donde quieras');
     });
   }
@@ -2632,7 +2699,7 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             await navigator.share({
               title: '¡PENALTAZO! - Resultado del Partido',
-              text: buildWordleShareText(),
+              text: customShareTextOverride || buildWordleShareText(),
               files: [file]
             });
             return;
@@ -2648,6 +2715,25 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
         showToast('📸 ¡Tarjeta de resultado descargada!');
       });
+    });
+  }
+
+  // 8. Compartir mediante apps del sistema (Web Share API)
+  if (shareResultNativeBtn) {
+    shareResultNativeBtn.addEventListener('click', async () => {
+      const text = customShareTextOverride || buildWordleShareText();
+      const url = getShareTargetUrl();
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '¡PENALTAZO! - Resultado',
+            text: text,
+            url: url
+          });
+        } catch (e) {}
+      } else {
+        copyTextWithFallback(text, '📋 ¡Resultado copiado al portapapeles! Pégalo donde quieras');
+      }
     });
   }
 

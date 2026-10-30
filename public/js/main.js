@@ -1975,6 +1975,20 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="heatmap-grid-3x2">
           ${cellsHtml}
         </div>
+        <div class="heatmap-legend">
+          <span class="heatmap-legend-item">
+            <span class="legend-color-dot dot-green"></span>
+            <span>Gol / Eficaz</span>
+          </span>
+          <span class="heatmap-legend-item">
+            <span class="legend-color-dot dot-orange"></span>
+            <span>Parada / Fallo</span>
+          </span>
+          <span class="heatmap-legend-item">
+            <span class="legend-color-dot dot-gray"></span>
+            <span>Sin tiros</span>
+          </span>
+        </div>
       </div>
     `;
   }

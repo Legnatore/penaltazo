@@ -48,6 +48,7 @@ body {
   background-attachment: fixed;
   color: var(--text-main);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -640,6 +641,9 @@ body {
 .room-share-modal-card {
   max-width: 520px;
   width: 100%;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
 }
 
 .room-share-modal-card .social-share-container {
@@ -2655,6 +2659,7 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   text-align: center;
   box-shadow: var(--shadow-main);
   max-height: 92vh;
+  max-height: 92dvh;
   overflow-y: auto;
 }
 
@@ -3262,6 +3267,7 @@ body:has(#game-screen:not(.hidden)) .app-footer {
   flex: 1 1 0%;
   min-height: 360px;
   max-height: calc(100vh - 210px);
+  max-height: calc(100dvh - 210px);
   padding: 1.2rem 0.8rem;
   background: rgba(255, 255, 255, 0.92);
   border: 4px solid #0f172a;
@@ -4242,6 +4248,61 @@ body:has(#game-screen:not(.hidden)) .app-footer {
 
   .keeper-body {
     transform: scale(0.72);
+  }
+}
+
+/* 3.1. Pantallas ultra-estrechas (< 360px) - Optimización de la portería 3x2 y controles */
+@media (max-width: 360px) {
+  .stadium-arena,
+  .game-screen .stadium-arena {
+    padding: 2px 2px 0 2px !important;
+  }
+
+  .goal-structure {
+    max-width: 94% !important;
+  }
+
+  .goal-grid {
+    gap: 3px !important;
+    padding: 3px !important;
+  }
+
+  .goal-cell {
+    border-width: 1.5px !important;
+    border-radius: 6px !important;
+  }
+
+  .cell-inner {
+    gap: 0.15rem !important;
+  }
+
+  .cell-marker {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .selected-zone-label {
+    font-size: 0.72rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .turn-role-cartel {
+    font-size: 0.65rem !important;
+    padding: 0.1rem 0.35rem !important;
+  }
+
+  .status-badge {
+    font-size: 0.52rem !important;
+    padding: 0.08rem 0.22rem !important;
+  }
+
+  .team-name {
+    font-size: 0.68rem !important;
+  }
+
+  .team-score {
+    font-size: 1.25rem !important;
   }
 }
 
@@ -6787,6 +6848,48 @@ body[data-kit] .animated-keeper .keeper-sock {
   line-height: 1.15;
 }
 
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.heatmap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.legend-color-dot.dot-green {
+  background: #22c55e;
+  border: 1.5px solid #16a34a;
+}
+
+.legend-color-dot.dot-orange {
+  background: #f97316;
+  border: 1.5px solid #ea580c;
+}
+
+.legend-color-dot.dot-gray {
+  background: #94a3b8;
+  border: 1.5px solid #64748b;
+}
+
 /* =========================================================
    OPTIMIZACIÓN RESPONSIVE DEL ENCABEZADO SUPERIOR EN MÓVIL
    ========================================================= */
@@ -8042,7 +8145,9 @@ body[data-theme="sensible"] .footer-social-pill {
   html,
   body {
     height: 100vh;
+    height: 100dvh;
     max-height: 100vh;
+    max-height: 100dvh;
     overflow: hidden;
   }
 
@@ -9660,20 +9765,20 @@ body[data-theme="oscuro"] .modal-win-close-btn:hover {
 }
 
 .crowd-pancarta-left {
-  top: 6%;
+  top: 3%;
   left: clamp(8px, 3.2vw, 24px);
   animation-delay: 0s;
 }
 
 .crowd-pancarta-right {
-  top: 6%;
+  top: 3%;
   right: clamp(8px, 3.2vw, 24px);
   animation-delay: -2s;
 }
 
 .crowd-pancarta .pancarta-ropes {
   width: 70%;
-  height: 6px;
+  height: 5px;
   display: flex;
   justify-content: space-between;
 }
@@ -9715,8 +9820,8 @@ body[data-theme="oscuro"] .modal-win-close-btn:hover {
 .crowd-pancarta .pancarta-cloth::after { right: 4px; }
 
 .crowd-pancarta .pancarta-logo-img {
-  width: 62px;
-  height: 62px;
+  width: clamp(34px, 4.2vw, 48px);
+  height: clamp(34px, 4.2vw, 48px);
   object-fit: contain;
   display: block;
 }
@@ -9727,18 +9832,39 @@ body[data-theme="oscuro"] .modal-win-close-btn:hover {
   100% { transform: translateY(0) rotate(-1.2deg); }
 }
 
+/* Vista de portero (cámara más baja): mantener pancarta proporcionada sin solaparse */
+#stadium-arena.view-keeper .crowd-pancarta {
+  top: 2%;
+}
+
+#stadium-arena.view-keeper .crowd-pancarta .pancarta-logo-img {
+  width: clamp(26px, 3.2vw, 36px);
+  height: clamp(26px, 3.2vw, 36px);
+}
+
+/* Tablets o pantallas medianas con zoom (<= 900px o altura <= 720px) */
+@media (max-width: 900px), (max-height: 720px) {
+  .crowd-pancarta {
+    top: 2.5%;
+  }
+  .crowd-pancarta .pancarta-logo-img {
+    width: clamp(28px, 3.6vw, 40px);
+    height: clamp(28px, 3.6vw, 40px);
+  }
+}
+
 @media (max-width: 600px) {
   .crowd-pancarta-left {
-    top: 4%;
+    top: 2%;
     left: 4px;
   }
   .crowd-pancarta-right {
-    top: 4%;
+    top: 2%;
     right: 4px;
   }
   .crowd-pancarta .pancarta-logo-img {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
   .crowd-pancarta .pancarta-cloth {
     padding: 2px;
@@ -9746,17 +9872,17 @@ body[data-theme="oscuro"] .modal-win-close-btn:hover {
     border-radius: 4px;
   }
   .crowd-pancarta .pancarta-ropes {
-    height: 4px;
+    height: 3px;
   }
 }
 
-@media (max-height: 500px) and (orientation: landscape) {
+@media (max-height: 520px) and (orientation: landscape) {
   .crowd-pancarta {
-    top: 4%;
+    top: 1%;
   }
   .crowd-pancarta .pancarta-logo-img {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -10337,4 +10463,200 @@ body[data-theme="sensible"] .result-modal-preview {
   border: 2px solid #ffcc00;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.65rem;
+}
+
+/* =========================================================
+   ADAPTACIÓN DEL MODAL UNIFICADO DE COMPARTIR AL TEMA OFICINA (WINDOWS 11)
+   ========================================================= */
+body[data-theme="oficina"] .room-share-modal-card {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+body[data-theme="oficina"] .room-share-modal-card .social-share-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+body[data-theme="oficina"] .room-share-modal-card .social-share-title {
+  color: #0067c0;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+}
+
+body[data-theme="oficina"] .room-share-modal-card .link-copy-row input {
+  background: #ffffff;
+  border: 1px solid #d1d1d1;
+  border-bottom: 2px solid #0067c0;
+  color: #1f1f1f;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body[data-theme="oficina"] .room-share-modal-card .link-copy-row .btn-copy {
+  background: #0067c0;
+  color: #ffffff;
+  border: 1px solid #005a9e;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="oficina"] .room-share-modal-card .link-copy-row .btn-copy:hover {
+  background: #1879cd;
+  border-color: #0067c0;
+}
+
+body[data-theme="oficina"] .room-share-modal-card .social-btn {
+  border-radius: 4px;
+  border-width: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+}
+
+body[data-theme="oficina"] .btn-download-card {
+  background: #0067c0;
+  color: #ffffff;
+  border: 1px solid #005a9e;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body[data-theme="oficina"] .btn-download-card:hover {
+  background: #1879cd;
+  border-color: #0067c0;
+  transform: translateY(-1px);
+}
+
+body[data-theme="oficina"] .room-share-modal-card .modal-actions .btn-outline {
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #d1d1d1;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+body[data-theme="oficina"] .room-share-modal-card .modal-actions .btn-outline:hover {
+  background: #f5f5f5;
+  border-color: #999999;
+}
+
+/* =========================================================
+   LEYENDA DEL MAPA DE CALOR (HEATMAP) EN DISTINTOS TEMAS
+   ========================================================= */
+body[data-theme="oficina"] .heatmap-legend {
+  color: #5c5c5c;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body[data-theme="pcfutbol"] .heatmap-legend {
+  color: #ffff00;
+  font-family: 'VT323', monospace;
+  font-size: 0.95rem;
+}
+
+body[data-theme="pcfutbol"] .legend-color-dot {
+  border-radius: 0 !important;
+}
+
+body[data-theme="sensible"] .heatmap-legend {
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+}
+
+body[data-theme="sensible"] .legend-color-dot {
+  border-radius: 0 !important;
+}
+
+body[data-theme="oscuro"] .heatmap-legend {
+  color: #94a3b8;
+}
+
+/* =========================================================
+   BOTÓN KO-FI EN TEMAS RETRO (PC FÚTBOL / SENSIBLE) Y OFICINA
+   ========================================================= */
+body[data-theme="pcfutbol"] .kofi-pill-btn {
+  background: #c0c0c0;
+  color: #000080 !important;
+  border: 2px outset #ffffff !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 1.05rem !important;
+  text-shadow: none !important;
+}
+
+body[data-theme="pcfutbol"] .kofi-pill-btn:hover {
+  background: #d4d4d4;
+  transform: none;
+}
+
+body[data-theme="pcfutbol"] .kofi-pill-btn:active {
+  border-style: inset !important;
+  transform: none;
+}
+
+body[data-theme="pcfutbol"] .kofi-support-row {
+  border-top-color: #808080 !important;
+}
+
+body[data-theme="pcfutbol5"] .kofi-pill-btn {
+  background: #08281a;
+  color: #d4af37 !important;
+  border: 2px outset #d4af37 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 1.05rem !important;
+}
+
+body[data-theme="pcfutbol5"] .kofi-pill-btn:hover {
+  background: #0d3822;
+  transform: none;
+}
+
+body[data-theme="pcfutbol5"] .kofi-pill-btn:active {
+  border-style: inset !important;
+  transform: none;
+}
+
+body[data-theme="sensible"] .kofi-pill-btn {
+  background: #000000;
+  color: #ffcc00 !important;
+  border: 2px solid #ffcc00 !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #ffcc00 !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 0.65rem !important;
+  text-shadow: none !important;
+}
+
+body[data-theme="sensible"] .kofi-pill-btn:hover {
+  background: #ffcc00;
+  color: #000000 !important;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000000 !important;
+}
+
+body[data-theme="oficina"] .kofi-pill-btn {
+  background: #ffffff;
+  color: #1f1f1f !important;
+  border: 1px solid #d1d1d1 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  font-family: 'Segoe UI', sans-serif !important;
+  font-size: 0.82rem !important;
+}
+
+body[data-theme="oficina"] .kofi-pill-btn:hover {
+  background: #f5f5f5;
+  border-color: #8a8a8a !important;
+  transform: translateY(-1px);
 }

@@ -29,6 +29,13 @@ class NetworkManager {
     }
     this.clientId = savedClientId;
 
+    // Soporte para backend PHP en hostings compartidos (Piensa Solutions / Apache)
+    this.usePhp = (typeof io === 'undefined');
+    this.phpPollingInterval = null;
+    this.phpLastSeq = 0;
+    this.phpLastTourneySeq = 0;
+    this.isPollingPhp = false;
+
     // Estado simulado para el modo IA
     this.localState = {
       turnIndex: 0,
@@ -42,17 +49,21 @@ class NetworkManager {
     // Cuando el usuario vuelve de la app de WhatsApp/Telegram al navegador móvil, reconectar y sincronizar sala
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && this.mode === 'multiplayer' && this.socket) {
-          if (!this.socket.connected) {
-            this.socket.connect();
-          } else if (this.roomId && !this.activeTournamentId && !String(this.roomId).includes('_r')) {
-            this.socket.emit('join_room', {
-              roomId: this.roomId,
-              playerName: this.playerName,
-              penaltiesPerPlayer: this.penaltiesPerPlayer,
-              clientId: this.clientId,
-              isAutoReconnect: true
-            });
+        if (document.visibilityState === 'visible' && this.mode === 'multiplayer') {
+          if (this.socket) {
+            if (!this.socket.connected) {
+              this.socket.connect();
+            } else if (this.roomId && !this.activeTournamentId && !String(this.roomId).includes('_r')) {
+              this.socket.emit('join_room', {
+                roomId: this.roomId,
+                playerName: this.playerName,
+                penaltiesPerPlayer: this.penaltiesPerPlayer,
+                clientId: this.clientId,
+                isAutoReconnect: true
+              });
+            }
+          } else if (this.usePhp) {
+            this.pollPhp();
           }
         }
       });
@@ -71,137 +82,270 @@ class NetworkManager {
 
   initMultiplayer(serverUrl = '') {
     this.mode = 'multiplayer';
+
+    // Si ya estamos en modo PHP backend, asegurar que el loop de polling está activo
+    if (this.usePhp) {
+      this.initPhpBackend();
+      return;
+    }
+
     if (this.socket) return; // Ya inicializado
 
     if (typeof io !== 'undefined') {
-      this.socket = io(serverUrl, {
-        reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 500,
-        timeout: 10000
-      });
+      try {
+        this.socket = io(serverUrl, {
+          reconnection: true,
+          reconnectionAttempts: 4,
+          reconnectionDelay: 500,
+          timeout: 4000
+        });
 
-      this.socket.on('connect', () => {
-        // Si estábamos en una sala 1v1 y el socket se reconectó (ej. tras volver de WhatsApp), re-entrar automáticamente
-        if (this.mode === 'multiplayer' && this.roomId && !this.activeTournamentId && !String(this.roomId).includes('_r')) {
-          this.socket.emit('join_room', {
-            roomId: this.roomId,
-            playerName: this.playerName,
-            penaltiesPerPlayer: this.penaltiesPerPlayer,
-            clientId: this.clientId,
-            isAutoReconnect: true
-          });
-        } else if (this.mode === 'multiplayer' && this.activeTournamentId) {
-          this.socket.emit('join_tournament', {
-            tournamentId: this.activeTournamentId,
-            playerName: this.playerName,
-            clientId: this.clientId
-          });
-          if (this.activeTournamentMatch) {
-            this.socket.emit('enter_tournament_match', {
-              tournamentId: this.activeTournamentMatch.tournamentId,
-              roundIndex: this.activeTournamentMatch.roundIndex,
-              matchIndex: this.activeTournamentMatch.matchIndex,
+        this.socket.on('connect_error', () => {
+          if (!this.socket.connected && !this.usePhp) {
+            console.warn('Servidor Socket.io no accesible. Conmutando automáticamente a backend PHP en /api...');
+            try { this.socket.disconnect(); } catch (e) {}
+            this.socket = null;
+            this.initPhpBackend();
+            if (this.roomId) {
+              this.joinRoom(this.roomId, this.playerName, this.penaltiesPerPlayer);
+            }
+          }
+        });
+
+        this.socket.on('connect', () => {
+          // Si estábamos en una sala 1v1 y el socket se reconectó (ej. tras volver de WhatsApp), re-entrar automáticamente
+          if (this.mode === 'multiplayer' && this.roomId && !this.activeTournamentId && !String(this.roomId).includes('_r')) {
+            this.socket.emit('join_room', {
+              roomId: this.roomId,
+              playerName: this.playerName,
+              penaltiesPerPlayer: this.penaltiesPerPlayer,
               clientId: this.clientId,
-              playerName: this.playerName
+              isAutoReconnect: true
             });
+          } else if (this.mode === 'multiplayer' && this.activeTournamentId) {
+            this.socket.emit('join_tournament', {
+              tournamentId: this.activeTournamentId,
+              playerName: this.playerName,
+              clientId: this.clientId
+            });
+            if (this.activeTournamentMatch) {
+              this.socket.emit('enter_tournament_match', {
+                tournamentId: this.activeTournamentMatch.tournamentId,
+                roundIndex: this.activeTournamentMatch.roundIndex,
+                matchIndex: this.activeTournamentMatch.matchIndex,
+                clientId: this.clientId,
+                playerName: this.playerName
+              });
+            }
+          }
+        });
+
+        this.socket.on('joined_room', (data) => {
+          this.roomId = data.roomId;
+          this.playerRole = data.role;
+          this.trigger('joined_room', data);
+        });
+
+        this.socket.on('room_update', (data) => {
+          this.trigger('room_update', data);
+        });
+
+        this.socket.on('game_started', (data) => {
+          this.trigger('game_started', data);
+        });
+
+        this.socket.on('choice_confirmed', (data) => {
+          this.trigger('choice_confirmed', data);
+        });
+
+        this.socket.on('turn_resolved', (data) => {
+          this.trigger('turn_resolved', data);
+        });
+
+        this.socket.on('next_turn_ready', (data) => {
+          this.trigger('next_turn_ready', data);
+        });
+
+        this.socket.on('player_left', (data) => {
+          this.trigger('player_left', data);
+        });
+
+        this.socket.on('rematch_status', (data) => {
+          this.trigger('rematch_status', data);
+        });
+
+        this.socket.on('emote_received', (data) => {
+          this.trigger('emote_received', data);
+        });
+
+        this.socket.on('turn_timeout_auto', (data) => {
+          this.trigger('turn_timeout_auto', data);
+        });
+
+        this.socket.on('role_swapped', (data) => {
+          if (data && data.p1ClientId === this.clientId) {
+            this.playerRole = 'P1';
+          } else if (data && data.p2ClientId === this.clientId) {
+            this.playerRole = 'P2';
+          } else {
+            this.playerRole = 'spectator';
+          }
+          this.trigger('role_swapped', {
+            ...data,
+            myNewRole: this.playerRole
+          });
+        });
+
+        // Eventos del sistema de torneos
+        this.socket.on('tournament_joined', (data) => {
+          if (data && data.tournament && data.tournament.id) {
+            this.activeTournamentId = data.tournament.id;
+          }
+          this.trigger('tournament_joined', data);
+        });
+
+        this.socket.on('tournament_updated', (data) => {
+          this.trigger('tournament_updated', data);
+        });
+
+        this.socket.on('tournament_started', (data) => {
+          this.trigger('tournament_started', data);
+        });
+
+        this.socket.on('tournament_match_finished', (data) => {
+          this.trigger('tournament_match_finished', data);
+        });
+
+        this.socket.on('tournament_error', (data) => {
+          this.trigger('tournament_error', data);
+        });
+      } catch (err) {
+        console.warn('Error al iniciar Socket.io. Activando backend PHP:', err);
+        this.initPhpBackend();
+      }
+    } else {
+      console.log('Socket.io no disponible. Activando backend PHP en /api...');
+      this.initPhpBackend();
+    }
+  }
+
+  // --- MOTOR BACKEND PHP (HOSTING PIENSA SOLUTIONS / APACHE) ---
+  initPhpBackend() {
+    this.usePhp = true;
+    this.mode = 'multiplayer';
+    if (!this.phpPollingInterval) {
+      this.phpPollingInterval = setInterval(() => this.pollPhp(), 750);
+    }
+  }
+
+  async phpPost(url, data) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json && json.events) {
+        this.phpDispatchEvents(json.events);
+      }
+      return json;
+    } catch (err) {
+      console.warn('Error en llamada PHP API:', err);
+      return null;
+    }
+  }
+
+  phpDispatchEvents(events) {
+    if (!Array.isArray(events) || events.length === 0) return;
+    for (const ev of events) {
+      if (!ev || !ev.event) continue;
+      const seq = ev.seq || 0;
+      if (ev.event.startsWith('tournament_')) {
+        if (seq && seq <= this.phpLastTourneySeq) continue;
+        if (seq) this.phpLastTourneySeq = seq;
+      } else {
+        if (seq && seq <= this.phpLastSeq) continue;
+        if (seq) this.phpLastSeq = seq;
+      }
+
+      if (ev.event === 'joined_room' && ev.data) {
+        this.roomId = ev.data.roomId;
+        this.playerRole = ev.data.role;
+      }
+      if (ev.event === 'tournament_joined' && ev.data && ev.data.tournament) {
+        this.activeTournamentId = ev.data.tournament.id;
+      }
+
+      this.trigger(ev.event, ev.data);
+    }
+  }
+
+  async pollPhp() {
+    if (this.isPollingPhp) return;
+    this.isPollingPhp = true;
+    try {
+      // 1. Polling de sala 1v1
+      if (this.roomId && this.mode === 'multiplayer') {
+        const url = `/api/game.php?action=poll&roomId=${encodeURIComponent(this.roomId)}&clientId=${encodeURIComponent(this.clientId)}&sinceSeq=${this.phpLastSeq}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.events) {
+            this.phpDispatchEvents(json.events);
           }
         }
-      });
-
-      this.socket.on('joined_room', (data) => {
-        this.roomId = data.roomId;
-        this.playerRole = data.role;
-        this.trigger('joined_room', data);
-      });
-
-      this.socket.on('room_update', (data) => {
-        this.trigger('room_update', data);
-      });
-
-      this.socket.on('game_started', (data) => {
-        this.trigger('game_started', data);
-      });
-
-      this.socket.on('choice_confirmed', (data) => {
-        this.trigger('choice_confirmed', data);
-      });
-
-      this.socket.on('turn_resolved', (data) => {
-        this.trigger('turn_resolved', data);
-      });
-
-      this.socket.on('next_turn_ready', (data) => {
-        this.trigger('next_turn_ready', data);
-      });
-
-      this.socket.on('player_left', (data) => {
-        this.trigger('player_left', data);
-      });
-
-      this.socket.on('rematch_status', (data) => {
-        this.trigger('rematch_status', data);
-      });
-
-      this.socket.on('emote_received', (data) => {
-        this.trigger('emote_received', data);
-      });
-
-      this.socket.on('turn_timeout_auto', (data) => {
-        this.trigger('turn_timeout_auto', data);
-      });
-
-      this.socket.on('role_swapped', (data) => {
-        if (data && data.p1ClientId === this.clientId) {
-          this.playerRole = 'P1';
-        } else if (data && data.p2ClientId === this.clientId) {
-          this.playerRole = 'P2';
-        } else {
-          this.playerRole = 'spectator';
+      }
+      // 2. Polling de torneo
+      if (this.activeTournamentId && this.mode === 'multiplayer') {
+        const url = `/api/tournament.php?action=poll_tournament&tournamentId=${encodeURIComponent(this.activeTournamentId)}&sinceSeq=${this.phpLastTourneySeq}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.events) {
+            this.phpDispatchEvents(json.events);
+          }
         }
-        this.trigger('role_swapped', {
-          ...data,
-          myNewRole: this.playerRole
-        });
-      });
-
-      // Eventos del sistema de torneos
-      this.socket.on('tournament_joined', (data) => {
-        if (data && data.tournament && data.tournament.id) {
-          this.activeTournamentId = data.tournament.id;
-        }
-        this.trigger('tournament_joined', data);
-      });
-
-      this.socket.on('tournament_updated', (data) => {
-        this.trigger('tournament_updated', data);
-      });
-
-      this.socket.on('tournament_started', (data) => {
-        this.trigger('tournament_started', data);
-      });
-
-      this.socket.on('tournament_match_finished', (data) => {
-        this.trigger('tournament_match_finished', data);
-      });
-
-      this.socket.on('tournament_error', (data) => {
-        this.trigger('tournament_error', data);
-      });
-
-    } else {
-      console.warn('Socket.io no encontrado. Iniciando en modo offline/IA.');
-      this.initAIMode();
+      }
+    } catch (e) {
+      // Ignorar microcortes de red en sondeo
+    } finally {
+      this.isPollingPhp = false;
     }
   }
 
   // --- PARTIDAS 1v1 ---
-  joinRoom(roomId, playerName, penaltiesPerPlayer = 5, isAutoReconnect = false) {
+  async joinRoom(roomId, playerName, penaltiesPerPlayer = 5, isAutoReconnect = false) {
     this.playerName = playerName || 'Jugador 1';
     this.penaltiesPerPlayer = penaltiesPerPlayer;
     this.activeTournamentId = null;
     this.activeTournamentMatch = null;
-    if (this.mode === 'multiplayer' && this.socket) {
+    this.initMultiplayer();
+
+    if (this.usePhp) {
+      const data = await this.phpPost('/api/game.php', {
+        action: 'join_room',
+        roomId,
+        playerName: this.playerName,
+        penaltiesPerPlayer,
+        clientId: this.clientId,
+        sinceSeq: this.phpLastSeq,
+        isAutoReconnect
+      });
+      if (data && data.success) {
+        this.roomId = data.roomId;
+        this.playerRole = data.role;
+        this.trigger('joined_room', {
+          roomId: data.roomId,
+          role: data.role,
+          roomState: data.roomState
+        });
+        if (data.events) {
+          this.phpDispatchEvents(data.events);
+        }
+      }
+    } else if (this.mode === 'multiplayer' && this.socket) {
       this.socket.emit('join_room', {
         roomId,
         playerName: this.playerName,
@@ -215,7 +359,16 @@ class NetworkManager {
   }
 
   submitChoice(row, col) {
-    if (this.mode === 'multiplayer' && this.socket) {
+    if (this.usePhp && this.mode === 'multiplayer') {
+      this.phpPost('/api/game.php', {
+        action: 'submit_choice',
+        roomId: this.roomId,
+        clientId: this.clientId,
+        row,
+        col,
+        sinceSeq: this.phpLastSeq
+      });
+    } else if (this.mode === 'multiplayer' && this.socket) {
       this.socket.emit('submit_choice', { row, col });
     } else if (this.mode === 'ai') {
       this.handleAIChoice(row, col);
@@ -227,7 +380,14 @@ class NetworkManager {
   }
 
   requestRematch() {
-    if (this.mode === 'multiplayer' && this.socket) {
+    if (this.usePhp && this.mode === 'multiplayer') {
+      this.phpPost('/api/game.php', {
+        action: 'request_rematch',
+        roomId: this.roomId,
+        clientId: this.clientId,
+        sinceSeq: this.phpLastSeq
+      });
+    } else if (this.mode === 'multiplayer' && this.socket) {
       this.socket.emit('request_rematch');
     } else if (this.mode === 'ai') {
       this.startAIGame();
@@ -237,7 +397,15 @@ class NetworkManager {
   }
 
   sendEmote(emoji, text) {
-    if (this.mode === 'multiplayer' && this.socket) {
+    if (this.usePhp && this.mode === 'multiplayer') {
+      this.phpPost('/api/game.php', {
+        action: 'send_emote',
+        roomId: this.roomId,
+        clientId: this.clientId,
+        emoji,
+        text
+      });
+    } else if (this.mode === 'multiplayer' && this.socket) {
       this.socket.emit('send_emote', { emoji, text });
     } else if (this.mode === 'ai') {
       this.trigger('emote_received', {
@@ -262,22 +430,55 @@ class NetworkManager {
   }
 
   // --- SISTEMA DE TORNEOS ---
-  createTournament(size, name, playerName, penaltiesPerPlayer = 5) {
+  async createTournament(size, name, playerName, penaltiesPerPlayer = 5) {
     this.playerName = playerName || 'Anfitrión';
     this.penaltiesPerPlayer = penaltiesPerPlayer;
     this.activeTournamentMatch = null;
     this.initMultiplayer();
-    if (this.socket) {
+    if (this.usePhp) {
+      const data = await this.phpPost('/api/tournament.php', {
+        action: 'create_tournament',
+        size,
+        name,
+        playerName: this.playerName,
+        penaltiesPerPlayer,
+        clientId: this.clientId
+      });
+      if (data && data.success) {
+        this.activeTournamentId = data.tournamentId;
+        this.trigger('tournament_joined', {
+          tournament: data.tournament,
+          participant: data.tournament.participants[0],
+          isHost: true
+        });
+      }
+    } else if (this.socket) {
       this.socket.emit('create_tournament', { size, name, playerName: this.playerName, penaltiesPerPlayer, clientId: this.clientId });
     }
   }
 
-  joinTournament(tournamentId, playerName) {
+  async joinTournament(tournamentId, playerName) {
     this.playerName = playerName || this.playerName || 'Jugador';
     this.activeTournamentId = (tournamentId || '').toUpperCase();
     this.roomId = null;
     this.initMultiplayer();
-    if (this.socket) {
+    if (this.usePhp) {
+      const data = await this.phpPost('/api/tournament.php', {
+        action: 'join_tournament',
+        tournamentId: this.activeTournamentId,
+        playerName: this.playerName,
+        clientId: this.clientId,
+        sinceSeq: this.phpLastTourneySeq
+      });
+      if (data && data.success) {
+        const myPart = data.tournament.participants.find(p => p.clientId === this.clientId) || data.tournament.participants[0];
+        this.trigger('tournament_joined', {
+          tournament: data.tournament,
+          participant: myPart,
+          isHost: data.tournament.hostClientId === this.clientId
+        });
+      }
+    } else if (this.socket) {
       this.socket.emit('join_tournament', { tournamentId, playerName: this.playerName, clientId: this.clientId });
     }
   }
@@ -286,20 +487,50 @@ class NetworkManager {
     const cleanId = (tournamentId || this.activeTournamentId || '').toUpperCase();
     this.activeTournamentId = null;
     this.activeTournamentMatch = null;
-    if (this.socket && cleanId) {
+    if (this.usePhp && cleanId) {
+      this.phpPost('/api/tournament.php', {
+        action: 'leave_tournament',
+        tournamentId: cleanId,
+        clientId: this.clientId
+      });
+    } else if (this.socket && cleanId) {
       this.socket.emit('leave_tournament', { tournamentId: cleanId, clientId: this.clientId });
     }
   }
 
   startTournament(tournamentId) {
-    if (this.socket) {
+    if (this.usePhp) {
+      this.phpPost('/api/tournament.php', {
+        action: 'start_tournament',
+        tournamentId: tournamentId || this.activeTournamentId,
+        clientId: this.clientId
+      });
+    } else if (this.socket) {
       this.socket.emit('start_tournament', { tournamentId, clientId: this.clientId });
     }
   }
 
-  enterTournamentMatch(tournamentId, roundIndex, matchIndex) {
+  async enterTournamentMatch(tournamentId, roundIndex, matchIndex) {
     this.activeTournamentMatch = { tournamentId, roundIndex, matchIndex };
-    if (this.socket) {
+    if (this.usePhp) {
+      const data = await this.phpPost('/api/tournament.php', {
+        action: 'enter_tournament_match',
+        tournamentId,
+        roundIndex,
+        matchIndex,
+        clientId: this.clientId,
+        playerName: this.playerName
+      });
+      if (data && data.success) {
+        this.roomId = data.roomId;
+        this.playerRole = data.role;
+        this.trigger('joined_room', {
+          roomId: data.roomId,
+          role: data.role,
+          roomState: data.roomState
+        });
+      }
+    } else if (this.socket) {
       this.socket.emit('enter_tournament_match', {
         tournamentId,
         roundIndex,

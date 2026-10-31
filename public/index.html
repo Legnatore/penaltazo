@@ -1176,8 +1176,8 @@
   <!-- Notificación Toast -->
   <div id="copy-toast" class="toast"></div>
 
-  <!-- Scripts: Socket.io para Node.js (con fallback automático a PHP en Piensa Solutions) -->
-  <script src="/socket.io/socket.io.js" onerror="console.log('Socket.io no presente. Usando API PHP.')"></script>
+  <!-- Scripts: Socket.io primero, luego módulos -->
+  <script src="/socket.io/socket.io.js"></script>
   <script src="js/audio.js?v=5.6"></script>
   <script src="js/ai-opponent.js?v=5.6"></script>
   <script src="js/goal-grid.js?v=5.6"></script>
